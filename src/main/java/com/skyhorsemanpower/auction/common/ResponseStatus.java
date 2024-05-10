@@ -1,4 +1,4 @@
-package com.skyhorsemanpower.auction;
+package com.skyhorsemanpower.auction.common;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.skyhorsemanpower.auction;
+package com.skyhorsemanpower.auction.common;
 
 import lombok.Builder;
 import org.springframework.http.HttpStatus;
