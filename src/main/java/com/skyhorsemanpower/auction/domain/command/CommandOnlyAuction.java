@@ -2,11 +2,8 @@ package com.skyhorsemanpower.auction.domain.command;
 
 import com.skyhorsemanpower.auction.common.BaseCreateAndEndTimeEntity;
 import com.skyhorsemanpower.auction.common.BaseTimeEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -19,6 +16,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
+@Table(name = "auction")
 public class CommandOnlyAuction extends BaseCreateAndEndTimeEntity {
 
     @Id

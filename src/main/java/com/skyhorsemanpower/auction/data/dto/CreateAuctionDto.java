@@ -13,6 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 public class CreateAuctionDto {
     private String uuid;
+    private String handle;
     private String title;
     private String content;
     private long majorCategoryId;
@@ -20,6 +21,7 @@ public class CreateAuctionDto {
     private int minimumBiddingPrice;
     private String thumbnail;
     private List<String> images;
+    private String auctionUuid;
 
     @Builder
     public CreateAuctionDto(String uuid, String title, String content, long majorCategoryId, long minorCategoryId, int minimumBiddingPrice, String thumbnail, List<String> images) {
