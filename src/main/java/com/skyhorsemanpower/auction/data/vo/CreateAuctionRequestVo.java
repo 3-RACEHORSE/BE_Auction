@@ -14,5 +14,4 @@ public class CreateAuctionRequestVo {
     private int minimumBiddingPrice;
     private String thumbnail;
     private List<String> images;
-//    private List<>
 }

@@ -1,5 +1,6 @@
-package com.skyhorsemanpower.auction.domain;
+package com.skyhorsemanpower.auction.domain.command;
 
+import com.skyhorsemanpower.auction.common.BaseCreateAndEndTimeEntity;
 import com.skyhorsemanpower.auction.common.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -18,7 +19,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class Auction extends BaseTimeEntity {
+public class CommandOnlyAuction extends BaseCreateAndEndTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,18 +43,14 @@ public class Auction extends BaseTimeEntity {
     @Column(nullable = false)
     private int minimumBiddingPrice;
 
-    @Column(nullable = false)
-    private LocalDateTime endedAt;
-
 
     @Builder
-    public Auction(String auctionUuid, String uuid, String handle, String title, String content, int minimumBiddingPrice) {
+    public CommandOnlyAuction(String auctionUuid, String uuid, String handle, String title, String content, int minimumBiddingPrice) {
         this.auctionUuid = auctionUuid;
         this.uuid = uuid;
         this.handle = handle;
         this.title = title;
         this.content = content;
         this.minimumBiddingPrice = minimumBiddingPrice;
-        this.endedAt = getCreatedDate().plusDays(1);
     }
 }
