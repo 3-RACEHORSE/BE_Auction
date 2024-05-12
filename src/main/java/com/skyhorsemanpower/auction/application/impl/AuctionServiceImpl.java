@@ -2,6 +2,8 @@ package com.skyhorsemanpower.auction.application.impl;
 
 import com.skyhorsemanpower.auction.application.AuctionService;
 import com.skyhorsemanpower.auction.data.dto.CreateAuctionDto;
+import com.skyhorsemanpower.auction.data.dto.SearchAuctionDto;
+import com.skyhorsemanpower.auction.data.vo.SearchAllAuctionResponseVo;
 import com.skyhorsemanpower.auction.domain.command.CommandOnlyAuction;
 import com.skyhorsemanpower.auction.domain.read.ReadOnlyAuction;
 import com.skyhorsemanpower.auction.repository.command.CommandOnlyAuctionRepository;
@@ -11,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -38,6 +42,25 @@ public class AuctionServiceImpl implements AuctionService {
         // MongoDB 저장
         createReadOnlyAuction(createAuctionDto);
     }
+
+    @Override
+    public List<SearchAllAuctionResponseVo> searchAllAuctionResponseVo(SearchAuctionDto searchAuctionDto) {
+        List<SearchAllAuctionResponseVo> searchAllAuctionResponseVos = new ArrayList<>();
+        SearchAllAuctionResponseVo searchAllAuctionResponseVo;
+        List<ReadOnlyAuction> readOnlyAuctions;
+
+        // keyword 없으면 전체 검색
+        if (searchAuctionDto.getKeyword() == null) readOnlyAuctions = readOnlyAuctionRepository.findAll();
+        // keyword 검색
+        else readOnlyAuctions = readOnlyAuctionRepository.findAllByTitle(searchAuctionDto.getKeyword());
+
+        for (ReadOnlyAuction readOnlyAuction : readOnlyAuctions) {
+            searchAllAuctionResponseVo = SearchAllAuctionResponseVo.readOnlyAuctionToSearchAllAuctionResponseVo(readOnlyAuction);
+            searchAllAuctionResponseVos.add(searchAllAuctionResponseVo);
+        }
+        return searchAllAuctionResponseVos;
+    }
+
 
     // MongoDB 경매글 저장
     private void createReadOnlyAuction(CreateAuctionDto createAuctionDto) {
