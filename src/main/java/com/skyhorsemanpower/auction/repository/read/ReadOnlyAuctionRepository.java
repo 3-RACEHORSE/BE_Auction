@@ -10,5 +10,7 @@ import java.util.List;
 @Repository
 public interface ReadOnlyAuctionRepository extends MongoRepository<ReadOnlyAuction, String> {
 
-    List<ReadOnlyAuction> findAllByTitle(String keyword);
+    List<ReadOnlyAuction> findAllByTitleLike(String keyword);
+
+    ReadOnlyAuction findByAuctionUuid(String auctionUuid);
 }

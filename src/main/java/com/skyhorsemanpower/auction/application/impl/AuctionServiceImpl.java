@@ -2,8 +2,10 @@ package com.skyhorsemanpower.auction.application.impl;
 
 import com.skyhorsemanpower.auction.application.AuctionService;
 import com.skyhorsemanpower.auction.data.dto.CreateAuctionDto;
+import com.skyhorsemanpower.auction.data.dto.SearchAllAuctionDto;
 import com.skyhorsemanpower.auction.data.dto.SearchAuctionDto;
 import com.skyhorsemanpower.auction.data.vo.SearchAllAuctionResponseVo;
+import com.skyhorsemanpower.auction.data.vo.SearchAuctionResponseVo;
 import com.skyhorsemanpower.auction.domain.command.CommandOnlyAuction;
 import com.skyhorsemanpower.auction.domain.read.ReadOnlyAuction;
 import com.skyhorsemanpower.auction.repository.command.CommandOnlyAuctionRepository;
@@ -44,21 +46,29 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     @Override
-    public List<SearchAllAuctionResponseVo> searchAllAuctionResponseVo(SearchAuctionDto searchAuctionDto) {
+    public List<SearchAllAuctionResponseVo> searchAllAuctionResponseVo(SearchAllAuctionDto searchAuctionDto) {
         List<SearchAllAuctionResponseVo> searchAllAuctionResponseVos = new ArrayList<>();
         SearchAllAuctionResponseVo searchAllAuctionResponseVo;
         List<ReadOnlyAuction> readOnlyAuctions;
 
         // keyword 없으면 전체 검색
+        //Todo 현재 진행중인지 검사 로직 필요
         if (searchAuctionDto.getKeyword() == null) readOnlyAuctions = readOnlyAuctionRepository.findAll();
         // keyword 검색
-        else readOnlyAuctions = readOnlyAuctionRepository.findAllByTitle(searchAuctionDto.getKeyword());
+        else readOnlyAuctions = readOnlyAuctionRepository.findAllByTitleLike(searchAuctionDto.getKeyword());
 
         for (ReadOnlyAuction readOnlyAuction : readOnlyAuctions) {
             searchAllAuctionResponseVo = SearchAllAuctionResponseVo.readOnlyAuctionToSearchAllAuctionResponseVo(readOnlyAuction);
             searchAllAuctionResponseVos.add(searchAllAuctionResponseVo);
         }
         return searchAllAuctionResponseVos;
+    }
+
+    @Override
+    public SearchAuctionResponseVo searchAuction(SearchAuctionDto searchAuctionDto) {
+        return SearchAuctionResponseVo.builder()
+                .readOnlyAuction(readOnlyAuctionRepository.findByAuctionUuid(searchAuctionDto.getAuctionUuid()))
+                .build();
     }
 
 

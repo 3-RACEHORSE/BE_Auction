@@ -8,11 +8,11 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class SearchAuctionDto {
-    private String auctionUuid;
+public class SearchAllAuctionDto {
+    private String keyword;
 
     @Builder
-    public SearchAuctionDto(String auctionUuid) {
-        this.auctionUuid = auctionUuid;
+    public SearchAllAuctionDto(String keyword) {
+        this.keyword = keyword;
     }
 }
