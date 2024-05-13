@@ -68,7 +68,7 @@ jobs:
           fi
 
       - name: Stop and remove container
-        if: steps.check-container.outputs.eureka-server-running == 'true'
+        if: steps.check-container.outputs.auction-server-running == 'true'
         run: sudo docker stop auction-service
 
       - name: Run new docker container
