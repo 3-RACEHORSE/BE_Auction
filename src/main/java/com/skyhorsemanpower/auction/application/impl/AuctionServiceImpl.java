@@ -11,10 +11,14 @@ import com.skyhorsemanpower.auction.domain.read.ReadOnlyAuction;
 import com.skyhorsemanpower.auction.repository.command.CommandOnlyAuctionRepository;
 import com.skyhorsemanpower.auction.repository.read.ReadOnlyAuctionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -26,6 +30,7 @@ public class AuctionServiceImpl implements AuctionService {
     private final CommandOnlyAuctionRepository commandOnlyAuctionRepository;
     private final ReadOnlyAuctionRepository readOnlyAuctionRepository;
 //    private final AuctionHistoryRepository auctionHistoryRepository;
+    private final MongoTemplate mongoTemplate;
 
     @Override
     @Transactional
@@ -52,8 +57,17 @@ public class AuctionServiceImpl implements AuctionService {
         List<ReadOnlyAuction> readOnlyAuctions;
 
         // keyword 없으면 전체 검색
-        //Todo 현재 진행중인지 검사 로직 필요
-        if (searchAuctionDto.getKeyword() == null) readOnlyAuctions = readOnlyAuctionRepository.findAll();
+        if (searchAuctionDto.getKeyword() == null) {
+            Criteria criteria = new Criteria().andOperator(
+                    Criteria.where("createdAt").lte(LocalDateTime.now()),
+                    Criteria.where("endedAt").gte(LocalDateTime.now())
+            );
+
+            Query query = new Query(criteria);
+
+            readOnlyAuctions = mongoTemplate.find(query, ReadOnlyAuction.class);
+        }
+
         // keyword 검색
         else readOnlyAuctions = readOnlyAuctionRepository.findAllByTitleLike(searchAuctionDto.getKeyword());
 
@@ -63,6 +77,7 @@ public class AuctionServiceImpl implements AuctionService {
         }
         return searchAllAuctionResponseVos;
     }
+
 
     @Override
     public SearchAuctionResponseVo searchAuction(SearchAuctionDto searchAuctionDto) {
