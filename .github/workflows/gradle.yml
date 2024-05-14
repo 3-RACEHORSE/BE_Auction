@@ -33,6 +33,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
+      - name: Set Environment Variables
+        run: |
+          echo "ENCRYPT_KEY=$ENCRYPT_KEY" >> $GITHUB_ENV
+        env:
+          ENCRYPT_KEY: ${{ secrets.ENCRYPT_KEY }}
+
       - name: Build with Gradle
         run: ./gradlew build
 
