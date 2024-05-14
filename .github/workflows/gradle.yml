@@ -72,7 +72,7 @@ jobs:
         run: sudo docker stop auction-service
 
       - name: Run new docker container
-        run: sudo docker run -e ENCRYPT_KEY=${{ secrets.ENCRYPT_KEY }} -d --name auction-service --rm -p 9001:9001 --net cheonma-network ${{ secrets.DOCKERHUB_USERNAME }}/auction-service:latest
+        run: sudo docker run -d --name auction-service --rm -p 9001:9001 --net cheonma-network ${{ secrets.DOCKERHUB_USERNAME }}/auction-service:latest
 
       - name: Delete old docker image
         run: sudo docker system prune -f
