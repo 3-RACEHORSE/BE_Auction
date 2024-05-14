@@ -58,26 +58,30 @@ public class AuctionServiceImpl implements AuctionService {
 
     private void createAuctionImages(CreateAuctionDto createAuctionDto) {
 
-        // 썸네일 저장
-        AuctionImages auctionThumbnailImage = AuctionImages.builder()
-                .auctionUuid(createAuctionDto.getAuctionUuid())
-                .imageUrl(createAuctionDto.getThumbnail())
-                .isThumbnail(true)
-                .build();
-
-        auctionImagesRepository.save(auctionThumbnailImage);
-
-        // 일반 이미지 저장
-        List<String> images = createAuctionDto.getImages();
-
-        for (String image : images) {
-            AuctionImages auctionImages = AuctionImages.builder()
+        try {
+            // 썸네일 저장
+            AuctionImages auctionThumbnailImage = AuctionImages.builder()
                     .auctionUuid(createAuctionDto.getAuctionUuid())
-                    .imageUrl(image)
-                    .isThumbnail(false)
+                    .imageUrl(createAuctionDto.getThumbnail())
+                    .isThumbnail(true)
                     .build();
 
-            auctionImagesRepository.save(auctionImages);
+            auctionImagesRepository.save(auctionThumbnailImage);
+
+            // 일반 이미지 저장
+            List<String> images = createAuctionDto.getImages();
+
+            for (String image : images) {
+                AuctionImages auctionImages = AuctionImages.builder()
+                        .auctionUuid(createAuctionDto.getAuctionUuid())
+                        .imageUrl(image)
+                        .isThumbnail(false)
+                        .build();
+
+                auctionImagesRepository.save(auctionImages);
+            }
+        } catch (Exception e) {
+            throw new CustomException(ResponseStatus.POSTGRESQL_ERROR);
         }
     }
 
@@ -86,6 +90,7 @@ public class AuctionServiceImpl implements AuctionService {
         List<SearchAllAuctionResponseVo> searchAllAuctionResponseVos = new ArrayList<>();
         SearchAllAuctionResponseVo searchAllAuctionResponseVo;
         List<ReadOnlyAuction> readOnlyAuctions;
+        String thumbnail;
 
         // keyword 없으면 전체 검색
         if (searchAuctionDto.getKeyword() == null) {
@@ -113,7 +118,14 @@ public class AuctionServiceImpl implements AuctionService {
         }
 
         for (ReadOnlyAuction readOnlyAuction : readOnlyAuctions) {
-            searchAllAuctionResponseVo = SearchAllAuctionResponseVo.readOnlyAuctionToSearchAllAuctionResponseVo(readOnlyAuction);
+            // 각 경매의 auctionUuid를 통해 thumbnail 가져오기
+            //Todo AuctionImages 엔티티를 다 들고와서 thumbnail를 뽑고 있다. 추후에 쿼리DSL이나 JPQL 방식으로 thumbnail만 가져오는 방식을 찾을 필요가 있다.
+            thumbnail = auctionImagesRepository.findByAuctionUuidAndIsThumbnail(
+                    readOnlyAuction.getAuctionUuid(), true).orElseThrow(
+                    () -> new CustomException(ResponseStatus.POSTGRESQL_ERROR)
+            ).getAuctionUuid();
+
+            searchAllAuctionResponseVo = SearchAllAuctionResponseVo.readOnlyAuctionToSearchAllAuctionResponseVo(readOnlyAuction, thumbnail);
             searchAllAuctionResponseVos.add(searchAllAuctionResponseVo);
         }
         return searchAllAuctionResponseVos;
