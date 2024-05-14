@@ -33,14 +33,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
+      - name: Build with Gradle
+        run: ./gradlew build
+
       - name: Set Environment Variables
         run: |
           echo "ENCRYPT_KEY=$ENCRYPT_KEY" >> $GITHUB_ENV
         env:
           ENCRYPT_KEY: ${{ secrets.ENCRYPT_KEY }}
-
-      - name: Build with Gradle
-        run: ./gradlew build
 
       - name: Build docker image
         run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/auction-service:latest -f Dockerfile .
