@@ -1,6 +1,9 @@
 package com.skyhorsemanpower.auction.application.impl;
 
 import com.skyhorsemanpower.auction.application.AuctionService;
+import com.skyhorsemanpower.auction.common.CustomException;
+import com.skyhorsemanpower.auction.common.ExceptionResponse;
+import com.skyhorsemanpower.auction.common.ResponseStatus;
 import com.skyhorsemanpower.auction.data.dto.CreateAuctionDto;
 import com.skyhorsemanpower.auction.data.dto.SearchAllAuctionDto;
 import com.skyhorsemanpower.auction.data.dto.SearchAuctionDto;
@@ -44,10 +47,19 @@ public class AuctionServiceImpl implements AuctionService {
         createAuctionDto.setAuctionUuid(auctionUuidToString);
 
         // PostgreSQL 저장
-        createCommandOnlyAution(createAuctionDto);
+        try {
+            createCommandOnlyAution(createAuctionDto);
+        } catch (Exception e) {
+            throw new CustomException(ResponseStatus.POSTGRESQL_ERROR);
+        }
 
         // MongoDB 저장
-        createReadOnlyAuction(createAuctionDto);
+        try {
+            createReadOnlyAuction(createAuctionDto);
+        } catch (Exception e) {
+            throw new CustomException(ResponseStatus.MONGODB_ERROR);
+        }
+
     }
 
     @Override
@@ -65,11 +77,21 @@ public class AuctionServiceImpl implements AuctionService {
 
             Query query = new Query(criteria);
 
-            readOnlyAuctions = mongoTemplate.find(query, ReadOnlyAuction.class);
+            try {
+                readOnlyAuctions = mongoTemplate.find(query, ReadOnlyAuction.class);
+            } catch (Exception e) {
+                throw new CustomException(ResponseStatus.MONGODB_ERROR);
+            }
         }
 
         // keyword 검색
-        else readOnlyAuctions = readOnlyAuctionRepository.findAllByTitleLike(searchAuctionDto.getKeyword());
+        else {
+            try {
+                readOnlyAuctions = readOnlyAuctionRepository.findAllByTitleLike(searchAuctionDto.getKeyword());
+            } catch (Exception e) {
+                throw new CustomException(ResponseStatus.MONGODB_ERROR);
+            }
+        }
 
         for (ReadOnlyAuction readOnlyAuction : readOnlyAuctions) {
             searchAllAuctionResponseVo = SearchAllAuctionResponseVo.readOnlyAuctionToSearchAllAuctionResponseVo(readOnlyAuction);
@@ -82,7 +104,9 @@ public class AuctionServiceImpl implements AuctionService {
     @Override
     public SearchAuctionResponseVo searchAuction(SearchAuctionDto searchAuctionDto) {
         return SearchAuctionResponseVo.builder()
-                .readOnlyAuction(readOnlyAuctionRepository.findByAuctionUuid(searchAuctionDto.getAuctionUuid()))
+                .readOnlyAuction(readOnlyAuctionRepository.findByAuctionUuid(searchAuctionDto.getAuctionUuid()).orElseThrow(
+                        () -> new CustomException(ResponseStatus.MONGODB_NOT_FOUND)
+                ))
                 .build();
     }
 
@@ -97,7 +121,11 @@ public class AuctionServiceImpl implements AuctionService {
                 .content(createAuctionDto.getContent())
                 .minimumBiddingPrice(createAuctionDto.getMinimumBiddingPrice())
                 .build();
-        readOnlyAuctionRepository.save(readOnlyAuction);
+        try {
+            readOnlyAuctionRepository.save(readOnlyAuction);
+        } catch (Exception e) {
+            throw new CustomException(ResponseStatus.MONGODB_ERROR);
+        }
     }
 
     // PostgreSQL 경매글 저장
@@ -110,8 +138,11 @@ public class AuctionServiceImpl implements AuctionService {
                 .content(createAuctionDto.getContent())
                 .minimumBiddingPrice(createAuctionDto.getMinimumBiddingPrice())
                 .build();
-        commandOnlyAuctionRepository.save(commandOnlyAuction);
+        try {
+            commandOnlyAuctionRepository.save(commandOnlyAuction);
+        } catch (Exception e) {
+            throw new CustomException(ResponseStatus.POSTGRESQL_ERROR);
+        }
     }
-
 
 }
