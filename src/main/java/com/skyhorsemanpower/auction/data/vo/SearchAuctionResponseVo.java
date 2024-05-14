@@ -1,6 +1,6 @@
 package com.skyhorsemanpower.auction.data.vo;
 
-import com.skyhorsemanpower.auction.domain.read.ReadOnlyAuction;
+import com.skyhorsemanpower.auction.domain.cqrs.read.ReadOnlyAuction;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;

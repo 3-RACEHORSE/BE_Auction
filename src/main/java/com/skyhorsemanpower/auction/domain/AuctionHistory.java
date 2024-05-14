@@ -1,4 +1,4 @@
-package com.skyhorsemanpower.auction.domain.read;
+package com.skyhorsemanpower.auction.domain;
 
 import com.skyhorsemanpower.auction.common.BaseTimeEntity;
 import lombok.Builder;

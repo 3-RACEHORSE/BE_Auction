@@ -1,10 +1,8 @@
-package com.skyhorsemanpower.auction.domain.command;
+package com.skyhorsemanpower.auction.domain.cqrs.command;
 
 import com.skyhorsemanpower.auction.common.BaseCreateAndEndTimeEntity;
-import com.skyhorsemanpower.auction.common.BaseTimeEntity;
 import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

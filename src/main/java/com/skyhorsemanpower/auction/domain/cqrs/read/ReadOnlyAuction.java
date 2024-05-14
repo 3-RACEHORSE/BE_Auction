@@ -1,4 +1,4 @@
-package com.skyhorsemanpower.auction.domain.read;
+package com.skyhorsemanpower.auction.domain.cqrs.read;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
