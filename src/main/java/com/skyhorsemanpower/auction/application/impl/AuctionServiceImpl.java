@@ -8,8 +8,10 @@ import com.skyhorsemanpower.auction.data.dto.SearchAllAuctionDto;
 import com.skyhorsemanpower.auction.data.dto.SearchAuctionDto;
 import com.skyhorsemanpower.auction.data.vo.SearchAllAuctionResponseVo;
 import com.skyhorsemanpower.auction.data.vo.SearchAuctionResponseVo;
+import com.skyhorsemanpower.auction.domain.AuctionImages;
 import com.skyhorsemanpower.auction.domain.cqrs.command.CommandOnlyAuction;
 import com.skyhorsemanpower.auction.domain.cqrs.read.ReadOnlyAuction;
+import com.skyhorsemanpower.auction.repository.AuctionImagesRepository;
 import com.skyhorsemanpower.auction.repository.cqrs.command.CommandOnlyAuctionRepository;
 import com.skyhorsemanpower.auction.repository.cqrs.read.ReadOnlyAuctionRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +33,8 @@ public class AuctionServiceImpl implements AuctionService {
 
     private final CommandOnlyAuctionRepository commandOnlyAuctionRepository;
     private final ReadOnlyAuctionRepository readOnlyAuctionRepository;
-//    private final AuctionHistoryRepository auctionHistoryRepository;
+    private final AuctionImagesRepository auctionImagesRepository;
+    //    private final AuctionHistoryRepository auctionHistoryRepository;
     private final MongoTemplate mongoTemplate;
 
     @Override
@@ -46,19 +49,36 @@ public class AuctionServiceImpl implements AuctionService {
         createAuctionDto.setAuctionUuid(auctionUuidToString);
 
         // PostgreSQL 저장
-        try {
-            createCommandOnlyAution(createAuctionDto);
-        } catch (Exception e) {
-            throw new CustomException(ResponseStatus.POSTGRESQL_ERROR);
-        }
+        createCommandOnlyAution(createAuctionDto);
+        createAuctionImages(createAuctionDto);
 
         // MongoDB 저장
-        try {
-            createReadOnlyAuction(createAuctionDto);
-        } catch (Exception e) {
-            throw new CustomException(ResponseStatus.MONGODB_ERROR);
-        }
+        createReadOnlyAuction(createAuctionDto);
+    }
 
+    private void createAuctionImages(CreateAuctionDto createAuctionDto) {
+
+        // 썸네일 저장
+        AuctionImages auctionThumbnailImage = AuctionImages.builder()
+                .auctionUuid(createAuctionDto.getAuctionUuid())
+                .imageUrl(createAuctionDto.getThumbnail())
+                .isThumbnail(true)
+                .build();
+
+        auctionImagesRepository.save(auctionThumbnailImage);
+
+        // 일반 이미지 저장
+        List<String> images = createAuctionDto.getImages();
+
+        for (String image : images) {
+            AuctionImages auctionImages = AuctionImages.builder()
+                    .auctionUuid(createAuctionDto.getAuctionUuid())
+                    .imageUrl(image)
+                    .isThumbnail(false)
+                    .build();
+
+            auctionImagesRepository.save(auctionImages);
+        }
     }
 
     @Override

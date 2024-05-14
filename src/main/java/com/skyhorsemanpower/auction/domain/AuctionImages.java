@@ -22,21 +22,12 @@ public class AuctionImages {
     private String imageUrl;
 
     @Column(nullable = false)
-    private boolean thumbnail;
+    private boolean isThumbnail;
 
     @Builder
-    public AuctionImages(long auctionImagesId, String auctionUuid, String imageUrl) {
-        this.auctionImagesId = auctionImagesId;
+    public AuctionImages(String auctionUuid, String imageUrl, boolean isThumbnail) {
         this.auctionUuid = auctionUuid;
         this.imageUrl = imageUrl;
-        this.thumbnail = false;
-    }
-
-    @Builder
-    public AuctionImages(long auctionImagesId, String auctionUuid, String imageUrl, boolean thumbnail) {
-        this.auctionImagesId = auctionImagesId;
-        this.auctionUuid = auctionUuid;
-        this.imageUrl = imageUrl;
-        this.thumbnail = thumbnail;
+        this.isThumbnail = isThumbnail;
     }
 }
