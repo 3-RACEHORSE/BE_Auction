@@ -36,9 +36,7 @@ jobs:
       - name: Build with Gradle
         env:
           ENCRYPT_KEY: ${{ secrets.ENCRYPT_KEY }}
-        run: |
-          ./gradlew build
-          echo "ENCRYPT_KEY=${ENCRYPT_KEY}"
+        run: ./gradlew build
 
       - name: Build docker image
         run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/auction-service:latest -f Dockerfile .
