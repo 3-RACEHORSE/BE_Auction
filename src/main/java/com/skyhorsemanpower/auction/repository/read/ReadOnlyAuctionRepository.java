@@ -6,11 +6,12 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ReadOnlyAuctionRepository extends MongoRepository<ReadOnlyAuction, String> {
 
     List<ReadOnlyAuction> findAllByTitleLike(String keyword);
 
-    ReadOnlyAuction findByAuctionUuid(String auctionUuid);
+    Optional<ReadOnlyAuction> findByAuctionUuid(String auctionUuid);
 }
