@@ -1,10 +1,8 @@
-package com.skyhorsemanpower.auction.domain.command;
+package com.skyhorsemanpower.auction.domain.cqrs.command;
 
 import com.skyhorsemanpower.auction.common.BaseCreateAndEndTimeEntity;
-import com.skyhorsemanpower.auction.common.BaseTimeEntity;
 import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -27,7 +25,7 @@ public class CommandOnlyAuction extends BaseCreateAndEndTimeEntity {
     private String auctionUuid;
 
     @Column(nullable = false)
-    private String uuid;
+    private String sellerUuid;
 
     @Column(nullable = false)
     private String handle;
@@ -39,16 +37,29 @@ public class CommandOnlyAuction extends BaseCreateAndEndTimeEntity {
     private String content;
 
     @Column(nullable = false)
+    private String category;
+
+    @Column(nullable = false)
     private int minimumBiddingPrice;
+
+    @Column(nullable = false)
+    private String bidderUuid;
+
+    @Column(nullable = false)
+    private int bidPrice;
 
 
     @Builder
-    public CommandOnlyAuction(String auctionUuid, String uuid, String handle, String title, String content, int minimumBiddingPrice) {
+    public CommandOnlyAuction(long auctionPostId, String auctionUuid, String sellerUuid, String handle, String title, String content, String category, int minimumBiddingPrice, String bidderUuid, int bidPrice) {
+        this.auctionPostId = auctionPostId;
         this.auctionUuid = auctionUuid;
-        this.uuid = uuid;
+        this.sellerUuid = sellerUuid;
         this.handle = handle;
         this.title = title;
         this.content = content;
+        this.category = category;
         this.minimumBiddingPrice = minimumBiddingPrice;
+        this.bidderUuid = bidderUuid;
+        this.bidPrice = bidPrice;
     }
 }

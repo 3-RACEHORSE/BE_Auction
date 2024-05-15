@@ -2,18 +2,20 @@ package com.skyhorsemanpower.auction.application.impl;
 
 import com.skyhorsemanpower.auction.application.AuctionService;
 import com.skyhorsemanpower.auction.common.CustomException;
-import com.skyhorsemanpower.auction.common.ExceptionResponse;
 import com.skyhorsemanpower.auction.common.ResponseStatus;
 import com.skyhorsemanpower.auction.data.dto.CreateAuctionDto;
 import com.skyhorsemanpower.auction.data.dto.SearchAllAuctionDto;
 import com.skyhorsemanpower.auction.data.dto.SearchAuctionDto;
 import com.skyhorsemanpower.auction.data.vo.SearchAllAuctionResponseVo;
 import com.skyhorsemanpower.auction.data.vo.SearchAuctionResponseVo;
-import com.skyhorsemanpower.auction.domain.command.CommandOnlyAuction;
-import com.skyhorsemanpower.auction.domain.read.ReadOnlyAuction;
-import com.skyhorsemanpower.auction.repository.command.CommandOnlyAuctionRepository;
-import com.skyhorsemanpower.auction.repository.read.ReadOnlyAuctionRepository;
+import com.skyhorsemanpower.auction.domain.AuctionImages;
+import com.skyhorsemanpower.auction.domain.cqrs.command.CommandOnlyAuction;
+import com.skyhorsemanpower.auction.domain.cqrs.read.ReadOnlyAuction;
+import com.skyhorsemanpower.auction.repository.AuctionImagesRepository;
+import com.skyhorsemanpower.auction.repository.cqrs.command.CommandOnlyAuctionRepository;
+import com.skyhorsemanpower.auction.repository.cqrs.read.ReadOnlyAuctionRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -28,11 +30,13 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuctionServiceImpl implements AuctionService {
 
     private final CommandOnlyAuctionRepository commandOnlyAuctionRepository;
     private final ReadOnlyAuctionRepository readOnlyAuctionRepository;
-//    private final AuctionHistoryRepository auctionHistoryRepository;
+    private final AuctionImagesRepository auctionImagesRepository;
+    //    private final AuctionHistoryRepository auctionHistoryRepository;
     private final MongoTemplate mongoTemplate;
 
     @Override
@@ -47,19 +51,40 @@ public class AuctionServiceImpl implements AuctionService {
         createAuctionDto.setAuctionUuid(auctionUuidToString);
 
         // PostgreSQL 저장
+        createCommandOnlyAution(createAuctionDto);
+        createAuctionImages(createAuctionDto);
+
+        // MongoDB 저장
+        createReadOnlyAuction(createAuctionDto);
+    }
+
+    private void createAuctionImages(CreateAuctionDto createAuctionDto) {
+
         try {
-            createCommandOnlyAution(createAuctionDto);
+            // 썸네일 저장
+            AuctionImages auctionThumbnailImage = AuctionImages.builder()
+                    .auctionUuid(createAuctionDto.getAuctionUuid())
+                    .imageUrl(createAuctionDto.getThumbnail())
+                    .isThumbnail(true)
+                    .build();
+
+            auctionImagesRepository.save(auctionThumbnailImage);
+
+            // 일반 이미지 저장
+            List<String> images = createAuctionDto.getImages();
+
+            for (String image : images) {
+                AuctionImages auctionImages = AuctionImages.builder()
+                        .auctionUuid(createAuctionDto.getAuctionUuid())
+                        .imageUrl(image)
+                        .isThumbnail(false)
+                        .build();
+
+                auctionImagesRepository.save(auctionImages);
+            }
         } catch (Exception e) {
             throw new CustomException(ResponseStatus.POSTGRESQL_ERROR);
         }
-
-        // MongoDB 저장
-        try {
-            createReadOnlyAuction(createAuctionDto);
-        } catch (Exception e) {
-            throw new CustomException(ResponseStatus.MONGODB_ERROR);
-        }
-
     }
 
     @Override
@@ -67,6 +92,7 @@ public class AuctionServiceImpl implements AuctionService {
         List<SearchAllAuctionResponseVo> searchAllAuctionResponseVos = new ArrayList<>();
         SearchAllAuctionResponseVo searchAllAuctionResponseVo;
         List<ReadOnlyAuction> readOnlyAuctions;
+        String thumbnail;
 
         // keyword 없으면 전체 검색
         if (searchAuctionDto.getKeyword() == null) {
@@ -94,19 +120,26 @@ public class AuctionServiceImpl implements AuctionService {
         }
 
         for (ReadOnlyAuction readOnlyAuction : readOnlyAuctions) {
-            searchAllAuctionResponseVo = SearchAllAuctionResponseVo.readOnlyAuctionToSearchAllAuctionResponseVo(readOnlyAuction);
+            // 각 경매의 auctionUuid를 통해 thumbnail 가져오기
+            // thumbnail은 null이 가능하다.
+            thumbnail = auctionImagesRepository.getThumbnailUrl(readOnlyAuction.getAuctionUuid());
+
+            searchAllAuctionResponseVo = SearchAllAuctionResponseVo.readOnlyAuctionToSearchAllAuctionResponseVo(readOnlyAuction, thumbnail);
             searchAllAuctionResponseVos.add(searchAllAuctionResponseVo);
         }
         return searchAllAuctionResponseVos;
     }
 
-
+    // 백업
     @Override
     public SearchAuctionResponseVo searchAuction(SearchAuctionDto searchAuctionDto) {
         return SearchAuctionResponseVo.builder()
                 .readOnlyAuction(readOnlyAuctionRepository.findByAuctionUuid(searchAuctionDto.getAuctionUuid()).orElseThrow(
                         () -> new CustomException(ResponseStatus.MONGODB_NOT_FOUND)
                 ))
+                .thumbnail(auctionImagesRepository.getThumbnailUrl(searchAuctionDto.getAuctionUuid()))
+                .images(auctionImagesRepository.getImagesUrl(searchAuctionDto.getAuctionUuid()))
+                .bidPrice(-1)
                 .build();
     }
 
@@ -115,11 +148,16 @@ public class AuctionServiceImpl implements AuctionService {
     private void createReadOnlyAuction(CreateAuctionDto createAuctionDto) {
         ReadOnlyAuction readOnlyAuction = ReadOnlyAuction.builder()
                 .auctionUuid(createAuctionDto.getAuctionUuid())
-                .uuid(createAuctionDto.getUuid())
+                .sellerUuid(createAuctionDto.getSellerUuid())
                 .handle(createAuctionDto.getHandle())
                 .title(createAuctionDto.getTitle())
                 .content(createAuctionDto.getContent())
+                .category(createAuctionDto.getCategory())
                 .minimumBiddingPrice(createAuctionDto.getMinimumBiddingPrice())
+                .createdAt(LocalDateTime.now())
+                .endedAt(LocalDateTime.now().plusDays(1))
+                .bidderUuid("추가 필요")
+                .bidPrice(-1)
                 .build();
         try {
             readOnlyAuctionRepository.save(readOnlyAuction);
@@ -132,12 +170,16 @@ public class AuctionServiceImpl implements AuctionService {
     private void createCommandOnlyAution(CreateAuctionDto createAuctionDto) {
         CommandOnlyAuction commandOnlyAuction = CommandOnlyAuction.builder()
                 .auctionUuid(createAuctionDto.getAuctionUuid())
-                .uuid(createAuctionDto.getUuid())
+                .sellerUuid(createAuctionDto.getSellerUuid())
                 .handle(createAuctionDto.getHandle())
                 .title(createAuctionDto.getTitle())
                 .content(createAuctionDto.getContent())
+                .category(createAuctionDto.getCategory())
                 .minimumBiddingPrice(createAuctionDto.getMinimumBiddingPrice())
+                .bidderUuid("추가 필요")
+                .bidPrice(-1)
                 .build();
+
         try {
             commandOnlyAuctionRepository.save(commandOnlyAuction);
         } catch (Exception e) {
