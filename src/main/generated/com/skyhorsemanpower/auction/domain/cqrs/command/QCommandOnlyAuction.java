@@ -25,6 +25,12 @@ public class QCommandOnlyAuction extends EntityPathBase<CommandOnlyAuction> {
 
     public final StringPath auctionUuid = createString("auctionUuid");
 
+    public final StringPath bidderUuid = createString("bidderUuid");
+
+    public final NumberPath<Integer> bidPrice = createNumber("bidPrice", Integer.class);
+
+    public final StringPath category = createString("category");
+
     public final StringPath content = createString("content");
 
     //inherited
@@ -37,9 +43,9 @@ public class QCommandOnlyAuction extends EntityPathBase<CommandOnlyAuction> {
 
     public final NumberPath<Integer> minimumBiddingPrice = createNumber("minimumBiddingPrice", Integer.class);
 
-    public final StringPath title = createString("title");
+    public final StringPath sellerUuid = createString("sellerUuid");
 
-    public final StringPath uuid = createString("uuid");
+    public final StringPath title = createString("title");
 
     public QCommandOnlyAuction(String variable) {
         super(CommandOnlyAuction.class, forVariable(variable));

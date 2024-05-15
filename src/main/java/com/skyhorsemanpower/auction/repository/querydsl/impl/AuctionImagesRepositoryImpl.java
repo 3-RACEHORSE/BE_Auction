@@ -1,6 +1,7 @@
-package com.skyhorsemanpower.auction.repository;
+package com.skyhorsemanpower.auction.repository.querydsl.impl;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.skyhorsemanpower.auction.repository.querydsl.AuctionImagesRepositoryCustom;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 

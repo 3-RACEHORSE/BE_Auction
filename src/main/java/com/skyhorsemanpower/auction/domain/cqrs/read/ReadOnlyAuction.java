@@ -6,7 +6,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
-@AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @ToString
@@ -17,24 +16,31 @@ public class ReadOnlyAuction {
     private String auctionPostId;
 
     private String auctionUuid;
-    private String uuid;
+    private String sellerUuid;
     private String handle;
     private String title;
     private String content;
+    private String category;
     private int minimumBiddingPrice;
     private LocalDateTime createdAt;
     private LocalDateTime endedAt;
+    private String bidderUuid;
+    private int bidPrice;
 
 
     @Builder
-    public ReadOnlyAuction(String auctionUuid, String uuid, String handle, String title, String content, int minimumBiddingPrice, LocalDateTime createdAt, LocalDateTime endedAt) {
+    public ReadOnlyAuction(String auctionPostId, String auctionUuid, String sellerUuid, String handle, String title, String content, String category, int minimumBiddingPrice, LocalDateTime createdAt, LocalDateTime endedAt, String bidderUuid, int bidPrice) {
+        this.auctionPostId = auctionPostId;
         this.auctionUuid = auctionUuid;
-        this.uuid = uuid;
+        this.sellerUuid = sellerUuid;
         this.handle = handle;
         this.title = title;
         this.content = content;
+        this.category = category;
         this.minimumBiddingPrice = minimumBiddingPrice;
-        this.createdAt = LocalDateTime.now(); // 현재 시간으로 설정
-        this.endedAt = this.createdAt.plusDays(1);
+        this.createdAt = createdAt;
+        this.endedAt = endedAt;
+        this.bidderUuid = bidderUuid;
+        this.bidPrice = bidPrice;
     }
 }

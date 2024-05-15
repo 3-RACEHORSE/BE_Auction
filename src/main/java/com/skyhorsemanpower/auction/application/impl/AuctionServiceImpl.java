@@ -15,6 +15,7 @@ import com.skyhorsemanpower.auction.repository.AuctionImagesRepository;
 import com.skyhorsemanpower.auction.repository.cqrs.command.CommandOnlyAuctionRepository;
 import com.skyhorsemanpower.auction.repository.cqrs.read.ReadOnlyAuctionRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -29,6 +30,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuctionServiceImpl implements AuctionService {
 
     private final CommandOnlyAuctionRepository commandOnlyAuctionRepository;
@@ -137,8 +139,6 @@ public class AuctionServiceImpl implements AuctionService {
                 ))
                 .thumbnail(auctionImagesRepository.getThumbnailUrl(searchAuctionDto.getAuctionUuid()))
                 .images(auctionImagesRepository.getImagesUrl(searchAuctionDto.getAuctionUuid()))
-                .categoryMajorName("추가 필요")
-                .categoryMinorName("추가 필요")
                 .bidPrice(-1)
                 .build();
     }
@@ -148,11 +148,16 @@ public class AuctionServiceImpl implements AuctionService {
     private void createReadOnlyAuction(CreateAuctionDto createAuctionDto) {
         ReadOnlyAuction readOnlyAuction = ReadOnlyAuction.builder()
                 .auctionUuid(createAuctionDto.getAuctionUuid())
-                .uuid(createAuctionDto.getUuid())
+                .sellerUuid(createAuctionDto.getSellerUuid())
                 .handle(createAuctionDto.getHandle())
                 .title(createAuctionDto.getTitle())
                 .content(createAuctionDto.getContent())
+                .category(createAuctionDto.getCategory())
                 .minimumBiddingPrice(createAuctionDto.getMinimumBiddingPrice())
+                .createdAt(LocalDateTime.now())
+                .endedAt(LocalDateTime.now().plusDays(1))
+                .bidderUuid("추가 필요")
+                .bidPrice(-1)
                 .build();
         try {
             readOnlyAuctionRepository.save(readOnlyAuction);
@@ -165,12 +170,16 @@ public class AuctionServiceImpl implements AuctionService {
     private void createCommandOnlyAution(CreateAuctionDto createAuctionDto) {
         CommandOnlyAuction commandOnlyAuction = CommandOnlyAuction.builder()
                 .auctionUuid(createAuctionDto.getAuctionUuid())
-                .uuid(createAuctionDto.getUuid())
+                .sellerUuid(createAuctionDto.getSellerUuid())
                 .handle(createAuctionDto.getHandle())
                 .title(createAuctionDto.getTitle())
                 .content(createAuctionDto.getContent())
+                .category(createAuctionDto.getCategory())
                 .minimumBiddingPrice(createAuctionDto.getMinimumBiddingPrice())
+                .bidderUuid("추가 필요")
+                .bidPrice(-1)
                 .build();
+
         try {
             commandOnlyAuctionRepository.save(commandOnlyAuction);
         } catch (Exception e) {

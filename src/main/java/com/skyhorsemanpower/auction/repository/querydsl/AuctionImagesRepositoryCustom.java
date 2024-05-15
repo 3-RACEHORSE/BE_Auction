@@ -1,4 +1,4 @@
-package com.skyhorsemanpower.auction.repository;
+package com.skyhorsemanpower.auction.repository.querydsl;
 
 import java.util.List;
 

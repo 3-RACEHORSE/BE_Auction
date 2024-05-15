@@ -9,8 +9,7 @@ import lombok.ToString;
 public class CreateAuctionRequestVo {
     private String title;
     private String content;
-    private long majorCategoryId;
-    private long minorCategoryId;
+    private String category;
     private int minimumBiddingPrice;
     private String thumbnail;
     private List<String> images;

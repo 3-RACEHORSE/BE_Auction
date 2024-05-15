@@ -12,24 +12,22 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 public class CreateAuctionDto {
-    private String uuid;
+    private String sellerUuid;
     private String handle;
     private String title;
     private String content;
-    private long majorCategoryId;
-    private long minorCategoryId;
+    private String category;
     private int minimumBiddingPrice;
     private String thumbnail;
     private List<String> images;
     private String auctionUuid;
 
     @Builder
-    public CreateAuctionDto(String uuid, String title, String content, long majorCategoryId, long minorCategoryId, int minimumBiddingPrice, String thumbnail, List<String> images) {
-        this.uuid = uuid;
+    public CreateAuctionDto(String sellerUuid, String title, String content, String category, int minimumBiddingPrice, String thumbnail, List<String> images) {
+        this.sellerUuid = sellerUuid;
         this.title = title;
         this.content = content;
-        this.majorCategoryId = majorCategoryId;
-        this.minorCategoryId = minorCategoryId;
+        this.category = category;
         this.minimumBiddingPrice = minimumBiddingPrice;
         this.thumbnail = thumbnail;
         this.images = images;
@@ -38,11 +36,10 @@ public class CreateAuctionDto {
     // converter
     public static CreateAuctionDto createAuctionVoToDto(String uuid, CreateAuctionRequestVo createAuctionRequestVo) {
         return CreateAuctionDto.builder()
-                .uuid(uuid)
+                .sellerUuid(uuid)
                 .title(createAuctionRequestVo.getTitle())
                 .content(createAuctionRequestVo.getContent())
-                .majorCategoryId(createAuctionRequestVo.getMajorCategoryId())
-                .minorCategoryId(createAuctionRequestVo.getMinorCategoryId())
+                .category(createAuctionRequestVo.getCategory())
                 .minimumBiddingPrice(createAuctionRequestVo.getMinimumBiddingPrice())
                 .thumbnail(createAuctionRequestVo.getThumbnail())
                 .images(createAuctionRequestVo.getImages())
