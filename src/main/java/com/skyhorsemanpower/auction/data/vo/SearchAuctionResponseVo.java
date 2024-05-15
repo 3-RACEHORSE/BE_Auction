@@ -23,10 +23,12 @@ public class SearchAuctionResponseVo {
 
 
     @Builder
-    public SearchAuctionResponseVo(ReadOnlyAuction readOnlyAuction, String thumbnail, List<String> images, int bidPrice) {
+    public SearchAuctionResponseVo(ReadOnlyAuction readOnlyAuction, String thumbnail, List<String> images, String categoryMajorName, String categoryMinorName, int bidPrice) {
         this.readOnlyAuction = readOnlyAuction;
         this.thumbnail = thumbnail;
         this.images = images;
+        this.categoryMajorName = categoryMajorName;
+        this.categoryMinorName = categoryMinorName;
         this.bidPrice = bidPrice;
     }
 

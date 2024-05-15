@@ -119,11 +119,8 @@ public class AuctionServiceImpl implements AuctionService {
 
         for (ReadOnlyAuction readOnlyAuction : readOnlyAuctions) {
             // 각 경매의 auctionUuid를 통해 thumbnail 가져오기
-            //Todo AuctionImages 엔티티를 다 들고와서 thumbnail를 뽑고 있다. 추후에 쿼리DSL이나 JPQL 방식으로 thumbnail만 가져오는 방식을 찾을 필요가 있다.
-            thumbnail = auctionImagesRepository.findByAuctionUuidAndIsThumbnail(
-                    readOnlyAuction.getAuctionUuid(), true).orElseThrow(
-                    () -> new CustomException(ResponseStatus.POSTGRESQL_ERROR)
-            ).getAuctionUuid();
+            // thumbnail은 null이 가능하다.
+            thumbnail = auctionImagesRepository.getThumbnailUrl(readOnlyAuction.getAuctionUuid());
 
             searchAllAuctionResponseVo = SearchAllAuctionResponseVo.readOnlyAuctionToSearchAllAuctionResponseVo(readOnlyAuction, thumbnail);
             searchAllAuctionResponseVos.add(searchAllAuctionResponseVo);
@@ -131,13 +128,18 @@ public class AuctionServiceImpl implements AuctionService {
         return searchAllAuctionResponseVos;
     }
 
-
+    // 백업
     @Override
     public SearchAuctionResponseVo searchAuction(SearchAuctionDto searchAuctionDto) {
         return SearchAuctionResponseVo.builder()
                 .readOnlyAuction(readOnlyAuctionRepository.findByAuctionUuid(searchAuctionDto.getAuctionUuid()).orElseThrow(
                         () -> new CustomException(ResponseStatus.MONGODB_NOT_FOUND)
                 ))
+                .thumbnail(auctionImagesRepository.getThumbnailUrl(searchAuctionDto.getAuctionUuid()))
+                .images(auctionImagesRepository.getImagesUrl(searchAuctionDto.getAuctionUuid()))
+                .categoryMajorName("추가 필요")
+                .categoryMinorName("추가 필요")
+                .bidPrice(-1)
                 .build();
     }
 

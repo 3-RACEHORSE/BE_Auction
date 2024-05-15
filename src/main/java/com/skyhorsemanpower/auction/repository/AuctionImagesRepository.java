@@ -5,6 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-public interface AuctionImagesRepository extends JpaRepository<AuctionImages, Long> {
+public interface AuctionImagesRepository extends JpaRepository<AuctionImages, Long>, AuctionImagesRepositoryCustom {
     Optional<AuctionImages> findByAuctionUuidAndIsThumbnail(String auctionUuid, boolean isThumbnail);
 }
