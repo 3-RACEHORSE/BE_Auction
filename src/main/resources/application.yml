@@ -8,7 +8,7 @@ spring:
 
   cloud:
     config:
-      profile: prod
+      profile: ${PROFILE}
 
 encrypt:
   key: ${ENCRYPT_KEY}

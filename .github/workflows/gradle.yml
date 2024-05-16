@@ -24,6 +24,7 @@ jobs:
           files: ./src/main/resources/application.yml
         env:
           encrypt.key: ${{ secrets.ENCRYPT_KEY }}
+          spring.cloud.config.profile: 'prod'
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
