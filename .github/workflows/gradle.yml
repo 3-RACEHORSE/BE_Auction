@@ -3,8 +3,6 @@ name: Auction server CI/CD with gradle
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
   build-docker-image:
