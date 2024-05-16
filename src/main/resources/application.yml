@@ -2,7 +2,7 @@ spring:
   application:
     name: auction-service
   profiles:
-    active: dev
+    active: prod
   config:
     import: optional:configserver:http://43.203.131.185:8071
 
