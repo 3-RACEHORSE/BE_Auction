@@ -20,7 +20,19 @@ public enum ResponseStatus {
 //    /**
 //     * 900: 기타 에러
 //     */
-    INTERNAL_SERVER_ERROR(500, "Internal server error");
+    INTERNAL_SERVER_ERROR(500, "Internal server error"),
+
+    POSTGRESQL_ERROR(500, "PostgreSQL error"),
+    POSTGRESQL_NOT_FOUND(500, "PostgreSQL Not Found"),
+
+    MONGODB_ERROR(500, "MongoDB error"),
+    MONGODB_NOT_FOUND(500, "MongoDB Not Found"),
+
+
+
+    // 예외 테스트 용
+    EXCEPTION_TEST(500, "Exception test");
+
     private final int code;
     private final String message;
 
