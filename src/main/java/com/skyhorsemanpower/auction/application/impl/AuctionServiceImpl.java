@@ -3,30 +3,36 @@ package com.skyhorsemanpower.auction.application.impl;
 import com.skyhorsemanpower.auction.application.AuctionService;
 import com.skyhorsemanpower.auction.common.CustomException;
 import com.skyhorsemanpower.auction.common.ResponseStatus;
-import com.skyhorsemanpower.auction.data.dto.CreateAuctionDto;
-import com.skyhorsemanpower.auction.data.dto.SearchAllAuctionDto;
-import com.skyhorsemanpower.auction.data.dto.SearchAuctionDto;
+import com.skyhorsemanpower.auction.data.dto.*;
 import com.skyhorsemanpower.auction.data.vo.SearchAllAuctionResponseVo;
 import com.skyhorsemanpower.auction.data.vo.SearchAuctionResponseVo;
+import com.skyhorsemanpower.auction.data.vo.SearchBiddingPriceResponseVo;
+import com.skyhorsemanpower.auction.domain.AuctionHistory;
 import com.skyhorsemanpower.auction.domain.AuctionImages;
 import com.skyhorsemanpower.auction.domain.cqrs.command.CommandOnlyAuction;
 import com.skyhorsemanpower.auction.domain.cqrs.read.ReadOnlyAuction;
+import com.skyhorsemanpower.auction.repository.AuctionHistoryRepository;
 import com.skyhorsemanpower.auction.repository.AuctionImagesRepository;
 import com.skyhorsemanpower.auction.repository.cqrs.command.CommandOnlyAuctionRepository;
 import com.skyhorsemanpower.auction.repository.cqrs.read.ReadOnlyAuctionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -36,8 +42,9 @@ public class AuctionServiceImpl implements AuctionService {
     private final CommandOnlyAuctionRepository commandOnlyAuctionRepository;
     private final ReadOnlyAuctionRepository readOnlyAuctionRepository;
     private final AuctionImagesRepository auctionImagesRepository;
-    //    private final AuctionHistoryRepository auctionHistoryRepository;
+    private final AuctionHistoryRepository auctionHistoryRepository;
     private final MongoTemplate mongoTemplate;
+    private final ReactiveMongoTemplate reactiveMongoTemplate;
 
     @Override
     @Transactional
@@ -130,19 +137,38 @@ public class AuctionServiceImpl implements AuctionService {
         return searchAllAuctionResponseVos;
     }
 
-    // 백업
     @Override
     public SearchAuctionResponseVo searchAuction(SearchAuctionDto searchAuctionDto) {
+        ReadOnlyAuction auction = readOnlyAuctionRepository.findByAuctionUuid(searchAuctionDto.getAuctionUuid()).orElseThrow(
+                () -> new CustomException(ResponseStatus.MONGODB_NOT_FOUND)
+        );
         return SearchAuctionResponseVo.builder()
-                .readOnlyAuction(readOnlyAuctionRepository.findByAuctionUuid(searchAuctionDto.getAuctionUuid()).orElseThrow(
-                        () -> new CustomException(ResponseStatus.MONGODB_NOT_FOUND)
-                ))
+                .readOnlyAuction(auction)
                 .thumbnail(auctionImagesRepository.getThumbnailUrl(searchAuctionDto.getAuctionUuid()))
                 .images(auctionImagesRepository.getImagesUrl(searchAuctionDto.getAuctionUuid()))
-                .bidPrice(-1)
                 .build();
     }
 
+    @Override
+    public void offerBiddingPrice(OfferBiddingPriceDto offerBiddingPriceDto) {
+        AuctionHistory auctionHistory = AuctionHistory.builder()
+                .auctionUuid(offerBiddingPriceDto.getAuctionUuid())
+                .biddingUuid(offerBiddingPriceDto.getBiddingUuid())
+                .biddingPrice(offerBiddingPriceDto.getBiddingPrice())
+                .biddingTime(LocalDateTime.now())
+                .build();
+        try {
+            auctionHistoryRepository.save(auctionHistory).subscribe();
+        } catch (Exception e) {
+            throw new CustomException(ResponseStatus.MONGODB_ERROR);
+        }
+    }
+
+    @Override
+    public Flux<AuctionHistory> searchBiddingPrice(SearchBiddingPriceDto searchBiddingPriceDto) {
+
+        return auctionHistoryRepository.searchBiddingPrice(searchBiddingPriceDto.getAuctionUuid());
+    }
 
     // MongoDB 경매글 저장
     private void createReadOnlyAuction(CreateAuctionDto createAuctionDto) {
