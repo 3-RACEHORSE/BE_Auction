@@ -15,16 +15,11 @@ public class SearchAuctionResponseVo {
     private String thumbnail;
     private List<String> images;
 
-    //Todo AuctionHistory 구현하면 수정 필요
-    private int bidPrice;
-
-
     @Builder
-    public SearchAuctionResponseVo(ReadOnlyAuction readOnlyAuction, String thumbnail, List<String> images, int bidPrice) {
+    public SearchAuctionResponseVo(ReadOnlyAuction readOnlyAuction, String thumbnail, List<String> images) {
         this.readOnlyAuction = readOnlyAuction;
         this.thumbnail = thumbnail;
         this.images = images;
-        this.bidPrice = bidPrice;
     }
 
 }
