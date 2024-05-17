@@ -61,7 +61,7 @@ public class AuctionController {
         return new SuccessResponse<>(null);
     }
 
-    // 경매 최고가 10개 조회
+    // 경매 입찰 내역 조회
     @GetMapping(value = "/{auctionUuid}/bidding-history", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(summary = "경매 입찰 내역 조회", description = "경매 입찰 내역 조회")
     public Flux<AuctionHistory> searchBiddingPrice(

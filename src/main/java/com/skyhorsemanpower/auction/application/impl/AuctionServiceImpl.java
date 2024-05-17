@@ -6,7 +6,6 @@ import com.skyhorsemanpower.auction.common.ResponseStatus;
 import com.skyhorsemanpower.auction.data.dto.*;
 import com.skyhorsemanpower.auction.data.vo.SearchAllAuctionResponseVo;
 import com.skyhorsemanpower.auction.data.vo.SearchAuctionResponseVo;
-import com.skyhorsemanpower.auction.data.vo.SearchBiddingPriceResponseVo;
 import com.skyhorsemanpower.auction.domain.AuctionHistory;
 import com.skyhorsemanpower.auction.domain.AuctionImages;
 import com.skyhorsemanpower.auction.domain.cqrs.command.CommandOnlyAuction;
@@ -17,7 +16,6 @@ import com.skyhorsemanpower.auction.repository.cqrs.command.CommandOnlyAuctionRe
 import com.skyhorsemanpower.auction.repository.cqrs.read.ReadOnlyAuctionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -25,14 +23,12 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

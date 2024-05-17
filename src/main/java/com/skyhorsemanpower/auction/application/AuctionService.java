@@ -3,7 +3,6 @@ package com.skyhorsemanpower.auction.application;
 import com.skyhorsemanpower.auction.data.dto.*;
 import com.skyhorsemanpower.auction.data.vo.SearchAllAuctionResponseVo;
 import com.skyhorsemanpower.auction.data.vo.SearchAuctionResponseVo;
-import com.skyhorsemanpower.auction.data.vo.SearchBiddingPriceResponseVo;
 import com.skyhorsemanpower.auction.domain.AuctionHistory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
