@@ -1,10 +1,15 @@
 package com.skyhorsemanpower.auction.quartz;
 
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
-import org.quartz.JobListener;
+import lombok.extern.slf4j.Slf4j;
+import org.quartz.*;
 
+import java.util.Date;
+
+@Slf4j
 public class EndAuctionListener implements JobListener {
+    private static final int MAX_RETRY_ATTEMPTS = 3;
+    private static final long RETRY_DELAY_MILLIS = 5000;
+
     @Override
     public String getName() {
         return "EndAuction";
@@ -20,9 +25,35 @@ public class EndAuctionListener implements JobListener {
     public void jobExecutionVetoed(JobExecutionContext context) {
     }
 
-    // Job 실행 와뇰 시점 수행
+    // Job 실행 완료 시점 수행
     @Override
     public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {
-        System.out.println("경매 마감 처리되었습니다.");
+        // 경매 마감에 에러가 생긴 경우
+        if (jobException != null) {
+            // 오류 발생 시 재시도 로직
+            Integer retryCount = context.getMergedJobDataMap().getInt("retryCount");
+
+            if (retryCount < MAX_RETRY_ATTEMPTS) {
+                retryCount++;
+                context.getMergedJobDataMap().put("retryCount", retryCount);
+                JobDetail jobDetail = context.getJobDetail();
+                Trigger trigger = TriggerBuilder.newTrigger()
+                        .withIdentity(jobDetail.getKey().getName() + "_retry", jobDetail.getKey().getGroup())
+                        .startAt(new Date(System.currentTimeMillis() + RETRY_DELAY_MILLIS))
+                        .build();
+                try {
+                    context.getScheduler().scheduleJob(jobDetail, trigger);
+                    log.info("Retrying job: " + jobDetail.getKey() + " (attempt " + retryCount + ")");
+                } catch (SchedulerException e) {
+                    log.error("Failed to reschedule job: " + e.getMessage());
+                }
+            } else {
+                log.error("Max retry attempts reached for job: " + context.getJobDetail().getKey());
+            }
+        }
+        // 경매 마감이 정상적으로 처리된 경우
+        else {
+            log.info("경매 마감 처리되었습니다.");
+        }
     }
 }
