@@ -3,6 +3,7 @@ package com.skyhorsemanpower.auction.application.impl;
 import com.skyhorsemanpower.auction.application.AuctionService;
 import com.skyhorsemanpower.auction.common.CustomException;
 import com.skyhorsemanpower.auction.common.ResponseStatus;
+import com.skyhorsemanpower.auction.config.QuartzConfig;
 import com.skyhorsemanpower.auction.data.dto.*;
 import com.skyhorsemanpower.auction.data.vo.SearchAllAuctionResponseVo;
 import com.skyhorsemanpower.auction.data.vo.SearchAuctionResponseVo;
@@ -16,6 +17,7 @@ import com.skyhorsemanpower.auction.repository.cqrs.command.CommandOnlyAuctionRe
 import com.skyhorsemanpower.auction.repository.cqrs.read.ReadOnlyAuctionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.quartz.SchedulerException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -40,7 +42,7 @@ public class AuctionServiceImpl implements AuctionService {
     private final AuctionImagesRepository auctionImagesRepository;
     private final AuctionHistoryRepository auctionHistoryRepository;
     private final MongoTemplate mongoTemplate;
-    private final ReactiveMongoTemplate reactiveMongoTemplate;
+    private final QuartzConfig quartzConfig;
 
     @Override
     @Transactional
@@ -59,6 +61,13 @@ public class AuctionServiceImpl implements AuctionService {
 
         // MongoDB 저장
         createReadOnlyAuction(createAuctionDto);
+
+        // 스케줄러에 경매 마감 등록
+        try {
+            quartzConfig.schedulerEndAuctionJob(auctionUuidToString);
+        } catch (SchedulerException e) {
+            throw new CustomException(ResponseStatus.SCHEDULER_ERROR);
+        }
     }
 
     private void createAuctionImages(CreateAuctionDto createAuctionDto) {
