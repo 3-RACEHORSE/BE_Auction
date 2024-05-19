@@ -43,11 +43,11 @@ public class EndAuction implements Job {
                     mongoTemplate.updateFirst(query, update, ReadOnlyAuction.class);
                 }, throwable -> {
                     // 오류 처리
-                    log.error("경매 마감에 오류가 발생하였습니다.", throwable);
+                    log.error("There was an error in closing the auction.", throwable);
                     try {
                         throw new JobExecutionException(throwable);
                     } catch (JobExecutionException e) {
-                        log.error("JobExecutionException occurred", e);
+                        log.error("Call the JobExecutionException", e);
                     }
                 });
     }

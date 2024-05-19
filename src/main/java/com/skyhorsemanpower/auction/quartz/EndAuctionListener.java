@@ -7,8 +7,9 @@ import java.util.Date;
 
 @Slf4j
 public class EndAuctionListener implements JobListener {
-    private static final int MAX_RETRY_ATTEMPTS = 3;
-    private static final long RETRY_DELAY_MILLIS = 5000;
+//    private static final int MAX_RETRY_ATTEMPTS = 3;
+//    private static final long RETRY_DELAY_MILLIS = 5000;
+private static final EndAuctionListenerEnum RETRY_POLICY = EndAuctionListenerEnum.RETRY_THREE_DELAY_5000;
 
     @Override
     public String getName() {
@@ -33,13 +34,13 @@ public class EndAuctionListener implements JobListener {
             // 오류 발생 시 재시도 로직
             Integer retryCount = context.getMergedJobDataMap().getInt("retryCount");
 
-            if (retryCount < MAX_RETRY_ATTEMPTS) {
+            if (retryCount < RETRY_POLICY.getMAX_RETRY_ATTEMPTS()) {
                 retryCount++;
                 context.getMergedJobDataMap().put("retryCount", retryCount);
                 JobDetail jobDetail = context.getJobDetail();
                 Trigger trigger = TriggerBuilder.newTrigger()
                         .withIdentity(jobDetail.getKey().getName() + "_retry", jobDetail.getKey().getGroup())
-                        .startAt(new Date(System.currentTimeMillis() + RETRY_DELAY_MILLIS))
+                        .startAt(new Date(System.currentTimeMillis() + RETRY_POLICY.getRETRY_DELAY_MILLIS()))
                         .build();
                 try {
                     context.getScheduler().scheduleJob(jobDetail, trigger);
@@ -53,7 +54,7 @@ public class EndAuctionListener implements JobListener {
         }
         // 경매 마감이 정상적으로 처리된 경우
         else {
-            log.info("경매 마감 처리되었습니다.");
+            log.info("Auction End Completely");
         }
     }
 }
