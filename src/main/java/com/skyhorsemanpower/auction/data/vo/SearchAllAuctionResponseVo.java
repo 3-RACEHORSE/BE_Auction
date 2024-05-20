@@ -3,12 +3,14 @@ package com.skyhorsemanpower.auction.data.vo;
 import com.skyhorsemanpower.auction.domain.cqrs.read.ReadOnlyAuction;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.time.LocalDateTime;
 
 @Getter
 @ToString
+@NoArgsConstructor
 public class SearchAllAuctionResponseVo {
     private String auctionUuid;
     private String handle;
@@ -35,10 +37,10 @@ public class SearchAllAuctionResponseVo {
         this.endedAt = endedAt;
     }
 
-    public static SearchAllAuctionResponseVo readOnlyAuctionToSearchAllAuctionResponseVo(ReadOnlyAuction readOnlyAuction, String thumbnail) {
+    public static SearchAllAuctionResponseVo readOnlyAuctionToSearchAllAuctionResponseVo(ReadOnlyAuction readOnlyAuction, String thumbnail, String handle) {
         return SearchAllAuctionResponseVo.builder().
                 auctionUuid(readOnlyAuction.getAuctionUuid())
-                .handle(readOnlyAuction.getHandle())
+                .handle(handle)
                 .sellerUuid(readOnlyAuction.getSellerUuid())
                 .title(readOnlyAuction.getTitle())
                 .content(readOnlyAuction.getContent())

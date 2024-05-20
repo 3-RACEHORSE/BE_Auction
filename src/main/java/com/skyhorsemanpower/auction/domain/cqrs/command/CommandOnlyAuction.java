@@ -28,9 +28,6 @@ public class CommandOnlyAuction extends BaseCreateAndEndTimeEntity {
     private String sellerUuid;
 
     @Column(nullable = false)
-    private String handle;
-
-    @Column(nullable = false)
     private String title;
 
     @Column(nullable = false)
@@ -50,11 +47,10 @@ public class CommandOnlyAuction extends BaseCreateAndEndTimeEntity {
 
 
     @Builder
-    public CommandOnlyAuction(long auctionPostId, String auctionUuid, String sellerUuid, String handle, String title, String content, String category, int minimumBiddingPrice, String bidderUuid, int bidPrice) {
+    public CommandOnlyAuction(long auctionPostId, String auctionUuid, String sellerUuid, String title, String content, String category, int minimumBiddingPrice, String bidderUuid, int bidPrice) {
         this.auctionPostId = auctionPostId;
         this.auctionUuid = auctionUuid;
         this.sellerUuid = sellerUuid;
-        this.handle = handle;
         this.title = title;
         this.content = content;
         this.category = category;

@@ -48,11 +48,6 @@ public class AuctionServiceImpl implements AuctionService {
     @Override
     @Transactional
     public void createAuction(CreateAuctionDto createAuctionDto) {
-        // uuid로 handle 요청
-        //todo 회원 서비스에서 uuid로 handle 요청
-        String handle = "handle";
-        createAuctionDto.setHandle(handle);
-
         // auctionUuid 제작
         String auctionUuid = generateAuctionUuid();
         createAuctionDto.setAuctionUuid(auctionUuid);
@@ -126,12 +121,12 @@ public class AuctionServiceImpl implements AuctionService {
         }
 
         // keyword 검색
-        else if(searchAuctionDto.getKeyword() != null && searchAuctionDto.getCategory() == null) {
+        else if (searchAuctionDto.getKeyword() != null && searchAuctionDto.getCategory() == null) {
             readOnlyAuctions = searchAuctionByKeyword(searchAuctionDto.getKeyword());
         }
 
         // category 검색
-        else if(searchAuctionDto.getKeyword() == null && searchAuctionDto.getCategory() != null) {
+        else if (searchAuctionDto.getKeyword() == null && searchAuctionDto.getCategory() != null) {
             readOnlyAuctions = searchAuctionByCategory(searchAuctionDto.getCategory());
         }
 
@@ -145,7 +140,10 @@ public class AuctionServiceImpl implements AuctionService {
             // thumbnail은 null이 가능하다.
             thumbnail = auctionImagesRepository.getThumbnailUrl(readOnlyAuction.getAuctionUuid());
 
-            searchAllAuctionResponseVo = SearchAllAuctionResponseVo.readOnlyAuctionToSearchAllAuctionResponseVo(readOnlyAuction, thumbnail);
+            //Todo handle을 회원 서비스에서 받아와야 한다.
+            String handle = "handle";
+
+            searchAllAuctionResponseVo = SearchAllAuctionResponseVo.readOnlyAuctionToSearchAllAuctionResponseVo(readOnlyAuction, thumbnail, handle);
             searchAllAuctionResponseVos.add(searchAllAuctionResponseVo);
         }
         return searchAllAuctionResponseVos;
@@ -203,8 +201,13 @@ public class AuctionServiceImpl implements AuctionService {
         ReadOnlyAuction auction = readOnlyAuctionRepository.findByAuctionUuid(searchAuctionDto.getAuctionUuid()).orElseThrow(
                 () -> new CustomException(ResponseStatus.MONGODB_NOT_FOUND)
         );
+
+        //Todo handle을 회원 서비스에서 받아와야 한다.
+        String handle = "handle";
+
         return SearchAuctionResponseVo.builder()
                 .readOnlyAuction(auction)
+                .handle(handle)
                 .thumbnail(auctionImagesRepository.getThumbnailUrl(searchAuctionDto.getAuctionUuid()))
                 .images(auctionImagesRepository.getImagesUrl(searchAuctionDto.getAuctionUuid()))
                 .build();
@@ -236,7 +239,6 @@ public class AuctionServiceImpl implements AuctionService {
         ReadOnlyAuction readOnlyAuction = ReadOnlyAuction.builder()
                 .auctionUuid(createAuctionDto.getAuctionUuid())
                 .sellerUuid(createAuctionDto.getSellerUuid())
-                .handle(createAuctionDto.getHandle())
                 .title(createAuctionDto.getTitle())
                 .content(createAuctionDto.getContent())
                 .category(createAuctionDto.getCategory())
@@ -258,7 +260,6 @@ public class AuctionServiceImpl implements AuctionService {
         CommandOnlyAuction commandOnlyAuction = CommandOnlyAuction.builder()
                 .auctionUuid(createAuctionDto.getAuctionUuid())
                 .sellerUuid(createAuctionDto.getSellerUuid())
-                .handle(createAuctionDto.getHandle())
                 .title(createAuctionDto.getTitle())
                 .content(createAuctionDto.getContent())
                 .category(createAuctionDto.getCategory())
