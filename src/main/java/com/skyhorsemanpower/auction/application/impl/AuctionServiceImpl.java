@@ -117,32 +117,27 @@ public class AuctionServiceImpl implements AuctionService {
     public List<SearchAllAuctionResponseVo> searchAllAuctionResponseVo(SearchAllAuctionDto searchAuctionDto) {
         List<SearchAllAuctionResponseVo> searchAllAuctionResponseVos = new ArrayList<>();
         SearchAllAuctionResponseVo searchAllAuctionResponseVo;
-        List<ReadOnlyAuction> readOnlyAuctions;
+        List<ReadOnlyAuction> readOnlyAuctions = new ArrayList<>();
         String thumbnail;
 
-        // keyword 없으면 전체 검색
-        if (searchAuctionDto.getKeyword() == null) {
-            Criteria criteria = new Criteria().andOperator(
-                    Criteria.where("createdAt").lte(LocalDateTime.now()),
-                    Criteria.where("endedAt").gte(LocalDateTime.now())
-            );
-
-            Query query = new Query(criteria);
-
-            try {
-                readOnlyAuctions = mongoTemplate.find(query, ReadOnlyAuction.class);
-            } catch (Exception e) {
-                throw new CustomException(ResponseStatus.MONGODB_ERROR);
-            }
+        // keyword와 category 없으면 전체 검색
+        if (searchAuctionDto.getKeyword() == null && searchAuctionDto.getCategory() == null) {
+            readOnlyAuctions = searchAllAuction();
         }
 
         // keyword 검색
+        else if(searchAuctionDto.getKeyword() != null && searchAuctionDto.getCategory() == null) {
+            readOnlyAuctions = searchAuctionByKeyword(searchAuctionDto.getKeyword());
+        }
+
+        // category 검색
+        else if(searchAuctionDto.getKeyword() == null && searchAuctionDto.getCategory() != null) {
+            readOnlyAuctions = searchAuctionByCategory(searchAuctionDto.getCategory());
+        }
+
+        // keyword, category 혼합 검색
         else {
-            try {
-                readOnlyAuctions = readOnlyAuctionRepository.findAllByTitleLike(searchAuctionDto.getKeyword());
-            } catch (Exception e) {
-                throw new CustomException(ResponseStatus.MONGODB_ERROR);
-            }
+            readOnlyAuctions = searchAuctionByKeywordAndCategory(searchAuctionDto.getKeyword(), searchAuctionDto.getCategory());
         }
 
         for (ReadOnlyAuction readOnlyAuction : readOnlyAuctions) {
@@ -154,6 +149,53 @@ public class AuctionServiceImpl implements AuctionService {
             searchAllAuctionResponseVos.add(searchAllAuctionResponseVo);
         }
         return searchAllAuctionResponseVos;
+    }
+
+
+    // keyword, category 혼합 검색
+    private List<ReadOnlyAuction> searchAuctionByKeywordAndCategory(String keyword, String category) {
+        try {
+            return readOnlyAuctionRepository.findAllByTitleLikeAndCategory(keyword, category);
+        } catch (Exception e) {
+            throw new CustomException(ResponseStatus.MONGODB_ERROR);
+        }
+    }
+
+
+    // category 검색
+    private List<ReadOnlyAuction> searchAuctionByCategory(String category) {
+        try {
+            return readOnlyAuctionRepository.findAllByCategory(category);
+        } catch (Exception e) {
+            throw new CustomException(ResponseStatus.MONGODB_ERROR);
+        }
+    }
+
+
+    // keyword 검색
+    private List<ReadOnlyAuction> searchAuctionByKeyword(String keyword) {
+        try {
+            return readOnlyAuctionRepository.findAllByTitleLike(keyword);
+        } catch (Exception e) {
+            throw new CustomException(ResponseStatus.MONGODB_ERROR);
+        }
+    }
+
+
+    // 현재 진행되는 전체 경매글 검색
+    private List<ReadOnlyAuction> searchAllAuction() {
+        Criteria criteria = new Criteria().andOperator(
+                Criteria.where("createdAt").lte(LocalDateTime.now()),
+                Criteria.where("endedAt").gte(LocalDateTime.now())
+        );
+
+        Query query = new Query(criteria);
+
+        try {
+            return mongoTemplate.find(query, ReadOnlyAuction.class);
+        } catch (Exception e) {
+            throw new CustomException(ResponseStatus.MONGODB_ERROR);
+        }
     }
 
     @Override

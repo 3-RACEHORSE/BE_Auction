@@ -14,4 +14,8 @@ public interface ReadOnlyAuctionRepository extends MongoRepository<ReadOnlyAucti
     List<ReadOnlyAuction> findAllByTitleLike(String keyword);
 
     Optional<ReadOnlyAuction> findByAuctionUuid(String auctionUuid);
+
+    List<ReadOnlyAuction> findAllByCategory(String category);
+
+    List<ReadOnlyAuction> findAllByTitleLikeAndCategory(String keyword, String category);
 }

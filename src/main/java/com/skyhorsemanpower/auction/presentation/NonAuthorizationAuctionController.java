@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
@@ -20,15 +19,16 @@ import java.util.List;
 @RequiredArgsConstructor
 @Tag(name = "인가가 필요없는 경매 서비스", description = "인가가 필요없는 경매 서비스 API")
 @RequestMapping("/api/v1/non-authorization/auction")
-public class AuctionController {
+public class NonAuthorizationAuctionController {
     private final AuctionService auctionService;
 
-    // 키워드를 통한 경매 리스트 조회
+    // 키워드와 카테고리를 통한 경매 리스트 조회
     @GetMapping("/search")
     @Operation(summary = "경매 리스트 조회", description = "경매 리스트 조회")
     public SuccessResponse<List<SearchAllAuctionResponseVo>> searchAllAuction(
-            @RequestParam(required = false) String keyword) {
-        List<SearchAllAuctionResponseVo> searchAllAuctionResponseVos = auctionService.searchAllAuctionResponseVo(SearchAllAuctionDto.builder().keyword(keyword).build());
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String category) {
+        List<SearchAllAuctionResponseVo> searchAllAuctionResponseVos = auctionService.searchAllAuctionResponseVo(SearchAllAuctionDto.builder().keyword(keyword).category(category).build());
         return new SuccessResponse<>(searchAllAuctionResponseVos);
     }
 
