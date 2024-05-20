@@ -28,6 +28,7 @@ import reactor.core.publisher.Flux;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -51,9 +52,10 @@ public class AuctionServiceImpl implements AuctionService {
         //todo 회원 서비스에서 uuid로 handle 요청
         String handle = "handle";
         createAuctionDto.setHandle(handle);
-        UUID auctionUuid = UUID.randomUUID();
-        String auctionUuidToString = LocalDate.now() + auctionUuid.toString();
-        createAuctionDto.setAuctionUuid(auctionUuidToString);
+
+        // auctionUuid 제작
+        String auctionUuid = generateAuctionUuid();
+        createAuctionDto.setAuctionUuid(auctionUuid);
 
         // PostgreSQL 저장
         createCommandOnlyAution(createAuctionDto);
@@ -64,10 +66,22 @@ public class AuctionServiceImpl implements AuctionService {
 
         // 스케줄러에 경매 마감 등록
         try {
-            quartzConfig.schedulerEndAuctionJob(auctionUuidToString);
+            quartzConfig.schedulerEndAuctionJob(auctionUuid);
         } catch (SchedulerException e) {
             throw new CustomException(ResponseStatus.SCHEDULER_ERROR);
         }
+    }
+
+    private String generateAuctionUuid() {
+        // 현재 날짜와 시간을 "yyyyMMddHHmm" 형식으로 포맷
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
+        String dateTime = LocalDateTime.now().format(formatter);
+
+        // UUID 생성 후 앞부분의 10자리 문자열 추출
+        String uuid = UUID.randomUUID().toString().replace("-", "").substring(0, 10);
+
+        // 날짜 시간과 UUID의 앞부분을 합쳐 UUID 생성
+        return dateTime + "-" + uuid;
     }
 
     private void createAuctionImages(CreateAuctionDto createAuctionDto) {
