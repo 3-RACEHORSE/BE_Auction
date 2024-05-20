@@ -13,7 +13,6 @@ import java.util.List;
 @NoArgsConstructor
 public class CreateAuctionDto {
     private String sellerUuid;
-    private String handle;
     private String title;
     private String content;
     private String category;

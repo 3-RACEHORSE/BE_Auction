@@ -17,7 +17,6 @@ public class ReadOnlyAuction {
 
     private String auctionUuid;
     private String sellerUuid;
-    private String handle;
     private String title;
     private String content;
     private String category;
@@ -29,11 +28,10 @@ public class ReadOnlyAuction {
 
 
     @Builder
-    public ReadOnlyAuction(String auctionPostId, String auctionUuid, String sellerUuid, String handle, String title, String content, String category, int minimumBiddingPrice, LocalDateTime createdAt, LocalDateTime endedAt, String bidderUuid, int bidPrice) {
+    public ReadOnlyAuction(String auctionPostId, String auctionUuid, String sellerUuid, String title, String content, String category, int minimumBiddingPrice, LocalDateTime createdAt, LocalDateTime endedAt, String bidderUuid, int bidPrice) {
         this.auctionPostId = auctionPostId;
         this.auctionUuid = auctionUuid;
         this.sellerUuid = sellerUuid;
-        this.handle = handle;
         this.title = title;
         this.content = content;
         this.category = category;

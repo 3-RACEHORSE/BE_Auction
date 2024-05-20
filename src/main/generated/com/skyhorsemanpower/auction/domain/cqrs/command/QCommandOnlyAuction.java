@@ -39,8 +39,6 @@ public class QCommandOnlyAuction extends EntityPathBase<CommandOnlyAuction> {
     //inherited
     public final DateTimePath<java.time.LocalDateTime> endedAt = _super.endedAt;
 
-    public final StringPath handle = createString("handle");
-
     public final NumberPath<Integer> minimumBiddingPrice = createNumber("minimumBiddingPrice", Integer.class);
 
     public final StringPath sellerUuid = createString("sellerUuid");
