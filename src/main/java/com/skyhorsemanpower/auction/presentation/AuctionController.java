@@ -18,21 +18,10 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@Tag(name = "경매", description = "경매 서비스 API")
-@RequestMapping("/api/v1/auction")
+@Tag(name = "인가가 필요없는 경매 서비스", description = "인가가 필요없는 경매 서비스 API")
+@RequestMapping("/api/v1/non-authorization/auction")
 public class AuctionController {
-
     private final AuctionService auctionService;
-
-    // 경매 등록
-    @PostMapping("")
-    @Operation(summary = "경매 등록", description = "경매 등록")
-    public SuccessResponse<Object> createAuction(
-            @RequestHeader String uuid,
-            @RequestBody CreateAuctionRequestVo createAuctionRequestVo) {
-        auctionService.createAuction(CreateAuctionDto.createAuctionVoToDto(uuid, createAuctionRequestVo));
-        return new SuccessResponse<>(null);
-    }
 
     // 키워드를 통한 경매 리스트 조회
     @GetMapping("/search")
@@ -49,16 +38,6 @@ public class AuctionController {
     public SuccessResponse<SearchAuctionResponseVo> searchAuction(@PathVariable("auctionUuid") String auctionUuid) {
         SearchAuctionResponseVo searchAuctionResponseVo = auctionService.searchAuction(SearchAuctionDto.builder().auctionUuid(auctionUuid).build());
         return new SuccessResponse<>(searchAuctionResponseVo);
-    }
-
-    // 경매 입찰가 제시
-    @PostMapping("/bidding")
-    @Operation(summary = "경매 입찰가 제시", description = "경매 입찰가 제시")
-    public SuccessResponse<Object> offerBiddingPrice(
-            @RequestHeader String uuid,
-            @RequestBody OfferBiddingPriceRequestVo offerBiddingPriceRequestVo) {
-        auctionService.offerBiddingPrice(OfferBiddingPriceDto.voToDto(offerBiddingPriceRequestVo, uuid));
-        return new SuccessResponse<>(null);
     }
 
     // 경매 입찰 내역 조회
