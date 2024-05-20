@@ -18,8 +18,8 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@Tag(name = "경매 서비스", description = "경매 서비스 API")
-@RequestMapping("/api/v1/auction")
+@Tag(name = "인가가 필요없는 경매 서비스", description = "인가가 필요없는 경매 서비스 API")
+@RequestMapping("/api/v1/non-authorization/auction")
 public class AuctionController {
     private final AuctionService auctionService;
 
