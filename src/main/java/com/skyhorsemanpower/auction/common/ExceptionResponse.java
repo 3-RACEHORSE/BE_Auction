@@ -1,5 +1,6 @@
 package com.skyhorsemanpower.auction.common;
 
+import com.skyhorsemanpower.auction.status.ResponseStatus;
 import lombok.Builder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

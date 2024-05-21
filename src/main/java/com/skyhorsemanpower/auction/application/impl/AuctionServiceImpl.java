@@ -2,7 +2,8 @@ package com.skyhorsemanpower.auction.application.impl;
 
 import com.skyhorsemanpower.auction.application.AuctionService;
 import com.skyhorsemanpower.auction.common.CustomException;
-import com.skyhorsemanpower.auction.common.ResponseStatus;
+import com.skyhorsemanpower.auction.status.AuctionStateEnum;
+import com.skyhorsemanpower.auction.status.ResponseStatus;
 import com.skyhorsemanpower.auction.config.QuartzConfig;
 import com.skyhorsemanpower.auction.data.dto.*;
 import com.skyhorsemanpower.auction.data.vo.SearchAllAuctionResponseVo;
@@ -19,14 +20,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.SchedulerException;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -247,6 +246,7 @@ public class AuctionServiceImpl implements AuctionService {
                 .endedAt(LocalDateTime.now().plusDays(1))
                 .bidderUuid("추가 필요")
                 .bidPrice(-1)
+                .state(AuctionStateEnum.AUCTION_IS_IN_PROGRESS)
                 .build();
         try {
             readOnlyAuctionRepository.save(readOnlyAuction);
@@ -266,6 +266,7 @@ public class AuctionServiceImpl implements AuctionService {
                 .minimumBiddingPrice(createAuctionDto.getMinimumBiddingPrice())
                 .bidderUuid("추가 필요")
                 .bidPrice(-1)
+                .state(AuctionStateEnum.AUCTION_IS_IN_PROGRESS)
                 .build();
 
         try {
