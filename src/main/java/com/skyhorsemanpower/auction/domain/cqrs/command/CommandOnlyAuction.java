@@ -1,6 +1,7 @@
 package com.skyhorsemanpower.auction.domain.cqrs.command;
 
 import com.skyhorsemanpower.auction.common.BaseCreateAndEndTimeEntity;
+import com.skyhorsemanpower.auction.status.AuctionStateEnum;
 import jakarta.persistence.*;
 
 import lombok.Builder;
@@ -28,9 +29,6 @@ public class CommandOnlyAuction extends BaseCreateAndEndTimeEntity {
     private String sellerUuid;
 
     @Column(nullable = false)
-    private String handle;
-
-    @Column(nullable = false)
     private String title;
 
     @Column(nullable = false)
@@ -48,18 +46,22 @@ public class CommandOnlyAuction extends BaseCreateAndEndTimeEntity {
     @Column(nullable = false)
     private int bidPrice;
 
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private AuctionStateEnum state;
+
 
     @Builder
-    public CommandOnlyAuction(long auctionPostId, String auctionUuid, String sellerUuid, String handle, String title, String content, String category, int minimumBiddingPrice, String bidderUuid, int bidPrice) {
+    public CommandOnlyAuction(long auctionPostId, String auctionUuid, String sellerUuid, String title, String content, String category, int minimumBiddingPrice, String bidderUuid, int bidPrice, AuctionStateEnum state) {
         this.auctionPostId = auctionPostId;
         this.auctionUuid = auctionUuid;
         this.sellerUuid = sellerUuid;
-        this.handle = handle;
         this.title = title;
         this.content = content;
         this.category = category;
         this.minimumBiddingPrice = minimumBiddingPrice;
         this.bidderUuid = bidderUuid;
         this.bidPrice = bidPrice;
+        this.state = state;
     }
 }

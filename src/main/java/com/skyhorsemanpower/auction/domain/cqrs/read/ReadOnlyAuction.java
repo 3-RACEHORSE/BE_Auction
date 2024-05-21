@@ -1,5 +1,6 @@
 package com.skyhorsemanpower.auction.domain.cqrs.read;
 
+import com.skyhorsemanpower.auction.status.AuctionStateEnum;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -17,7 +18,6 @@ public class ReadOnlyAuction {
 
     private String auctionUuid;
     private String sellerUuid;
-    private String handle;
     private String title;
     private String content;
     private String category;
@@ -26,14 +26,14 @@ public class ReadOnlyAuction {
     private LocalDateTime endedAt;
     private String bidderUuid;
     private int bidPrice;
+    private AuctionStateEnum state;
 
 
     @Builder
-    public ReadOnlyAuction(String auctionPostId, String auctionUuid, String sellerUuid, String handle, String title, String content, String category, int minimumBiddingPrice, LocalDateTime createdAt, LocalDateTime endedAt, String bidderUuid, int bidPrice) {
+    public ReadOnlyAuction(String auctionPostId, String auctionUuid, String sellerUuid, String title, String content, String category, int minimumBiddingPrice, LocalDateTime createdAt, LocalDateTime endedAt, String bidderUuid, int bidPrice, AuctionStateEnum state) {
         this.auctionPostId = auctionPostId;
         this.auctionUuid = auctionUuid;
         this.sellerUuid = sellerUuid;
-        this.handle = handle;
         this.title = title;
         this.content = content;
         this.category = category;
@@ -42,5 +42,6 @@ public class ReadOnlyAuction {
         this.endedAt = endedAt;
         this.bidderUuid = bidderUuid;
         this.bidPrice = bidPrice;
+        this.state = state;
     }
 }

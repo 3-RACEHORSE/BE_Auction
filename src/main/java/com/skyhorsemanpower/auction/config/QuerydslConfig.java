@@ -1,4 +1,4 @@
-package com.skyhorsemanpower.auction.common;
+package com.skyhorsemanpower.auction.config;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;

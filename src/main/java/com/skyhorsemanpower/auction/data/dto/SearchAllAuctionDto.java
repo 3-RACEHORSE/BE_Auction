@@ -10,9 +10,11 @@ import lombok.Setter;
 @NoArgsConstructor
 public class SearchAllAuctionDto {
     private String keyword;
+    private String category;
 
     @Builder
-    public SearchAllAuctionDto(String keyword) {
+    public SearchAllAuctionDto(String keyword, String category) {
         this.keyword = keyword;
+        this.category = category;
     }
 }
