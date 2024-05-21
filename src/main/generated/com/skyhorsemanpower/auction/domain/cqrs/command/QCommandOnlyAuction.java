@@ -43,6 +43,8 @@ public class QCommandOnlyAuction extends EntityPathBase<CommandOnlyAuction> {
 
     public final StringPath sellerUuid = createString("sellerUuid");
 
+    public final NumberPath<Integer> status = createNumber("status", Integer.class);
+
     public final StringPath title = createString("title");
 
     public QCommandOnlyAuction(String variable) {
