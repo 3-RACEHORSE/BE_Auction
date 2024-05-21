@@ -2,6 +2,7 @@ package com.skyhorsemanpower.auction.application.impl;
 
 import com.skyhorsemanpower.auction.application.AuctionService;
 import com.skyhorsemanpower.auction.common.CustomException;
+import com.skyhorsemanpower.auction.data.vo.InquiryAuctionHistoryResponseVo;
 import com.skyhorsemanpower.auction.status.AuctionStateEnum;
 import com.skyhorsemanpower.auction.status.ResponseStatus;
 import com.skyhorsemanpower.auction.config.QuartzConfig;
@@ -243,6 +244,12 @@ public class AuctionServiceImpl implements AuctionService {
     public Flux<AuctionHistory> searchBiddingPrice(SearchBiddingPriceDto searchBiddingPriceDto) {
 
         return auctionHistoryRepository.searchBiddingPrice(searchBiddingPriceDto.getAuctionUuid());
+    }
+
+    @Override
+    public List<ReadOnlyAuction> inquiryAuctionHistory(InquiryAuctionHistoryDto inquiryAuctionHistoryDto) {
+
+        return readOnlyAuctionRepository.findAllBySellerUuidOrderByCreatedAtDesc(inquiryAuctionHistoryDto.getSellerUuid());
     }
 
     // MongoDB 경매글 저장
