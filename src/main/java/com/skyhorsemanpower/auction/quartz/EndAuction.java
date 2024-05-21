@@ -1,6 +1,7 @@
 package com.skyhorsemanpower.auction.quartz;
 
 import com.skyhorsemanpower.auction.common.CustomException;
+import com.skyhorsemanpower.auction.status.AuctionStatusEnum;
 import com.skyhorsemanpower.auction.status.ResponseStatus;
 import com.skyhorsemanpower.auction.domain.cqrs.read.ReadOnlyAuction;
 import com.skyhorsemanpower.auction.repository.AuctionHistoryRepository;
@@ -32,14 +33,25 @@ public class EndAuction implements Job {
         // auctionUuid를 통한 로직 구현
         // 가장 큰 biddingPrice 레코드에서 biddingUuid, biddingPrice 추출
         auctionHistoryRepository.findTopByAuctionUuidOrderByBiddingPriceDesc(auctionUuid)
-                .switchIfEmpty(Mono.error(new CustomException(ResponseStatus.NO_PARTICIPATE_AUCTION)))
+
+                // 경매 참여자가 없는 경우, 경매 상태를 "AUCTION_NO_PARTICIPANTS"로 처리
+                .switchIfEmpty(Mono.fromRunnable(() -> {
+                    Query query = new Query(Criteria.where("auctionUuid").is(auctionUuid));
+                    Update update = new Update().set("status", AuctionStatusEnum.AUCTION_NO_PARTICIPANTS.getStatus());
+                    mongoTemplate.updateFirst(query, update, ReadOnlyAuction.class);
+                }))
+
+                // 경매가 정상 처리된 경우, 경매 상태를 "AUCTION_NORMAL_CLOSING"로 처리
                 .subscribe(auctionHistory -> {
                     String bidderUuid = auctionHistory.getBiddingUuid();
                     int bidPrice = auctionHistory.getBiddingPrice();
 
                     // 해당 ReadOnlyAuction 엔티티의 bidderUuid, bidPrice 갱신
                     Query query = new Query(Criteria.where("auctionUuid").is(auctionUuid));
-                    Update update = new Update().set("bidderUuid", bidderUuid).set("bidPrice", bidPrice);
+                    Update update = new Update()
+                            .set("bidderUuid", bidderUuid)
+                            .set("bidPrice", bidPrice)
+                            .set("status", AuctionStatusEnum.AUCTION_NORMAL_CLOSING.getStatus());
                     mongoTemplate.updateFirst(query, update, ReadOnlyAuction.class);
                 }, throwable -> {
                     // 오류 처리
