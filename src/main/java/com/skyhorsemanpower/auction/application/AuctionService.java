@@ -22,5 +22,5 @@ public interface AuctionService {
 
     Flux<AuctionHistory> searchBiddingPrice(SearchBiddingPriceDto searchBiddingPriceDto);
 
-    List<ReadOnlyAuction> inquiryAuctionHistory(InquiryAuctionHistoryDto inquiryAuctionHistoryDto);
+    List<InquiryAuctionHistoryResponseVo> inquiryAuctionHistory(InquiryAuctionHistoryDto inquiryAuctionHistoryDto);
 }

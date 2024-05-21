@@ -47,10 +47,10 @@ public class AuthorizationAuctionController {
     // 경매글 이력 조회
     @GetMapping("/history")
     @Operation(summary = "경매글 이력 조회", description = "경매글 이력 조회")
-    public SuccessResponse<List<ReadOnlyAuction>> inquiryAuctionHistory(
+    public SuccessResponse<List<InquiryAuctionHistoryResponseVo>> inquiryAuctionHistory(
             @RequestHeader String uuid) {
-        List<ReadOnlyAuction> readOnlyAuctions = auctionService.inquiryAuctionHistory(InquiryAuctionHistoryDto.builder().sellerUuid(uuid).build());
-        return new SuccessResponse<>(readOnlyAuctions);
+        List<InquiryAuctionHistoryResponseVo> inquiryAuctionHistoryResponseVos = auctionService.inquiryAuctionHistory(InquiryAuctionHistoryDto.builder().sellerUuid(uuid).build());
+        return new SuccessResponse<>(inquiryAuctionHistoryResponseVos);
     }
 
 }
