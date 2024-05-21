@@ -1,7 +1,7 @@
 package com.skyhorsemanpower.auction.quartz;
 
 import com.skyhorsemanpower.auction.common.CustomException;
-import com.skyhorsemanpower.auction.common.ResponseStatus;
+import com.skyhorsemanpower.auction.status.ResponseStatus;
 import com.skyhorsemanpower.auction.domain.cqrs.read.ReadOnlyAuction;
 import com.skyhorsemanpower.auction.repository.AuctionHistoryRepository;
 import lombok.RequiredArgsConstructor;

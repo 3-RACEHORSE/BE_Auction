@@ -1,5 +1,6 @@
 package com.skyhorsemanpower.auction.quartz;
 
+import com.skyhorsemanpower.auction.status.EndAuctionListenerEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 
@@ -7,8 +8,6 @@ import java.util.Date;
 
 @Slf4j
 public class EndAuctionListener implements JobListener {
-//    private static final int MAX_RETRY_ATTEMPTS = 3;
-//    private static final long RETRY_DELAY_MILLIS = 5000;
 private static final EndAuctionListenerEnum RETRY_POLICY = EndAuctionListenerEnum.RETRY_THREE_DELAY_5000;
 
     @Override
