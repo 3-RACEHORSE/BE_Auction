@@ -1,8 +1,6 @@
 package com.skyhorsemanpower.auction.quartz;
 
-import com.skyhorsemanpower.auction.common.CustomException;
-import com.skyhorsemanpower.auction.status.AuctionStatusEnum;
-import com.skyhorsemanpower.auction.status.ResponseStatus;
+import com.skyhorsemanpower.auction.status.AuctionStateEnum;
 import com.skyhorsemanpower.auction.domain.cqrs.read.ReadOnlyAuction;
 import com.skyhorsemanpower.auction.repository.AuctionHistoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +35,7 @@ public class EndAuction implements Job {
                 // 경매 참여자가 없는 경우, 경매 상태를 "AUCTION_NO_PARTICIPANTS"로 처리
                 .switchIfEmpty(Mono.fromRunnable(() -> {
                     Query query = new Query(Criteria.where("auctionUuid").is(auctionUuid));
-                    Update update = new Update().set("status", AuctionStatusEnum.AUCTION_NO_PARTICIPANTS.getStatus());
+                    Update update = new Update().set("state", AuctionStateEnum.AUCTION_NO_PARTICIPANTS);
                     mongoTemplate.updateFirst(query, update, ReadOnlyAuction.class);
                 }))
 
@@ -51,7 +49,7 @@ public class EndAuction implements Job {
                     Update update = new Update()
                             .set("bidderUuid", bidderUuid)
                             .set("bidPrice", bidPrice)
-                            .set("status", AuctionStatusEnum.AUCTION_NORMAL_CLOSING.getStatus());
+                            .set("state", AuctionStateEnum.AUCTION_NORMAL_CLOSING);
                     mongoTemplate.updateFirst(query, update, ReadOnlyAuction.class);
                 }, throwable -> {
                     // 오류 처리

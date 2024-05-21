@@ -2,7 +2,7 @@ package com.skyhorsemanpower.auction.application.impl;
 
 import com.skyhorsemanpower.auction.application.AuctionService;
 import com.skyhorsemanpower.auction.common.CustomException;
-import com.skyhorsemanpower.auction.status.AuctionStatusEnum;
+import com.skyhorsemanpower.auction.status.AuctionStateEnum;
 import com.skyhorsemanpower.auction.status.ResponseStatus;
 import com.skyhorsemanpower.auction.config.QuartzConfig;
 import com.skyhorsemanpower.auction.data.dto.*;
@@ -246,7 +246,7 @@ public class AuctionServiceImpl implements AuctionService {
                 .endedAt(LocalDateTime.now().plusDays(1))
                 .bidderUuid("추가 필요")
                 .bidPrice(-1)
-                .status(AuctionStatusEnum.AUCTION_IS_IN_PROGRESS.getStatus())
+                .state(AuctionStateEnum.AUCTION_IS_IN_PROGRESS)
                 .build();
         try {
             readOnlyAuctionRepository.save(readOnlyAuction);
@@ -266,7 +266,7 @@ public class AuctionServiceImpl implements AuctionService {
                 .minimumBiddingPrice(createAuctionDto.getMinimumBiddingPrice())
                 .bidderUuid("추가 필요")
                 .bidPrice(-1)
-                .status(AuctionStatusEnum.AUCTION_IS_IN_PROGRESS.getStatus())
+                .state(AuctionStateEnum.AUCTION_IS_IN_PROGRESS)
                 .build();
 
         try {

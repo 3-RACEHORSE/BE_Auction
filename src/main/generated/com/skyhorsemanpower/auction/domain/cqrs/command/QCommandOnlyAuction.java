@@ -43,7 +43,7 @@ public class QCommandOnlyAuction extends EntityPathBase<CommandOnlyAuction> {
 
     public final StringPath sellerUuid = createString("sellerUuid");
 
-    public final NumberPath<Integer> status = createNumber("status", Integer.class);
+    public final EnumPath<com.skyhorsemanpower.auction.status.AuctionStateEnum> state = createEnum("state", com.skyhorsemanpower.auction.status.AuctionStateEnum.class);
 
     public final StringPath title = createString("title");
 
