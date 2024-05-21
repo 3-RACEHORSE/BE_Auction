@@ -247,9 +247,24 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     @Override
-    public List<ReadOnlyAuction> inquiryAuctionHistory(InquiryAuctionHistoryDto inquiryAuctionHistoryDto) {
+    public List<InquiryAuctionHistoryResponseVo> inquiryAuctionHistory(InquiryAuctionHistoryDto inquiryAuctionHistoryDto) {
+        List<InquiryAuctionHistoryResponseVo> inquiryAuctionHistoryResponseVos = new ArrayList<>();
+        InquiryAuctionHistoryResponseVo inquiryAuctionHistoryResponseVo = new InquiryAuctionHistoryResponseVo();
 
-        return readOnlyAuctionRepository.findAllBySellerUuidOrderByCreatedAtDesc(inquiryAuctionHistoryDto.getSellerUuid());
+        // 최신순으로 자신의 경매 내역 조회
+        List<ReadOnlyAuction> auctions = readOnlyAuctionRepository.findAllBySellerUuidOrderByCreatedAtDesc(inquiryAuctionHistoryDto.getSellerUuid());
+
+        // 경매에 따른 thumbnail과 낙찰자 handle 조회
+        for (ReadOnlyAuction auction : auctions) {
+            // thumbnail 호출
+            String thumbnail = auctionImagesRepository.getThumbnailUrl(auction.getAuctionUuid());
+
+            //Todo handle을 회원 서비스에서 받아와야 한다.
+            String handle = "handle";
+
+            inquiryAuctionHistoryResponseVos.add(inquiryAuctionHistoryResponseVo.toVo(auction, thumbnail, handle));
+        }
+        return inquiryAuctionHistoryResponseVos;
     }
 
     // MongoDB 경매글 저장
