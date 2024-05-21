@@ -24,6 +24,9 @@ public enum ResponseStatus {
     // 경매 참여자가 없는 경우
     NO_PARTICIPATE_AUCTION(404, "경매 참여자가 없습니다."),
 
+    // 경매 마감 시간 이후로 입찰 제한
+    NOT_BIDDING_TIME(400, "입찰 가능한 시간이 아닙니다."),
+
 
     // 예외 테스트 용
     EXCEPTION_TEST(500, "예외 테스트");

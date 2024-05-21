@@ -214,17 +214,29 @@ public class AuctionServiceImpl implements AuctionService {
 
     @Override
     public void offerBiddingPrice(OfferBiddingPriceDto offerBiddingPriceDto) {
-        AuctionHistory auctionHistory = AuctionHistory.builder()
-                .auctionUuid(offerBiddingPriceDto.getAuctionUuid())
-                .biddingUuid(offerBiddingPriceDto.getBiddingUuid())
-                .biddingPrice(offerBiddingPriceDto.getBiddingPrice())
-                .biddingTime(LocalDateTime.now())
-                .build();
-        try {
-            auctionHistoryRepository.save(auctionHistory).subscribe();
-        } catch (Exception e) {
-            throw new CustomException(ResponseStatus.MONGODB_ERROR);
-        }
+        // 마감 시간이 현재 시간보다 미래면 입찰 제시 가능
+        if (isAuctionActive(offerBiddingPriceDto.getAuctionUuid())) {
+            AuctionHistory auctionHistory = AuctionHistory.builder()
+                    .auctionUuid(offerBiddingPriceDto.getAuctionUuid())
+                    .biddingUuid(offerBiddingPriceDto.getBiddingUuid())
+                    .biddingPrice(offerBiddingPriceDto.getBiddingPrice())
+                    .biddingTime(LocalDateTime.now())
+                    .build();
+            try {
+                auctionHistoryRepository.save(auctionHistory).subscribe();
+            } catch (Exception e) {
+                throw new CustomException(ResponseStatus.MONGODB_ERROR);
+            }
+        } else throw new CustomException(ResponseStatus.NOT_BIDDING_TIME);
+    }
+
+    private boolean isAuctionActive(String auctionUuid) {
+        ReadOnlyAuction readOnlyAuction = readOnlyAuctionRepository.findByAuctionUuid(auctionUuid).orElseThrow(
+                () -> new CustomException(ResponseStatus.MONGODB_ERROR)
+        );
+
+        // 마감 시간이 현재 시간보다 미래면 true 반환
+        return readOnlyAuction.getEndedAt().isAfter(LocalDateTime.now());
     }
 
     @Override
