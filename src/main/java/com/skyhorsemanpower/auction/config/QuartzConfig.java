@@ -1,6 +1,7 @@
 package com.skyhorsemanpower.auction.config;
 
 import com.skyhorsemanpower.auction.quartz.EndAuction;
+import com.skyhorsemanpower.auction.quartz.EndAuctionListener;
 import lombok.RequiredArgsConstructor;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
@@ -18,6 +19,7 @@ public class QuartzConfig {
     @Bean
     public Scheduler scheduler() throws SchedulerException {
         Scheduler scheduler = new StdSchedulerFactory().getScheduler();
+        scheduler.getListenerManager().addJobListener(new EndAuctionListener());
         scheduler.start();
         return scheduler;
     }

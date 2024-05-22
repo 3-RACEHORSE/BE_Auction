@@ -1,12 +1,14 @@
 package com.skyhorsemanpower.auction.quartz;
 
 import com.skyhorsemanpower.auction.status.EndAuctionListenerEnum;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 
 import java.util.Date;
 
 @Slf4j
+@NoArgsConstructor
 public class EndAuctionListener implements JobListener {
 private static final EndAuctionListenerEnum RETRY_POLICY = EndAuctionListenerEnum.RETRY_THREE_DELAY_5000;
 
@@ -28,6 +30,7 @@ private static final EndAuctionListenerEnum RETRY_POLICY = EndAuctionListenerEnu
     // Job 실행 완료 시점 수행
     @Override
     public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {
+        log.info(">>>>>>>>>>>>");
         // 경매 마감에 에러가 생긴 경우
         if (jobException != null) {
             // 오류 발생 시 재시도 로직
