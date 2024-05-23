@@ -2,7 +2,8 @@ package com.skyhorsemanpower.auction.application.impl;
 
 import com.skyhorsemanpower.auction.application.AuctionService;
 import com.skyhorsemanpower.auction.common.CustomException;
-import com.skyhorsemanpower.auction.data.vo.InquiryAuctionHistoryResponseVo;
+import com.skyhorsemanpower.auction.data.vo.CreatedAuctionHistoryResponseVo;
+import com.skyhorsemanpower.auction.data.vo.ParticipatedAuctionHistoryResponseVo;
 import com.skyhorsemanpower.auction.status.AuctionStateEnum;
 import com.skyhorsemanpower.auction.status.ResponseStatus;
 import com.skyhorsemanpower.auction.config.QuartzConfig;
@@ -247,12 +248,12 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     @Override
-    public List<InquiryAuctionHistoryResponseVo> inquiryAuctionHistory(InquiryAuctionHistoryDto inquiryAuctionHistoryDto) {
-        List<InquiryAuctionHistoryResponseVo> inquiryAuctionHistoryResponseVos = new ArrayList<>();
-        InquiryAuctionHistoryResponseVo inquiryAuctionHistoryResponseVo = new InquiryAuctionHistoryResponseVo();
+    public List<CreatedAuctionHistoryResponseVo> createdAuctionHistory(CreatedAuctionHistoryDto createdAuctionHistoryDto) {
+        List<CreatedAuctionHistoryResponseVo> createdAuctionHistoryResponseVos = new ArrayList<>();
+        CreatedAuctionHistoryResponseVo createdAuctionHistoryResponseVo = new CreatedAuctionHistoryResponseVo();
 
         // 최신순으로 자신의 경매 내역 조회
-        List<ReadOnlyAuction> auctions = readOnlyAuctionRepository.findAllBySellerUuidOrderByCreatedAtDesc(inquiryAuctionHistoryDto.getSellerUuid());
+        List<ReadOnlyAuction> auctions = readOnlyAuctionRepository.findAllBySellerUuidOrderByCreatedAtDesc(createdAuctionHistoryDto.getSellerUuid());
 
         // 경매에 따른 thumbnail과 낙찰자 handle 조회
         for (ReadOnlyAuction auction : auctions) {
@@ -262,9 +263,18 @@ public class AuctionServiceImpl implements AuctionService {
             //Todo handle을 회원 서비스에서 받아와야 한다.
             String handle = "handle";
 
-            inquiryAuctionHistoryResponseVos.add(inquiryAuctionHistoryResponseVo.toVo(auction, thumbnail, handle));
+            createdAuctionHistoryResponseVos.add(createdAuctionHistoryResponseVo.toVo(auction, thumbnail, handle));
         }
-        return inquiryAuctionHistoryResponseVos;
+        return createdAuctionHistoryResponseVos;
+    }
+
+    @Override
+    public List<ParticipatedAuctionHistoryResponseVo> participatedAuctionHistory(ParticipatedAuctionHistoryDto participatedAuctionHistoryDto) {
+        List<ParticipatedAuctionHistoryResponseVo> participatedAuctionHistoryResponseVos = new ArrayList<>();
+        ParticipatedAuctionHistoryResponseVo participatedAuctionHistoryResponseVo = new ParticipatedAuctionHistoryResponseVo();
+
+       //Todo auctionHistory에서 uuid가 있는 AuctionUuid를 들고와서 반환 로직 필요
+        return participatedAuctionHistoryResponseVos;
     }
 
     // MongoDB 경매글 저장

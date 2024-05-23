@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Getter
 @ToString
 @NoArgsConstructor
-public class InquiryAuctionHistoryResponseVo {
+public class ParticipatedAuctionHistoryResponseVo {
     private String auctionUuid;
     private String title;
     private String category;
@@ -25,7 +25,7 @@ public class InquiryAuctionHistoryResponseVo {
     private String thumbnail;
 
     @Builder
-    public InquiryAuctionHistoryResponseVo(String auctionUuid, String title, String category, int minimumBiddingPrice, LocalDateTime createdAt, LocalDateTime endedAt, int bidPrice, AuctionStateEnum state, String handle, String thumbnail) {
+    public ParticipatedAuctionHistoryResponseVo(String auctionUuid, String title, String category, int minimumBiddingPrice, LocalDateTime createdAt, LocalDateTime endedAt, int bidPrice, AuctionStateEnum state, String handle, String thumbnail) {
         this.auctionUuid = auctionUuid;
         this.title = title;
         this.category = category;
@@ -39,8 +39,8 @@ public class InquiryAuctionHistoryResponseVo {
     }
 
     // auction 엔티티와 thumbnail, handle 로 InquiryAuctionHistoryResponseVo 생성
-    public InquiryAuctionHistoryResponseVo toVo(ReadOnlyAuction readOnlyAuction, String thumbnail, String handle) {
-        return InquiryAuctionHistoryResponseVo.builder()
+    public ParticipatedAuctionHistoryResponseVo toVo(ReadOnlyAuction readOnlyAuction, String thumbnail, String handle) {
+        return ParticipatedAuctionHistoryResponseVo.builder()
                 .auctionUuid(readOnlyAuction.getAuctionUuid())
                 .title(readOnlyAuction.getTitle())
                 .category(readOnlyAuction.getCategory())

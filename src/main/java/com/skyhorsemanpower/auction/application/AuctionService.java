@@ -1,13 +1,12 @@
 package com.skyhorsemanpower.auction.application;
 
 import com.skyhorsemanpower.auction.data.dto.*;
-import com.skyhorsemanpower.auction.data.vo.InquiryAuctionHistoryResponseVo;
+import com.skyhorsemanpower.auction.data.vo.CreatedAuctionHistoryResponseVo;
+import com.skyhorsemanpower.auction.data.vo.ParticipatedAuctionHistoryResponseVo;
 import com.skyhorsemanpower.auction.data.vo.SearchAllAuctionResponseVo;
 import com.skyhorsemanpower.auction.data.vo.SearchAuctionResponseVo;
 import com.skyhorsemanpower.auction.domain.AuctionHistory;
-import com.skyhorsemanpower.auction.domain.cqrs.read.ReadOnlyAuction;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -22,5 +21,7 @@ public interface AuctionService {
 
     Flux<AuctionHistory> searchBiddingPrice(SearchBiddingPriceDto searchBiddingPriceDto);
 
-    List<InquiryAuctionHistoryResponseVo> inquiryAuctionHistory(InquiryAuctionHistoryDto inquiryAuctionHistoryDto);
+    List<CreatedAuctionHistoryResponseVo> createdAuctionHistory(CreatedAuctionHistoryDto createdAuctionHistoryDto);
+
+    List<ParticipatedAuctionHistoryResponseVo> participatedAuctionHistory(ParticipatedAuctionHistoryDto participatedAuctionHistoryDto);
 }
