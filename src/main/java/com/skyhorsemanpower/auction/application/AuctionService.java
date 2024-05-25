@@ -1,10 +1,8 @@
 package com.skyhorsemanpower.auction.application;
 
+import com.skyhorsemanpower.auction.common.SuccessResponse;
 import com.skyhorsemanpower.auction.data.dto.*;
-import com.skyhorsemanpower.auction.data.vo.CreatedAuctionHistoryResponseVo;
-import com.skyhorsemanpower.auction.data.vo.ParticipatedAuctionHistoryResponseVo;
-import com.skyhorsemanpower.auction.data.vo.SearchAllAuctionResponseVo;
-import com.skyhorsemanpower.auction.data.vo.SearchAuctionResponseVo;
+import com.skyhorsemanpower.auction.data.vo.*;
 import com.skyhorsemanpower.auction.domain.AuctionHistory;
 import reactor.core.publisher.Flux;
 
@@ -24,4 +22,6 @@ public interface AuctionService {
     List<CreatedAuctionHistoryResponseVo> createdAuctionHistory(CreatedAuctionHistoryDto createdAuctionHistoryDto);
 
     List<ParticipatedAuctionHistoryResponseVo> participatedAuctionHistory(ParticipatedAuctionHistoryDto participatedAuctionHistoryDto);
+
+    MainStatisticResponseVo mainStatistic();
 }
