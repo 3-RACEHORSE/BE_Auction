@@ -26,4 +26,6 @@ public interface AuctionService {
     MainStatisticResponseVo mainStatistic();
 
     List<MainHotAuctionResponseVo> mainHotAuction();
+
+    List<MainCategoryHotAuctionResponseVo> mainCategoryHotAuction();
 }
