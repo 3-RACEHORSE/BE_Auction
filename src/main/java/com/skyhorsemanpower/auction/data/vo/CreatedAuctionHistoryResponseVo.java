@@ -23,9 +23,10 @@ public class CreatedAuctionHistoryResponseVo {
     private AuctionStateEnum state;
     private String handle;
     private String thumbnail;
+    private String content;
 
     @Builder
-    public CreatedAuctionHistoryResponseVo(String auctionUuid, String title, String category, int minimumBiddingPrice, LocalDateTime createdAt, LocalDateTime endedAt, int bidPrice, AuctionStateEnum state, String handle, String thumbnail) {
+    public CreatedAuctionHistoryResponseVo(String auctionUuid, String title, String category, int minimumBiddingPrice, LocalDateTime createdAt, LocalDateTime endedAt, int bidPrice, AuctionStateEnum state, String handle, String thumbnail, String content) {
         this.auctionUuid = auctionUuid;
         this.title = title;
         this.category = category;
@@ -36,6 +37,7 @@ public class CreatedAuctionHistoryResponseVo {
         this.state = state;
         this.handle = handle;
         this.thumbnail = thumbnail;
+        this.content = content;
     }
 
     // auction 엔티티와 thumbnail, handle 로 InquiryAuctionHistoryResponseVo 생성
@@ -51,6 +53,7 @@ public class CreatedAuctionHistoryResponseVo {
                 .state(readOnlyAuction.getState())
                 .thumbnail(thumbnail)
                 .handle(handle)
+                .content(readOnlyAuction.getContent())
                 .build();
     }
 }
