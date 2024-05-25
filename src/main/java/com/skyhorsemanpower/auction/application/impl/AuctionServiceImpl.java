@@ -2,15 +2,13 @@ package com.skyhorsemanpower.auction.application.impl;
 
 import com.skyhorsemanpower.auction.application.AuctionService;
 import com.skyhorsemanpower.auction.common.CustomException;
+import com.skyhorsemanpower.auction.common.SuccessResponse;
 import com.skyhorsemanpower.auction.data.projection.ParticipatedAuctionHistoryProjection;
-import com.skyhorsemanpower.auction.data.vo.CreatedAuctionHistoryResponseVo;
-import com.skyhorsemanpower.auction.data.vo.ParticipatedAuctionHistoryResponseVo;
+import com.skyhorsemanpower.auction.data.vo.*;
 import com.skyhorsemanpower.auction.status.AuctionStateEnum;
 import com.skyhorsemanpower.auction.status.ResponseStatus;
 import com.skyhorsemanpower.auction.config.QuartzConfig;
 import com.skyhorsemanpower.auction.data.dto.*;
-import com.skyhorsemanpower.auction.data.vo.SearchAllAuctionResponseVo;
-import com.skyhorsemanpower.auction.data.vo.SearchAuctionResponseVo;
 import com.skyhorsemanpower.auction.domain.AuctionHistory;
 import com.skyhorsemanpower.auction.domain.AuctionImages;
 import com.skyhorsemanpower.auction.domain.cqrs.command.CommandOnlyAuction;
@@ -300,6 +298,28 @@ public class AuctionServiceImpl implements AuctionService {
             participatedAuctionHistoryResponseVos.add(participatedAuctionHistoryResponseVo.toVo(auction, thumbnail, handle));
         }
         return participatedAuctionHistoryResponseVos;
+    }
+
+    @Override
+    public MainStatisticResponseVo mainStatistic() {
+        //Todo
+        // 스프링 배치 도입하면 집계 테이블에서 해당 데이터를 받아와야 한다.
+        String totalAuctionCount = "9999";
+        String weeklyAddedAuctionCount = "99";
+        String dailyTotalAuctionCount = "99";
+        String currentTimeAddedAuctionCount = "9";
+        String biddingRate = "99";
+        String closedAuctionCount = "999";
+        String progressingAuctionCount = "99";
+        return MainStatisticResponseVo.builder()
+                .totalAuctionCount(totalAuctionCount)
+                .weeklyAddedAuctionCount(weeklyAddedAuctionCount)
+                .dailyTotalAuctionCount(dailyTotalAuctionCount)
+                .currentTimeAddedAuctionCount(currentTimeAddedAuctionCount)
+                .biddingRate(biddingRate)
+                .closedAuctionCount(closedAuctionCount)
+                .progressingAuctionCount(progressingAuctionCount)
+                .build();
     }
 
     private List<ParticipatedAuctionHistoryProjection> getAuctionUuidList(String sellerUuid) {

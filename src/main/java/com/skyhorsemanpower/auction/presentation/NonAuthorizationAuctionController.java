@@ -48,4 +48,11 @@ public class NonAuthorizationAuctionController {
         return auctionService.searchBiddingPrice(SearchBiddingPriceDto.builder().auctionUuid(auctionUuid).build()).subscribeOn(Schedulers.boundedElastic());
     }
 
+    // 메인 페이지_통계
+    @GetMapping("/statistic")
+    @Operation(summary = "메인 페이지_통계", description = "메인 페이지_통계")
+    public SuccessResponse<MainStatisticResponseVo> mainStatistic() {
+        return new SuccessResponse<>(auctionService.mainStatistic());
+    }
+
 }
