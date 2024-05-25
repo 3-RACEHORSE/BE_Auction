@@ -5,7 +5,6 @@ import com.skyhorsemanpower.auction.common.CustomException;
 import com.skyhorsemanpower.auction.data.projection.ParticipatedAuctionHistoryProjection;
 import com.skyhorsemanpower.auction.data.vo.CreatedAuctionHistoryResponseVo;
 import com.skyhorsemanpower.auction.data.vo.ParticipatedAuctionHistoryResponseVo;
-import com.skyhorsemanpower.auction.repository.AuctionHistoryRepository;
 import com.skyhorsemanpower.auction.status.AuctionStateEnum;
 import com.skyhorsemanpower.auction.status.ResponseStatus;
 import com.skyhorsemanpower.auction.config.QuartzConfig;
@@ -46,7 +45,6 @@ public class AuctionServiceImpl implements AuctionService {
     private final ReadOnlyAuctionRepository readOnlyAuctionRepository;
     private final AuctionImagesRepository auctionImagesRepository;
     private final AuctionHistoryReactiveRepository auctionHistoryReactiveRepository;
-    private final AuctionHistoryRepository auctionHistoryRepository;
     private final MongoTemplate mongoTemplate;
     private final QuartzConfig quartzConfig;
 
