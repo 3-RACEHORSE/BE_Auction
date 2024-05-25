@@ -273,7 +273,10 @@ public class AuctionServiceImpl implements AuctionService {
         List<ParticipatedAuctionHistoryResponseVo> participatedAuctionHistoryResponseVos = new ArrayList<>();
         ParticipatedAuctionHistoryResponseVo participatedAuctionHistoryResponseVo = new ParticipatedAuctionHistoryResponseVo();
 
-       //Todo auctionHistory에서 uuid가 있는 AuctionUuid를 들고와서 반환 로직 필요
+        //Todo auctionHistory에서 uuid가 있는 AuctionUuid를 들고와서 반환 로직 필요
+        // 모든 경매를 다 돌면서 biddingUuid일치하는 경매의 AuctionUuid를 들고와야 한다.
+        // 동일 AuctionUuid이 있는 경우 같은 로직을 돌릴 수 있으니 Set 자료구조에 중복 안 되도록 수정해야 할 듯
+        auctionHistoryRepository.findTopByAuctionUuidOrderByBiddingPriceDesc(participatedAuctionHistoryResponseVo.getAuctionUuid());
         return participatedAuctionHistoryResponseVos;
     }
 
