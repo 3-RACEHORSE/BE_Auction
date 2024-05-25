@@ -55,4 +55,10 @@ public class NonAuthorizationAuctionController {
         return new SuccessResponse<>(auctionService.mainStatistic());
     }
 
+    // 메인 페이지_핫 경매글
+    @GetMapping("/hot-auction")
+    @Operation(summary = "메인 페이지_핫경매글", description = "메인 페이지_핫경매글")
+    public SuccessResponse<List<MainHotAuctionResponseVo>> mainHotAuction() {
+        return new SuccessResponse<>(auctionService.mainHotAuction());
+    }
 }

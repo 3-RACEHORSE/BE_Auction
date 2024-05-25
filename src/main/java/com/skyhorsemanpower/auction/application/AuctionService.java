@@ -24,4 +24,6 @@ public interface AuctionService {
     List<ParticipatedAuctionHistoryResponseVo> participatedAuctionHistory(ParticipatedAuctionHistoryDto participatedAuctionHistoryDto);
 
     MainStatisticResponseVo mainStatistic();
+
+    List<MainHotAuctionResponseVo> mainHotAuction();
 }
