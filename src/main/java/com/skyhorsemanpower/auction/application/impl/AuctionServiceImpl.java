@@ -366,6 +366,48 @@ public class AuctionServiceImpl implements AuctionService {
         return mainHotAuctionResponseVos;
     }
 
+    @Override
+    public List<MainCategoryHotAuctionResponseVo> mainCategoryHotAuction() {
+        //Todo
+        // 스프링 배치 도입하면 집계 테이블에서 해당 데이터를 받아와야 한다.
+        List<MainCategoryHotAuctionResponseVo> mainCategoryHotAuctionResponseVos = new ArrayList<>();
+        String[] titles = {"Java 강의합니다.", "포트폴리오 피드백 해드립니다.", "코테 문제 풀이", "백준 플레 입니다.",
+                "백엔드 강의합니다.", "GPT보다 코딩 잘 합니다.", "프론트 진짜 잘합니다.",
+                "디자인 패턴 알려드립니다.", "키보드 부숴드립니다.", "wu shi zongguren"};
+        int[] minimumBiddingPrices = {10000, 100000, 120000, 40000, 123000,
+                60000, 3400, 23000, 90000, 12300, 530000};
+        String[] handles = {"이서용의 코딩용 손가락", "조윤찬의 파워포인트", "한문철", "트페장인", "잇섭",
+                "뤼튼", "유니온 그래픽스", "오은영", "호날도", "모택동"
+        };
+        String[] thumbnails = {"https://i.ibb.co/1mgWHH5/2024-05-26-024430.png",
+                "https://i.ibb.co/Qkz2YnF/2024-05-26-024510.png",
+                "https://i.ibb.co/CttbvVk/2024-05-26-024725.png",
+                "https://i.ibb.co/zV02kNy/2024-05-26-024532.png",
+                "https://i.ibb.co/fF3z16x/2024-05-26-024755.png",
+                "https://i.ibb.co/JjqdbX2/2024-05-26-025312.png",
+                "https://i.ibb.co/nRNkTVK/2024-05-26-025121.png",
+                "https://i.ibb.co/Nmn1Xn1/2024-05-26-025050.png",
+                "https://i.ibb.co/RTdJmYg/2024-05-26-024945.png",
+                "https://i.ibb.co/4P7qhjG/2024-05-26-025357.png"};
+        String[] contents = {"내용물내용물내용물내용물", "내용물내용물내용물내용물", "내용물내용물내용물내용물",
+                "내용물내용물내용물내용물", "내용물내용물내용물내용물", "내용물내용물내용물내용물",
+                "내용물내용물내용물내용물", "내용물내용물내용물내용물", "내용물내용물내용물내용물", "내용물내용물내용물내용물"};
+        for (int i = 0; i < 10; i++) {
+            mainCategoryHotAuctionResponseVos.add(MainCategoryHotAuctionResponseVo.builder()
+                    .auctionUuid("auction_" + i)
+                    .title(titles[i])
+                    .category("IT·프로그래밍")
+                    .minimumBiddingPrice(minimumBiddingPrices[i])
+                    .handle(handles[i])
+                    .thumbnail(thumbnails[i])
+                    .content(contents[i])
+                    .createdAt(LocalDateTime.now())
+                    .endedAt(LocalDateTime.now().plusDays(1))
+                    .build());
+        }
+        return mainCategoryHotAuctionResponseVos;
+    }
+
     private List<ParticipatedAuctionHistoryProjection> getAuctionUuidList(String sellerUuid) {
         Query query = new Query(Criteria.where("biddingUuid").is(sellerUuid));
 

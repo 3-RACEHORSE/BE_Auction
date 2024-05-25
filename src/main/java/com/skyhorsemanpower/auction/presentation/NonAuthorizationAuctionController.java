@@ -61,4 +61,11 @@ public class NonAuthorizationAuctionController {
     public SuccessResponse<List<MainHotAuctionResponseVo>> mainHotAuction() {
         return new SuccessResponse<>(auctionService.mainHotAuction());
     }
+
+    // 메인 페이지_카테고리 핫 경매글 구현
+    @GetMapping("/category-hot-auction")
+    @Operation(summary = "메인 페이지_카테고리 핫경매글", description = "메인 페이지_카테고리 핫경매글")
+    public SuccessResponse<List<MainCategoryHotAuctionResponseVo>> mainCategoryHotAuction() {
+        return new SuccessResponse<>(auctionService.mainCategoryHotAuction());
+    }
 }
