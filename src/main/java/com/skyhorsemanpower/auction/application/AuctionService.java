@@ -28,4 +28,6 @@ public interface AuctionService {
     List<MainHotAuctionResponseVo> mainHotAuction();
 
     List<MainCategoryHotAuctionResponseVo> mainCategoryHotAuction();
+
+    List<MainHighBiddingPriceAuctionResponseVo> mainHighBiddingPriceAuction();
 }
