@@ -152,31 +152,31 @@ public class AuctionServiceImpl implements AuctionService {
 
     // keyword, category 혼합 검색
     private List<ReadOnlyAuction> searchAuctionByKeywordAndCategory(String keyword, String category) {
-        try {
-            return readOnlyAuctionRepository.findAllByTitleLikeAndCategory(keyword, category);
-        } catch (Exception e) {
-            throw new CustomException(ResponseStatus.MONGODB_ERROR);
-        }
+        List<ReadOnlyAuction> results = readOnlyAuctionRepository.findAllByTitleLikeAndCategory(keyword, category);
+        // 조회 결과 있는 경우
+        if (!results.isEmpty()) return results;
+            // 조회 결과 없는 경우
+        else throw new CustomException(ResponseStatus.NO_DATA);
     }
 
 
     // category 검색
     private List<ReadOnlyAuction> searchAuctionByCategory(String category) {
-        try {
-            return readOnlyAuctionRepository.findAllByCategory(category);
-        } catch (Exception e) {
-            throw new CustomException(ResponseStatus.MONGODB_ERROR);
-        }
+        List<ReadOnlyAuction> results = readOnlyAuctionRepository.findAllByCategory(category);
+        // 조회 결과 있는 경우
+        if (!results.isEmpty()) return results;
+            // 조회 결과 없는 경우
+        else throw new CustomException(ResponseStatus.NO_DATA);
     }
 
 
     // keyword 검색
     private List<ReadOnlyAuction> searchAuctionByKeyword(String keyword) {
-        try {
-            return readOnlyAuctionRepository.findAllByTitleLike(keyword);
-        } catch (Exception e) {
-            throw new CustomException(ResponseStatus.MONGODB_ERROR);
-        }
+        List<ReadOnlyAuction> results = readOnlyAuctionRepository.findAllByTitleLike(keyword);
+        // 조회 결과 있는 경우
+        if (!results.isEmpty()) return results;
+            // 조회 결과 없는 경우
+        else throw new CustomException(ResponseStatus.NO_DATA);
     }
 
 
@@ -189,17 +189,18 @@ public class AuctionServiceImpl implements AuctionService {
 
         Query query = new Query(criteria);
 
-        try {
-            return mongoTemplate.find(query, ReadOnlyAuction.class);
-        } catch (Exception e) {
-            throw new CustomException(ResponseStatus.MONGODB_ERROR);
-        }
+        List<ReadOnlyAuction> results = mongoTemplate.find(query, ReadOnlyAuction.class);
+        // 조회 결과 있는 경우
+        if (!results.isEmpty()) return results;
+        // 조회 결과 없는 경우
+        else throw new CustomException(ResponseStatus.NO_DATA);
     }
+
 
     @Override
     public SearchAuctionResponseVo searchAuction(SearchAuctionDto searchAuctionDto) {
         ReadOnlyAuction auction = readOnlyAuctionRepository.findByAuctionUuid(searchAuctionDto.getAuctionUuid()).orElseThrow(
-                () -> new CustomException(ResponseStatus.MONGODB_NOT_FOUND)
+                () -> new CustomException(ResponseStatus.NO_DATA)
         );
 
         //Todo handle을 회원 서비스에서 받아와야 한다.
@@ -254,17 +255,22 @@ public class AuctionServiceImpl implements AuctionService {
         // 최신순으로 자신의 경매 내역 조회
         List<ReadOnlyAuction> auctions = readOnlyAuctionRepository.findAllBySellerUuidOrderByCreatedAtDesc(inquiryAuctionHistoryDto.getSellerUuid());
 
-        // 경매에 따른 thumbnail과 낙찰자 handle 조회
-        for (ReadOnlyAuction auction : auctions) {
-            // thumbnail 호출
-            String thumbnail = auctionImagesRepository.getThumbnailUrl(auction.getAuctionUuid());
+        // 조회 결과 없는 경우
+        if (auctions.isEmpty()) throw new CustomException(ResponseStatus.NO_DATA);
+            // 조회 결과 있는 경우
+        else {
+            // 경매에 따른 thumbnail과 낙찰자 handle 조회
+            for (ReadOnlyAuction auction : auctions) {
+                // thumbnail 호출
+                String thumbnail = auctionImagesRepository.getThumbnailUrl(auction.getAuctionUuid());
 
-            //Todo handle을 회원 서비스에서 받아와야 한다.
-            String handle = "handle";
+                //Todo handle을 회원 서비스에서 받아와야 한다.
+                String handle = "handle";
 
-            inquiryAuctionHistoryResponseVos.add(inquiryAuctionHistoryResponseVo.toVo(auction, thumbnail, handle));
+                inquiryAuctionHistoryResponseVos.add(inquiryAuctionHistoryResponseVo.toVo(auction, thumbnail, handle));
+            }
+            return inquiryAuctionHistoryResponseVos;
         }
-        return inquiryAuctionHistoryResponseVos;
     }
 
     // MongoDB 경매글 저장
