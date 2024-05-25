@@ -270,9 +270,10 @@ public class AuctionServiceImpl implements AuctionService {
                 //Todo handle을 회원 서비스에서 받아와야 한다.
                 String handle = "handle";
 
-              createdAuctionHistoryResponseVos.add(createdAuctionHistoryResponseVo.toVo(auction, thumbnail, handle));
+                createdAuctionHistoryResponseVos.add(createdAuctionHistoryResponseVo.toVo(auction, thumbnail, handle));
+            }
+            return createdAuctionHistoryResponseVos;
         }
-        return createdAuctionHistoryResponseVos;
     }
 
     @Override
