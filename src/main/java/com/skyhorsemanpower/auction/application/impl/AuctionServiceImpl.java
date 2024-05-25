@@ -192,7 +192,7 @@ public class AuctionServiceImpl implements AuctionService {
         List<ReadOnlyAuction> results = mongoTemplate.find(query, ReadOnlyAuction.class);
         // 조회 결과 있는 경우
         if (!results.isEmpty()) return results;
-            // 조회 결과 없는 경우
+        // 조회 결과 없는 경우
         else throw new CustomException(ResponseStatus.NO_DATA);
     }
 

@@ -12,11 +12,9 @@ public enum ResponseStatus {
 
     // postgreSQL 관련 에러
     POSTGRESQL_ERROR(500, "PostgreSQL 에러"),
-//    POSTGRESQL_NOT_FOUND(500, "PostgreSQL에서 조회할 수 없습니다."),
 
     // MongoDB 관련 에러
     MONGODB_ERROR(500, "MongoDB 에러"),
-//    MONGODB_NOT_FOUND(404, "MongoDB에서 조회할 수 없습니다."),
 
     // Quartz 관련 에러
     SCHEDULER_ERROR(500, "스케줄러 등록 에러"),
