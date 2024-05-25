@@ -155,7 +155,7 @@ public class AuctionServiceImpl implements AuctionService {
         List<ReadOnlyAuction> results = readOnlyAuctionRepository.findAllByTitleLikeAndCategory(keyword, category);
         // 조회 결과 있는 경우
         if (!results.isEmpty()) return results;
-        // 조회 결과 없는 경우
+            // 조회 결과 없는 경우
         else throw new CustomException(ResponseStatus.NO_DATA);
     }
 
@@ -165,7 +165,7 @@ public class AuctionServiceImpl implements AuctionService {
         List<ReadOnlyAuction> results = readOnlyAuctionRepository.findAllByCategory(category);
         // 조회 결과 있는 경우
         if (!results.isEmpty()) return results;
-        // 조회 결과 없는 경우
+            // 조회 결과 없는 경우
         else throw new CustomException(ResponseStatus.NO_DATA);
     }
 
@@ -175,7 +175,7 @@ public class AuctionServiceImpl implements AuctionService {
         List<ReadOnlyAuction> results = readOnlyAuctionRepository.findAllByTitleLike(keyword);
         // 조회 결과 있는 경우
         if (!results.isEmpty()) return results;
-        // 조회 결과 없는 경우
+            // 조회 결과 없는 경우
         else throw new CustomException(ResponseStatus.NO_DATA);
     }
 
@@ -255,17 +255,22 @@ public class AuctionServiceImpl implements AuctionService {
         // 최신순으로 자신의 경매 내역 조회
         List<ReadOnlyAuction> auctions = readOnlyAuctionRepository.findAllBySellerUuidOrderByCreatedAtDesc(inquiryAuctionHistoryDto.getSellerUuid());
 
-        // 경매에 따른 thumbnail과 낙찰자 handle 조회
-        for (ReadOnlyAuction auction : auctions) {
-            // thumbnail 호출
-            String thumbnail = auctionImagesRepository.getThumbnailUrl(auction.getAuctionUuid());
+        // 조회 결과 없는 경우
+        if (auctions.isEmpty()) throw new CustomException(ResponseStatus.NO_DATA);
+            // 조회 결과 있는 경우
+        else {
+            // 경매에 따른 thumbnail과 낙찰자 handle 조회
+            for (ReadOnlyAuction auction : auctions) {
+                // thumbnail 호출
+                String thumbnail = auctionImagesRepository.getThumbnailUrl(auction.getAuctionUuid());
 
-            //Todo handle을 회원 서비스에서 받아와야 한다.
-            String handle = "handle";
+                //Todo handle을 회원 서비스에서 받아와야 한다.
+                String handle = "handle";
 
-            inquiryAuctionHistoryResponseVos.add(inquiryAuctionHistoryResponseVo.toVo(auction, thumbnail, handle));
+                inquiryAuctionHistoryResponseVos.add(inquiryAuctionHistoryResponseVo.toVo(auction, thumbnail, handle));
+            }
+            return inquiryAuctionHistoryResponseVos;
         }
-        return inquiryAuctionHistoryResponseVos;
     }
 
     // MongoDB 경매글 저장
