@@ -2,7 +2,9 @@ package com.skyhorsemanpower.auction.application.impl;
 
 import com.skyhorsemanpower.auction.application.AuctionService;
 import com.skyhorsemanpower.auction.common.CustomException;
-import com.skyhorsemanpower.auction.data.vo.InquiryAuctionHistoryResponseVo;
+import com.skyhorsemanpower.auction.data.projection.ParticipatedAuctionHistoryProjection;
+import com.skyhorsemanpower.auction.data.vo.CreatedAuctionHistoryResponseVo;
+import com.skyhorsemanpower.auction.data.vo.ParticipatedAuctionHistoryResponseVo;
 import com.skyhorsemanpower.auction.status.AuctionStateEnum;
 import com.skyhorsemanpower.auction.status.ResponseStatus;
 import com.skyhorsemanpower.auction.config.QuartzConfig;
@@ -13,7 +15,7 @@ import com.skyhorsemanpower.auction.domain.AuctionHistory;
 import com.skyhorsemanpower.auction.domain.AuctionImages;
 import com.skyhorsemanpower.auction.domain.cqrs.command.CommandOnlyAuction;
 import com.skyhorsemanpower.auction.domain.cqrs.read.ReadOnlyAuction;
-import com.skyhorsemanpower.auction.repository.AuctionHistoryRepository;
+import com.skyhorsemanpower.auction.repository.AuctionHistoryReactiveRepository;
 import com.skyhorsemanpower.auction.repository.AuctionImagesRepository;
 import com.skyhorsemanpower.auction.repository.cqrs.command.CommandOnlyAuctionRepository;
 import com.skyhorsemanpower.auction.repository.cqrs.read.ReadOnlyAuctionRepository;
@@ -32,6 +34,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +44,7 @@ public class AuctionServiceImpl implements AuctionService {
     private final CommandOnlyAuctionRepository commandOnlyAuctionRepository;
     private final ReadOnlyAuctionRepository readOnlyAuctionRepository;
     private final AuctionImagesRepository auctionImagesRepository;
-    private final AuctionHistoryRepository auctionHistoryRepository;
+    private final AuctionHistoryReactiveRepository auctionHistoryReactiveRepository;
     private final MongoTemplate mongoTemplate;
     private final QuartzConfig quartzConfig;
 
@@ -225,7 +228,7 @@ public class AuctionServiceImpl implements AuctionService {
                     .biddingTime(LocalDateTime.now())
                     .build();
             try {
-                auctionHistoryRepository.save(auctionHistory).subscribe();
+                auctionHistoryReactiveRepository.save(auctionHistory).subscribe();
             } catch (Exception e) {
                 throw new CustomException(ResponseStatus.MONGODB_ERROR);
             }
@@ -244,16 +247,16 @@ public class AuctionServiceImpl implements AuctionService {
     @Override
     public Flux<AuctionHistory> searchBiddingPrice(SearchBiddingPriceDto searchBiddingPriceDto) {
 
-        return auctionHistoryRepository.searchBiddingPrice(searchBiddingPriceDto.getAuctionUuid());
+        return auctionHistoryReactiveRepository.searchBiddingPrice(searchBiddingPriceDto.getAuctionUuid());
     }
 
     @Override
-    public List<InquiryAuctionHistoryResponseVo> inquiryAuctionHistory(InquiryAuctionHistoryDto inquiryAuctionHistoryDto) {
-        List<InquiryAuctionHistoryResponseVo> inquiryAuctionHistoryResponseVos = new ArrayList<>();
-        InquiryAuctionHistoryResponseVo inquiryAuctionHistoryResponseVo = new InquiryAuctionHistoryResponseVo();
+    public List<CreatedAuctionHistoryResponseVo> createdAuctionHistory(CreatedAuctionHistoryDto createdAuctionHistoryDto) {
+        List<CreatedAuctionHistoryResponseVo> createdAuctionHistoryResponseVos = new ArrayList<>();
+        CreatedAuctionHistoryResponseVo createdAuctionHistoryResponseVo = new CreatedAuctionHistoryResponseVo();
 
         // 최신순으로 자신의 경매 내역 조회
-        List<ReadOnlyAuction> auctions = readOnlyAuctionRepository.findAllBySellerUuidOrderByCreatedAtDesc(inquiryAuctionHistoryDto.getSellerUuid());
+        List<ReadOnlyAuction> auctions = readOnlyAuctionRepository.findAllBySellerUuidOrderByCreatedAtDesc(createdAuctionHistoryDto.getSellerUuid());
 
         // 조회 결과 없는 경우
         if (auctions.isEmpty()) throw new CustomException(ResponseStatus.NO_DATA);
@@ -267,10 +270,55 @@ public class AuctionServiceImpl implements AuctionService {
                 //Todo handle을 회원 서비스에서 받아와야 한다.
                 String handle = "handle";
 
-                inquiryAuctionHistoryResponseVos.add(inquiryAuctionHistoryResponseVo.toVo(auction, thumbnail, handle));
-            }
-            return inquiryAuctionHistoryResponseVos;
+              createdAuctionHistoryResponseVos.add(createdAuctionHistoryResponseVo.toVo(auction, thumbnail, handle));
         }
+        return createdAuctionHistoryResponseVos;
+    }
+
+    @Override
+    public List<ParticipatedAuctionHistoryResponseVo> participatedAuctionHistory(ParticipatedAuctionHistoryDto participatedAuctionHistoryDto) {
+        List<ParticipatedAuctionHistoryResponseVo> participatedAuctionHistoryResponseVos = new ArrayList<>();
+        ParticipatedAuctionHistoryResponseVo participatedAuctionHistoryResponseVo = new ParticipatedAuctionHistoryResponseVo();
+
+        // 참여한 경매의 중복 제거한 auctionUuid 리스트 조회
+        List<ParticipatedAuctionHistoryProjection> participatedAuctionHistoryProjections = getAuctionUuidList(participatedAuctionHistoryDto.getSellerUuid());
+
+        // auctionHistoryProjection 객체를 통해 auctionUuid를 반환
+        for (ParticipatedAuctionHistoryProjection participatedAuctionHistoryProjection : participatedAuctionHistoryProjections) {
+            // thumbnail 호출
+            String thumbnail = auctionImagesRepository.getThumbnailUrl(participatedAuctionHistoryProjection.getAuctionUuid());
+
+            //Todo handle을 회원 서비스에서 받아와야 한다.
+            String handle = "handle";
+
+            // auction 엔티티 조회
+            ReadOnlyAuction auction = readOnlyAuctionRepository.findByAuctionUuid(participatedAuctionHistoryProjection.getAuctionUuid())
+                    .orElseThrow(
+                            () -> new CustomException(ResponseStatus.NO_DATA)
+                    );
+            participatedAuctionHistoryResponseVos.add(participatedAuctionHistoryResponseVo.toVo(auction, thumbnail, handle));
+        }
+        return participatedAuctionHistoryResponseVos;
+    }
+
+    private List<ParticipatedAuctionHistoryProjection> getAuctionUuidList(String sellerUuid) {
+        Query query = new Query(Criteria.where("biddingUuid").is(sellerUuid));
+
+        List<String> distinctAuctionUuids = mongoTemplate.query(AuctionHistory.class)
+                .distinct("auctionUuid")
+                .matching(query)
+                .as(String.class)
+                .all();
+
+        // 조회 결과가 없는 경우
+        if (distinctAuctionUuids.isEmpty()) throw new CustomException(ResponseStatus.NO_DATA);
+
+        // 조회 결과가 있는 경우
+        return distinctAuctionUuids.stream()
+                .map(auctionUuid -> ParticipatedAuctionHistoryProjection.builder()
+                        .auctionUuid(auctionUuid)
+                        .build())
+                .collect(Collectors.toList());
     }
 
     // MongoDB 경매글 저장

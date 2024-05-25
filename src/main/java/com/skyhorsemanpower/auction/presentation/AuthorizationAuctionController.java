@@ -3,15 +3,15 @@ package com.skyhorsemanpower.auction.presentation;
 import com.skyhorsemanpower.auction.application.AuctionService;
 import com.skyhorsemanpower.auction.common.SuccessResponse;
 import com.skyhorsemanpower.auction.data.dto.CreateAuctionDto;
-import com.skyhorsemanpower.auction.data.dto.InquiryAuctionHistoryDto;
+import com.skyhorsemanpower.auction.data.dto.CreatedAuctionHistoryDto;
 import com.skyhorsemanpower.auction.data.dto.OfferBiddingPriceDto;
+import com.skyhorsemanpower.auction.data.dto.ParticipatedAuctionHistoryDto;
 import com.skyhorsemanpower.auction.data.vo.CreateAuctionRequestVo;
-import com.skyhorsemanpower.auction.data.vo.InquiryAuctionHistoryResponseVo;
+import com.skyhorsemanpower.auction.data.vo.CreatedAuctionHistoryResponseVo;
 import com.skyhorsemanpower.auction.data.vo.OfferBiddingPriceRequestVo;
-import com.skyhorsemanpower.auction.domain.cqrs.read.ReadOnlyAuction;
+import com.skyhorsemanpower.auction.data.vo.ParticipatedAuctionHistoryResponseVo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,10 +47,18 @@ public class AuthorizationAuctionController {
     // 경매글 이력 조회
     @GetMapping("/history")
     @Operation(summary = "경매글 이력 조회", description = "경매글 이력 조회")
-    public SuccessResponse<List<InquiryAuctionHistoryResponseVo>> inquiryAuctionHistory(
+    public SuccessResponse<List<CreatedAuctionHistoryResponseVo>> createdAuctionHistory(
             @RequestHeader String uuid) {
-        List<InquiryAuctionHistoryResponseVo> inquiryAuctionHistoryResponseVos = auctionService.inquiryAuctionHistory(InquiryAuctionHistoryDto.builder().sellerUuid(uuid).build());
-        return new SuccessResponse<>(inquiryAuctionHistoryResponseVos);
+        List<CreatedAuctionHistoryResponseVo> createdAuctionHistoryResponseVos = auctionService.createdAuctionHistory(CreatedAuctionHistoryDto.builder().sellerUuid(uuid).build());
+        return new SuccessResponse<>(createdAuctionHistoryResponseVos);
     }
 
+    // 자신이 참여한 경매 이력 조회
+    @GetMapping("/participate-history")
+    @Operation(summary = "참여한 경매 이력 조회", description = "참여한 경매 이력 조회")
+    public SuccessResponse<List<ParticipatedAuctionHistoryResponseVo>> participatedAuctionHistory(
+            @RequestHeader String uuid) {
+        List<ParticipatedAuctionHistoryResponseVo> participatedAuctionHistoryResponseVos = auctionService.participatedAuctionHistory(ParticipatedAuctionHistoryDto.builder().sellerUuid(uuid).build());
+        return new SuccessResponse<>(participatedAuctionHistoryResponseVos);
+    }
 }

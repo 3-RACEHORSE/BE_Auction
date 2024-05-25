@@ -2,7 +2,7 @@ package com.skyhorsemanpower.auction.quartz;
 
 import com.skyhorsemanpower.auction.status.AuctionStateEnum;
 import com.skyhorsemanpower.auction.domain.cqrs.read.ReadOnlyAuction;
-import com.skyhorsemanpower.auction.repository.AuctionHistoryRepository;
+import com.skyhorsemanpower.auction.repository.AuctionHistoryReactiveRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @RequiredArgsConstructor
 public class EndAuction implements Job {
-    private final AuctionHistoryRepository auctionHistoryRepository;
+    private final AuctionHistoryReactiveRepository auctionHistoryRepository;
     private final MongoTemplate mongoTemplate;
 
     @Override

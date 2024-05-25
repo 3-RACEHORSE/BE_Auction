@@ -1,7 +1,6 @@
 package com.skyhorsemanpower.auction.repository.cqrs.read;
 
 
-import com.skyhorsemanpower.auction.data.vo.InquiryAuctionHistoryResponseVo;
 import com.skyhorsemanpower.auction.domain.cqrs.read.ReadOnlyAuction;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
