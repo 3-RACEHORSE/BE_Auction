@@ -12,11 +12,9 @@ public enum ResponseStatus {
 
     // postgreSQL 관련 에러
     POSTGRESQL_ERROR(500, "PostgreSQL 에러"),
-    POSTGRESQL_NOT_FOUND(500, "PostgreSQL에서 조회할 수 없습니다."),
 
     // MongoDB 관련 에러
     MONGODB_ERROR(500, "MongoDB 에러"),
-    MONGODB_NOT_FOUND(404, "MongoDB에서 조회할 수 없습니다."),
 
     // Quartz 관련 에러
     SCHEDULER_ERROR(500, "스케줄러 등록 에러"),
@@ -27,6 +25,8 @@ public enum ResponseStatus {
     // 경매 마감 시간 이후로 입찰 제한
     NOT_BIDDING_TIME(400, "입찰 가능한 시간이 아닙니다."),
 
+    // 조회 데이터가 없는 경우
+    NO_DATA(404, "데이터가 없습니다."),
 
     // 예외 테스트 용
     EXCEPTION_TEST(500, "예외 테스트");

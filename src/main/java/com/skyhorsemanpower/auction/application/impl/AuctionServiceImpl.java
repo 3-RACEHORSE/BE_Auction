@@ -2,8 +2,10 @@ package com.skyhorsemanpower.auction.application.impl;
 
 import com.skyhorsemanpower.auction.application.AuctionService;
 import com.skyhorsemanpower.auction.common.CustomException;
+import com.skyhorsemanpower.auction.data.projection.ParticipatedAuctionHistoryProjection;
 import com.skyhorsemanpower.auction.data.vo.CreatedAuctionHistoryResponseVo;
 import com.skyhorsemanpower.auction.data.vo.ParticipatedAuctionHistoryResponseVo;
+import com.skyhorsemanpower.auction.repository.AuctionHistoryRepository;
 import com.skyhorsemanpower.auction.status.AuctionStateEnum;
 import com.skyhorsemanpower.auction.status.ResponseStatus;
 import com.skyhorsemanpower.auction.config.QuartzConfig;
@@ -14,7 +16,7 @@ import com.skyhorsemanpower.auction.domain.AuctionHistory;
 import com.skyhorsemanpower.auction.domain.AuctionImages;
 import com.skyhorsemanpower.auction.domain.cqrs.command.CommandOnlyAuction;
 import com.skyhorsemanpower.auction.domain.cqrs.read.ReadOnlyAuction;
-import com.skyhorsemanpower.auction.repository.AuctionHistoryRepository;
+import com.skyhorsemanpower.auction.repository.AuctionHistoryReactiveRepository;
 import com.skyhorsemanpower.auction.repository.AuctionImagesRepository;
 import com.skyhorsemanpower.auction.repository.cqrs.command.CommandOnlyAuctionRepository;
 import com.skyhorsemanpower.auction.repository.cqrs.read.ReadOnlyAuctionRepository;
@@ -33,6 +35,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +45,7 @@ public class AuctionServiceImpl implements AuctionService {
     private final CommandOnlyAuctionRepository commandOnlyAuctionRepository;
     private final ReadOnlyAuctionRepository readOnlyAuctionRepository;
     private final AuctionImagesRepository auctionImagesRepository;
+    private final AuctionHistoryReactiveRepository auctionHistoryReactiveRepository;
     private final AuctionHistoryRepository auctionHistoryRepository;
     private final MongoTemplate mongoTemplate;
     private final QuartzConfig quartzConfig;
@@ -200,7 +204,7 @@ public class AuctionServiceImpl implements AuctionService {
     @Override
     public SearchAuctionResponseVo searchAuction(SearchAuctionDto searchAuctionDto) {
         ReadOnlyAuction auction = readOnlyAuctionRepository.findByAuctionUuid(searchAuctionDto.getAuctionUuid()).orElseThrow(
-                () -> new CustomException(ResponseStatus.MONGODB_NOT_FOUND)
+                () -> new CustomException(ResponseStatus.NO_DATA)
         );
 
         //Todo handle을 회원 서비스에서 받아와야 한다.
@@ -225,7 +229,7 @@ public class AuctionServiceImpl implements AuctionService {
                     .biddingTime(LocalDateTime.now())
                     .build();
             try {
-                auctionHistoryRepository.save(auctionHistory).subscribe();
+                auctionHistoryReactiveRepository.save(auctionHistory).subscribe();
             } catch (Exception e) {
                 throw new CustomException(ResponseStatus.MONGODB_ERROR);
             }
@@ -244,7 +248,7 @@ public class AuctionServiceImpl implements AuctionService {
     @Override
     public Flux<AuctionHistory> searchBiddingPrice(SearchBiddingPriceDto searchBiddingPriceDto) {
 
-        return auctionHistoryRepository.searchBiddingPrice(searchBiddingPriceDto.getAuctionUuid());
+        return auctionHistoryReactiveRepository.searchBiddingPrice(searchBiddingPriceDto.getAuctionUuid());
     }
 
     @Override
@@ -273,11 +277,45 @@ public class AuctionServiceImpl implements AuctionService {
         List<ParticipatedAuctionHistoryResponseVo> participatedAuctionHistoryResponseVos = new ArrayList<>();
         ParticipatedAuctionHistoryResponseVo participatedAuctionHistoryResponseVo = new ParticipatedAuctionHistoryResponseVo();
 
-        //Todo auctionHistory에서 uuid가 있는 AuctionUuid를 들고와서 반환 로직 필요
-        // 모든 경매를 다 돌면서 biddingUuid일치하는 경매의 AuctionUuid를 들고와야 한다.
-        // 동일 AuctionUuid이 있는 경우 같은 로직을 돌릴 수 있으니 Set 자료구조에 중복 안 되도록 수정해야 할 듯
-        auctionHistoryRepository.findTopByAuctionUuidOrderByBiddingPriceDesc(participatedAuctionHistoryResponseVo.getAuctionUuid());
+        // 참여한 경매의 중복 제거한 auctionUuid 리스트 조회
+        List<ParticipatedAuctionHistoryProjection> participatedAuctionHistoryProjections = getAuctionUuidList(participatedAuctionHistoryDto.getSellerUuid());
+
+        // auctionHistoryProjection 객체를 통해 auctionUuid를 반환
+        for (ParticipatedAuctionHistoryProjection participatedAuctionHistoryProjection : participatedAuctionHistoryProjections) {
+            // thumbnail 호출
+            String thumbnail = auctionImagesRepository.getThumbnailUrl(participatedAuctionHistoryProjection.getAuctionUuid());
+
+            //Todo handle을 회원 서비스에서 받아와야 한다.
+            String handle = "handle";
+
+            // auction 엔티티 조회
+            ReadOnlyAuction auction = readOnlyAuctionRepository.findByAuctionUuid(participatedAuctionHistoryProjection.getAuctionUuid())
+                    .orElseThrow(
+                            () -> new CustomException(ResponseStatus.NO_DATA)
+                    );
+            participatedAuctionHistoryResponseVos.add(participatedAuctionHistoryResponseVo.toVo(auction, thumbnail, handle));
+        }
         return participatedAuctionHistoryResponseVos;
+    }
+
+    private List<ParticipatedAuctionHistoryProjection> getAuctionUuidList(String sellerUuid) {
+        Query query = new Query(Criteria.where("biddingUuid").is(sellerUuid));
+
+        List<String> distinctAuctionUuids = mongoTemplate.query(AuctionHistory.class)
+                .distinct("auctionUuid")
+                .matching(query)
+                .as(String.class)
+                .all();
+
+        // 조회 결과가 없는 경우
+        if (distinctAuctionUuids.isEmpty()) throw new CustomException(ResponseStatus.NO_DATA);
+
+        // 조회 결과가 있는 경우
+        return distinctAuctionUuids.stream()
+                .map(auctionUuid -> ParticipatedAuctionHistoryProjection.builder()
+                        .auctionUuid(auctionUuid)
+                        .build())
+                .collect(Collectors.toList());
     }
 
     // MongoDB 경매글 저장
