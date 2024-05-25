@@ -8,14 +8,11 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Optional;
-
 @Repository
-public interface AuctionHistoryRepository extends ReactiveMongoRepository<AuctionHistory, String> {
+public interface AuctionHistoryReactiveRepository extends ReactiveMongoRepository<AuctionHistory, String> {
 
     @Tailable
     @Query("{'auctionUuid' : ?0}")
     Flux<AuctionHistory> searchBiddingPrice(String auctionUuid);
-
     Mono<AuctionHistory> findTopByAuctionUuidOrderByBiddingPriceDesc(String auctionUuid);
 }

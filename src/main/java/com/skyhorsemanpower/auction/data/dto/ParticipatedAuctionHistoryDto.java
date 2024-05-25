@@ -8,11 +8,11 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class InquiryAuctionHistoryDto {
+public class ParticipatedAuctionHistoryDto {
     private String sellerUuid;
 
     @Builder
-    public InquiryAuctionHistoryDto(String sellerUuid) {
+    public ParticipatedAuctionHistoryDto(String sellerUuid) {
         this.sellerUuid = sellerUuid;
     }
 }

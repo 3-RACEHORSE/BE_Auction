@@ -51,7 +51,7 @@ public class QuartzConfig {
                 .withDescription("경매 마감 Trigger")
 
                 // test용 30초 후 시작하는 스케줄러
-                .startAt(DateBuilder.futureDate(30, DateBuilder.IntervalUnit.SECOND))
+                .startAt(DateBuilder.futureDate(60, DateBuilder.IntervalUnit.SECOND))
 
                 //Todo 실제 배포에서는 endedAt을 사용해야 한다.
 //                .startAt(endedAt)
