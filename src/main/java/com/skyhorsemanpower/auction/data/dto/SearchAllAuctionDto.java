@@ -11,10 +11,14 @@ import lombok.Setter;
 public class SearchAllAuctionDto {
     private String keyword;
     private String category;
+    private Integer page;
+    private Integer size;
 
     @Builder
-    public SearchAllAuctionDto(String keyword, String category) {
+    public SearchAllAuctionDto(String keyword, String category, Integer page, Integer size) {
         this.keyword = keyword;
         this.category = category;
+        this.page = page;
+        this.size = size;
     }
 }
