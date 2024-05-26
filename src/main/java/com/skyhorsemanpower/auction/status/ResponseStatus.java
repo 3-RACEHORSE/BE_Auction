@@ -25,6 +25,9 @@ public enum ResponseStatus {
     // 경매 마감 시간 이후로 입찰 제한
     NOT_BIDDING_TIME(400, "입찰 가능한 시간이 아닙니다."),
 
+    // 입찰제시금이 현재 입찰 최고가보다 작은 경우
+    UNSATISFING_BIDDING_PRICE(400, "입찰 제시금이 기존 입찰금보다 적습니다."),
+
     // 조회 데이터가 없는 경우
     NO_DATA(404, "데이터가 없습니다."),
 

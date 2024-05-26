@@ -2,8 +2,10 @@ package com.skyhorsemanpower.auction.application.impl;
 
 import com.skyhorsemanpower.auction.application.AuctionService;
 import com.skyhorsemanpower.auction.common.CustomException;
+import com.skyhorsemanpower.auction.data.projection.CheckBiddingPriceProjection;
 import com.skyhorsemanpower.auction.data.projection.ParticipatedAuctionHistoryProjection;
 import com.skyhorsemanpower.auction.data.vo.*;
+import com.skyhorsemanpower.auction.repository.AuctionHistoryRepository;
 import com.skyhorsemanpower.auction.status.AuctionStateEnum;
 import com.skyhorsemanpower.auction.status.ResponseStatus;
 import com.skyhorsemanpower.auction.config.QuartzConfig;
@@ -30,6 +32,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -41,6 +44,7 @@ public class AuctionServiceImpl implements AuctionService {
     private final CommandOnlyAuctionRepository commandOnlyAuctionRepository;
     private final ReadOnlyAuctionRepository readOnlyAuctionRepository;
     private final AuctionImagesRepository auctionImagesRepository;
+    private final AuctionHistoryRepository auctionHistoryRepository;
     private final AuctionHistoryReactiveRepository auctionHistoryReactiveRepository;
     private final MongoTemplate mongoTemplate;
     private final QuartzConfig quartzConfig;
@@ -51,7 +55,6 @@ public class AuctionServiceImpl implements AuctionService {
         // auctionUuid 제작
         String auctionUuid = generateAuctionUuid();
         createAuctionDto.setAuctionUuid(auctionUuid);
-
         // PostgreSQL 저장
         createCommandOnlyAution(createAuctionDto);
         createAuctionImages(createAuctionDto);
@@ -216,8 +219,10 @@ public class AuctionServiceImpl implements AuctionService {
 
     @Override
     public void offerBiddingPrice(OfferBiddingPriceDto offerBiddingPriceDto) {
-        // 마감 시간이 현재 시간보다 미래면 입찰 제시 가능
-        if (isAuctionActive(offerBiddingPriceDto.getAuctionUuid())) {
+        // 조건1. 마감 시간이 현재 시간보다 미래면 입찰 제시 가능
+        // 조건2. 입찰 제시가가 최고 입찰가보다 커야한다.
+        if (isAuctionActive(offerBiddingPriceDto.getAuctionUuid())
+                && checkBiddingPrice(offerBiddingPriceDto.getBiddingUuid(), offerBiddingPriceDto.getAuctionUuid(), offerBiddingPriceDto.getBiddingPrice())) {
             AuctionHistory auctionHistory = AuctionHistory.builder()
                     .auctionUuid(offerBiddingPriceDto.getAuctionUuid())
                     .biddingUuid(offerBiddingPriceDto.getBiddingUuid())
@@ -229,16 +234,33 @@ public class AuctionServiceImpl implements AuctionService {
             } catch (Exception e) {
                 throw new CustomException(ResponseStatus.MONGODB_ERROR);
             }
-        } else throw new CustomException(ResponseStatus.NOT_BIDDING_TIME);
+        }
+    }
+
+    private boolean checkBiddingPrice(String biddingUuid, String auctionUuid, int biddingPrice) {
+        Optional<CheckBiddingPriceProjection> optionalMaxBiddingPrice = auctionHistoryRepository.findMaxBiddingPriceByAuctionUuid(auctionUuid);
+        int minimumBiddingPrice = readOnlyAuctionRepository.findByAuctionUuid(auctionUuid).orElseThrow(
+                () -> new CustomException(ResponseStatus.NO_DATA)
+        ).getMinimumBiddingPrice();
+
+        // 최초 입찰인 경우 바로 입찰되도록 true 반환
+        if (optionalMaxBiddingPrice.isEmpty() && biddingPrice >= minimumBiddingPrice) return true;
+
+        if (optionalMaxBiddingPrice.isPresent()) {
+            int maxBiddingPrice = optionalMaxBiddingPrice.get().getBiddingPrice();
+            if (biddingPrice > maxBiddingPrice && biddingPrice >= minimumBiddingPrice) return true;
+        }
+        throw new CustomException(ResponseStatus.UNSATISFING_BIDDING_PRICE);
     }
 
     private boolean isAuctionActive(String auctionUuid) {
         ReadOnlyAuction readOnlyAuction = readOnlyAuctionRepository.findByAuctionUuid(auctionUuid).orElseThrow(
-                () -> new CustomException(ResponseStatus.MONGODB_ERROR)
+                () -> new CustomException(ResponseStatus.NO_DATA)
         );
 
         // 마감 시간이 현재 시간보다 미래면 true 반환
-        return readOnlyAuction.getEndedAt().isAfter(LocalDateTime.now());
+        if (readOnlyAuction.getEndedAt().isAfter(LocalDateTime.now())) return true;
+        else throw new CustomException(ResponseStatus.NOT_BIDDING_TIME);
     }
 
     @Override
