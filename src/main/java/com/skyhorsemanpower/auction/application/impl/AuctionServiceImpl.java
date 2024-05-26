@@ -29,6 +29,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -207,21 +208,28 @@ public class AuctionServiceImpl implements AuctionService {
 
     // 현재 진행되는 전체 경매글 검색
     private Page<ReadOnlyAuction> searchAllAuction(int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+
         Criteria criteria = new Criteria().andOperator(
                 Criteria.where("createdAt").lte(LocalDateTime.now()),
                 Criteria.where("endedAt").gte(LocalDateTime.now())
         );
 
-        Query query = new Query(criteria).with(PageRequest.of(page, size));
+        Query query = new Query(criteria).with(pageable)
+                // 페이지 번호에 따라 결과를 건너뛴다.
+                .skip(pageable.getPageSize() * pageable.getPageNumber())
+                .limit(pageable.getPageSize());
 
-        long total = mongoTemplate.count(query, ReadOnlyAuction.class);
-        List<ReadOnlyAuction> results = mongoTemplate.find(query, ReadOnlyAuction.class);
+        List<ReadOnlyAuction> filteredReadOnlyAuction = mongoTemplate.find(query, ReadOnlyAuction.class);
 
-        if (results.isEmpty()) {
-            throw new CustomException(ResponseStatus.NO_DATA);
-        }
-
-        return new PageImpl<>(results, PageRequest.of(page, size), total);
+        // 쿼리 결과 목록을 통해 페이지 객체 생성 페이지 객체 생성
+        return PageableExecutionUtils.getPage(
+                filteredReadOnlyAuction,
+                pageable,
+                // -1은 정확하게 세겠다는 의미
+                () -> mongoTemplate.count(query.skip(-1).limit(-1), ReadOnlyAuction.class)
+        );
     }
 
     @Override
