@@ -234,27 +234,33 @@ public class AuctionServiceImpl implements AuctionService {
             } catch (Exception e) {
                 throw new CustomException(ResponseStatus.MONGODB_ERROR);
             }
-        } else throw new CustomException(ResponseStatus.NOT_BIDDING_TIME);
+        }
     }
 
     private boolean checkBiddingPrice(String biddingUuid, String auctionUuid, int biddingPrice) {
         Optional<CheckBiddingPriceProjection> optionalMaxBiddingPrice = auctionHistoryRepository.findMaxBiddingPriceByAuctionUuid(auctionUuid);
+        int minimumBiddingPrice = readOnlyAuctionRepository.findByAuctionUuid(auctionUuid).orElseThrow(
+                () -> new CustomException(ResponseStatus.NO_DATA)
+        ).getMinimumBiddingPrice();
 
         // 최초 입찰인 경우 바로 입찰되도록 true 반환
-        if (!optionalMaxBiddingPrice.isPresent()) return true;
+        if (optionalMaxBiddingPrice.isEmpty() && biddingPrice >= minimumBiddingPrice) return true;
 
-        int maxBiddingPrice = optionalMaxBiddingPrice.get().getBiddingPrice();
-        if (biddingPrice > maxBiddingPrice) return true;
-        else throw new CustomException(ResponseStatus.UNSATISFING_BIDDING_PRICE);
+        if (optionalMaxBiddingPrice.isPresent()) {
+            int maxBiddingPrice = optionalMaxBiddingPrice.get().getBiddingPrice();
+            if (biddingPrice > maxBiddingPrice && biddingPrice >= minimumBiddingPrice) return true;
+        }
+        throw new CustomException(ResponseStatus.UNSATISFING_BIDDING_PRICE);
     }
 
     private boolean isAuctionActive(String auctionUuid) {
         ReadOnlyAuction readOnlyAuction = readOnlyAuctionRepository.findByAuctionUuid(auctionUuid).orElseThrow(
-                () -> new CustomException(ResponseStatus.MONGODB_ERROR)
+                () -> new CustomException(ResponseStatus.NO_DATA)
         );
 
         // 마감 시간이 현재 시간보다 미래면 true 반환
-        return readOnlyAuction.getEndedAt().isAfter(LocalDateTime.now());
+        if (readOnlyAuction.getEndedAt().isAfter(LocalDateTime.now())) return true;
+        else throw new CustomException(ResponseStatus.NOT_BIDDING_TIME);
     }
 
     @Override
