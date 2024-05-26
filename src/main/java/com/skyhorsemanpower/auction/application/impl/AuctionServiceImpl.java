@@ -7,6 +7,7 @@ import com.skyhorsemanpower.auction.data.projection.ParticipatedAuctionHistoryPr
 import com.skyhorsemanpower.auction.data.vo.*;
 import com.skyhorsemanpower.auction.repository.AuctionHistoryRepository;
 import com.skyhorsemanpower.auction.status.AuctionStateEnum;
+import com.skyhorsemanpower.auction.status.PageState;
 import com.skyhorsemanpower.auction.status.ResponseStatus;
 import com.skyhorsemanpower.auction.config.QuartzConfig;
 import com.skyhorsemanpower.auction.data.dto.*;
@@ -21,6 +22,10 @@ import com.skyhorsemanpower.auction.repository.cqrs.read.ReadOnlyAuctionReposito
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.SchedulerException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -112,50 +117,68 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     @Override
-    public List<SearchAllAuctionResponseVo> searchAllAuctionResponseVo(SearchAllAuctionDto searchAuctionDto) {
+    public SearchAllAuctionResponseVo searchAllAuction(SearchAllAuctionDto searchAuctionDto) {
+        Integer page = searchAuctionDto.getPage();
+        Integer size = searchAuctionDto.getSize();
+
+        // page, size 미지정 시, 기본값 할당
+        if (page == null || page < 0) page = PageState.DEFAULT.getPage();
+        if (size == null || size <= 0) size = PageState.DEFAULT.getSize();
+
         List<SearchAllAuctionResponseVo> searchAllAuctionResponseVos = new ArrayList<>();
-        SearchAllAuctionResponseVo searchAllAuctionResponseVo;
+        Page<ReadOnlyAuction> readOnlyAuctionPage = Page.empty();
         List<ReadOnlyAuction> readOnlyAuctions = new ArrayList<>();
-        String thumbnail;
 
         // keyword와 category 없으면 전체 검색
         if (searchAuctionDto.getKeyword() == null && searchAuctionDto.getCategory() == null) {
-            readOnlyAuctions = searchAllAuction();
+            readOnlyAuctionPage = searchAllAuction(page, size);
         }
-
         // keyword 검색
         else if (searchAuctionDto.getKeyword() != null && searchAuctionDto.getCategory() == null) {
-            readOnlyAuctions = searchAuctionByKeyword(searchAuctionDto.getKeyword());
+            readOnlyAuctionPage = searchAuctionByKeyword(searchAuctionDto.getKeyword(), page, size);
         }
-
         // category 검색
         else if (searchAuctionDto.getKeyword() == null && searchAuctionDto.getCategory() != null) {
-            readOnlyAuctions = searchAuctionByCategory(searchAuctionDto.getCategory());
+            readOnlyAuctionPage = searchAuctionByCategory(searchAuctionDto.getCategory(), page, size);
         }
-
         // keyword, category 혼합 검색
         else {
-            readOnlyAuctions = searchAuctionByKeywordAndCategory(searchAuctionDto.getKeyword(), searchAuctionDto.getCategory());
+            readOnlyAuctionPage = searchAuctionByKeywordAndCategory(searchAuctionDto.getKeyword(), searchAuctionDto.getCategory(), page, size);
         }
+
+        readOnlyAuctions = readOnlyAuctionPage.getContent();
+        List<SearchAllAuction> searchAllAuctionList = new ArrayList<>();
 
         for (ReadOnlyAuction readOnlyAuction : readOnlyAuctions) {
             // 각 경매의 auctionUuid를 통해 thumbnail 가져오기
             // thumbnail은 null이 가능하다.
-            thumbnail = auctionImagesRepository.getThumbnailUrl(readOnlyAuction.getAuctionUuid());
+            String thumbnail = auctionImagesRepository.getThumbnailUrl(readOnlyAuction.getAuctionUuid());
 
-            //Todo handle을 회원 서비스에서 받아와야 한다.
+            // Todo handle을 회원 서비스에서 받아와야 한다.
             String handle = "handle";
 
-            searchAllAuctionResponseVo = SearchAllAuctionResponseVo.readOnlyAuctionToSearchAllAuctionResponseVo(readOnlyAuction, thumbnail, handle);
-            searchAllAuctionResponseVos.add(searchAllAuctionResponseVo);
+            searchAllAuctionList.add(SearchAllAuction.builder()
+                    .auctionUuid(readOnlyAuction.getAuctionUuid())
+                    .handle(handle)
+                    .sellerUuid(readOnlyAuction.getSellerUuid())
+                    .title(readOnlyAuction.getTitle())
+                    .content(readOnlyAuction.getContent())
+                    .category(readOnlyAuction.getCategory())
+                    .minimumBiddingPrice(readOnlyAuction.getMinimumBiddingPrice())
+                    .thumbnail(thumbnail)
+                    .createdAt(readOnlyAuction.getCreatedAt())
+                    .endedAt(readOnlyAuction.getEndedAt())
+                    .build());
         }
-        return searchAllAuctionResponseVos;
+
+        boolean hasNext = readOnlyAuctionPage.hasNext();
+        return new SearchAllAuctionResponseVo(searchAllAuctionList, page, hasNext);
     }
 
 
     // keyword, category 혼합 검색
-    private List<ReadOnlyAuction> searchAuctionByKeywordAndCategory(String keyword, String category) {
-        List<ReadOnlyAuction> results = readOnlyAuctionRepository.findAllByTitleLikeAndCategory(keyword, category);
+    private Page<ReadOnlyAuction> searchAuctionByKeywordAndCategory(String keyword, String category, int page, int size) {
+        Page<ReadOnlyAuction> results = readOnlyAuctionRepository.findAllByTitleLikeAndCategory(keyword, category, PageRequest.of(page, size));
         // 조회 결과 있는 경우
         if (!results.isEmpty()) return results;
             // 조회 결과 없는 경우
@@ -164,8 +187,8 @@ public class AuctionServiceImpl implements AuctionService {
 
 
     // category 검색
-    private List<ReadOnlyAuction> searchAuctionByCategory(String category) {
-        List<ReadOnlyAuction> results = readOnlyAuctionRepository.findAllByCategory(category);
+    private Page<ReadOnlyAuction> searchAuctionByCategory(String category, int page, int size) {
+        Page<ReadOnlyAuction> results = readOnlyAuctionRepository.findAllByCategory(category, PageRequest.of(page, size));
         // 조회 결과 있는 경우
         if (!results.isEmpty()) return results;
             // 조회 결과 없는 경우
@@ -174,31 +197,32 @@ public class AuctionServiceImpl implements AuctionService {
 
 
     // keyword 검색
-    private List<ReadOnlyAuction> searchAuctionByKeyword(String keyword) {
-        List<ReadOnlyAuction> results = readOnlyAuctionRepository.findAllByTitleLike(keyword);
+    private Page<ReadOnlyAuction> searchAuctionByKeyword(String keyword, int page, int size) {
+        Page<ReadOnlyAuction> results = readOnlyAuctionRepository.findAllByTitleLike(keyword, PageRequest.of(page, size));
         // 조회 결과 있는 경우
         if (!results.isEmpty()) return results;
             // 조회 결과 없는 경우
         else throw new CustomException(ResponseStatus.NO_DATA);
     }
 
-
     // 현재 진행되는 전체 경매글 검색
-    private List<ReadOnlyAuction> searchAllAuction() {
+    private Page<ReadOnlyAuction> searchAllAuction(int page, int size) {
         Criteria criteria = new Criteria().andOperator(
                 Criteria.where("createdAt").lte(LocalDateTime.now()),
                 Criteria.where("endedAt").gte(LocalDateTime.now())
         );
 
-        Query query = new Query(criteria);
+        Query query = new Query(criteria).with(PageRequest.of(page, size));
 
+        long total = mongoTemplate.count(query, ReadOnlyAuction.class);
         List<ReadOnlyAuction> results = mongoTemplate.find(query, ReadOnlyAuction.class);
-        // 조회 결과 있는 경우
-        if (!results.isEmpty()) return results;
-            // 조회 결과 없는 경우
-        else throw new CustomException(ResponseStatus.NO_DATA);
-    }
 
+        if (results.isEmpty()) {
+            throw new CustomException(ResponseStatus.NO_DATA);
+        }
+
+        return new PageImpl<>(results, PageRequest.of(page, size), total);
+    }
 
     @Override
     public SearchAuctionResponseVo searchAuction(SearchAuctionDto searchAuctionDto) {
