@@ -11,7 +11,7 @@ import java.util.List;
 public interface AuctionService {
     void createAuction(CreateAuctionDto createAuctionDto);
 
-    List<SearchAllAuctionResponseVo> searchAllAuctionResponseVo(SearchAllAuctionDto searchAuctionDto);
+    SearchAllAuctionResponseVo searchAllAuction(SearchAllAuctionDto searchAuctionDto);
 
     SearchAuctionResponseVo searchAuction(SearchAuctionDto searchAuctionDto);
 
