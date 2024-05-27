@@ -34,6 +34,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 
@@ -160,7 +161,7 @@ public class AuctionServiceImpl implements AuctionService {
             String thumbnail = auctionImagesRepository.getThumbnailUrl(readOnlyAuction.getAuctionUuid());
 
             // Todo 배포환경 테스트 필요
-            String handle = getHandle(readOnlyAuction.getSellerUuid());
+            String handle = getHandleByWebClient(readOnlyAuction.getSellerUuid());
 
             searchAllAuctionList.add(SearchAllAuction.builder()
                     .auctionUuid(readOnlyAuction.getAuctionUuid())
@@ -243,8 +244,7 @@ public class AuctionServiceImpl implements AuctionService {
         );
 
         // Todo 배포환경 테스트 필요
-        String handle = getHandle(auction.getSellerUuid());
-        log.info(">>>>>>>>>>>> Handle : {}", handle);
+        String handle = getHandleByWebClient(auction.getSellerUuid());
 
         return SearchAuctionResponseVo.builder()
                 .readOnlyAuction(auction)
@@ -324,8 +324,7 @@ public class AuctionServiceImpl implements AuctionService {
                 String thumbnail = auctionImagesRepository.getThumbnailUrl(auction.getAuctionUuid());
 
                 // Todo 배포환경 테스트 필요
-                String handle = getHandle(auction.getSellerUuid());
-                log.info(">>>>>>>>>>>> Handle : {}", handle);
+                String handle = getHandleByWebClient(auction.getSellerUuid());
 
                 createdAuctionHistoryResponseVos.add(createdAuctionHistoryResponseVo.toVo(auction, thumbnail, handle));
             }
@@ -353,7 +352,7 @@ public class AuctionServiceImpl implements AuctionService {
                     );
 
             // Todo 배포환경 테스트 필요
-            String handle = getHandle(auction.getSellerUuid());
+            String handle = getHandleByWebClient(auction.getSellerUuid());
             participatedAuctionHistoryResponseVos.add(participatedAuctionHistoryResponseVo.toVo(auction, thumbnail, handle));
         }
         return participatedAuctionHistoryResponseVos;
@@ -576,8 +575,8 @@ public class AuctionServiceImpl implements AuctionService {
         }
     }
 
-    // 회원 서비스에 uuid를 이용해 handle 데이터 요청
-    private String getHandle(String uuid) {
+    // restTemplate 통신으로 회원 서비스에 uuid를 이용해 handle 데이터 요청
+    private String getHandleByRestTemplate(String uuid) {
         URI uri = UriComponentsBuilder
                 .fromUriString(ServerPathEnum.MEMBER_SERVER.getServer())
                 .path(ServerPathEnum.GET_HANDLE.getServer() + "/{uuid}")
@@ -592,4 +591,15 @@ public class AuctionServiceImpl implements AuctionService {
         return responseEntity.getBody();
     }
 
+    // webClient 통신으로 회원 서비스에 uuid를 이용해 handle 데이터 요청
+    private String getHandleByWebClient(String uuid) {
+        WebClient webClient = WebClient.create(ServerPathEnum.MEMBER_SERVER.getServer());
+
+        ResponseEntity<String> responseEntity = webClient.get()
+                .uri(uriBuilder -> uriBuilder.path(ServerPathEnum.GET_HANDLE.getServer() + "/{uuid}")
+                        .build(uuid))
+                .retrieve().toEntity(String.class).block();
+
+        return responseEntity.getBody();
+    }
 }
