@@ -19,21 +19,25 @@ import com.skyhorsemanpower.auction.repository.AuctionHistoryReactiveRepository;
 import com.skyhorsemanpower.auction.repository.AuctionImagesRepository;
 import com.skyhorsemanpower.auction.repository.cqrs.command.CommandOnlyAuctionRepository;
 import com.skyhorsemanpower.auction.repository.cqrs.read.ReadOnlyAuctionRepository;
+import com.skyhorsemanpower.auction.common.ServerPathEnum;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.SchedulerException;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.support.PageableExecutionUtils;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -239,7 +243,8 @@ public class AuctionServiceImpl implements AuctionService {
         );
 
         //Todo handle을 회원 서비스에서 받아와야 한다.
-        String handle = "handle";
+        String handle = getHandle(auction.getSellerUuid());
+        log.info(">>>>>>>>>>>> Handle : {}", handle);
 
         return SearchAuctionResponseVo.builder()
                 .readOnlyAuction(auction)
@@ -319,7 +324,8 @@ public class AuctionServiceImpl implements AuctionService {
                 String thumbnail = auctionImagesRepository.getThumbnailUrl(auction.getAuctionUuid());
 
                 //Todo handle을 회원 서비스에서 받아와야 한다.
-                String handle = "handle";
+                String handle = getHandle(auction.getSellerUuid());
+                log.info(">>>>>>>>>>>> Handle : {}", handle);
 
                 createdAuctionHistoryResponseVos.add(createdAuctionHistoryResponseVo.toVo(auction, thumbnail, handle));
             }
@@ -568,6 +574,22 @@ public class AuctionServiceImpl implements AuctionService {
         } catch (Exception e) {
             throw new CustomException(ResponseStatus.POSTGRESQL_ERROR);
         }
+    }
+
+    // 회원 서비스에 uuid를 이용해 handle 데이터 요청
+    public String getHandle(String uuid) {
+        URI uri = UriComponentsBuilder
+                .fromUriString(ServerPathEnum.MEMBER_SERVER.getServer())
+                .path(ServerPathEnum.GET_HANDLE + "/{uuid}")
+                .encode()
+                .build()
+                .expand(uuid)   // path의 중괄호를 순서대로 입력
+                .toUri();
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> responseEntity = restTemplate.getForEntity(uri, String.class);
+
+        return responseEntity.getBody();
     }
 
 }
