@@ -159,8 +159,8 @@ public class AuctionServiceImpl implements AuctionService {
             // thumbnail은 null이 가능하다.
             String thumbnail = auctionImagesRepository.getThumbnailUrl(readOnlyAuction.getAuctionUuid());
 
-            // Todo handle을 회원 서비스에서 받아와야 한다.
-            String handle = "handle";
+            // Todo 배포환경 테스트 필요
+            String handle = getHandle(readOnlyAuction.getSellerUuid());
 
             searchAllAuctionList.add(SearchAllAuction.builder()
                     .auctionUuid(readOnlyAuction.getAuctionUuid())
@@ -242,7 +242,7 @@ public class AuctionServiceImpl implements AuctionService {
                 () -> new CustomException(ResponseStatus.NO_DATA)
         );
 
-        //Todo handle을 회원 서비스에서 받아와야 한다.
+        // Todo 배포환경 테스트 필요
         String handle = getHandle(auction.getSellerUuid());
         log.info(">>>>>>>>>>>> Handle : {}", handle);
 
@@ -323,7 +323,7 @@ public class AuctionServiceImpl implements AuctionService {
                 // thumbnail 호출
                 String thumbnail = auctionImagesRepository.getThumbnailUrl(auction.getAuctionUuid());
 
-                //Todo handle을 회원 서비스에서 받아와야 한다.
+                // Todo 배포환경 테스트 필요
                 String handle = getHandle(auction.getSellerUuid());
                 log.info(">>>>>>>>>>>> Handle : {}", handle);
 
@@ -346,14 +346,14 @@ public class AuctionServiceImpl implements AuctionService {
             // thumbnail 호출
             String thumbnail = auctionImagesRepository.getThumbnailUrl(participatedAuctionHistoryProjection.getAuctionUuid());
 
-            //Todo handle을 회원 서비스에서 받아와야 한다.
-            String handle = "handle";
-
             // auction 엔티티 조회
             ReadOnlyAuction auction = readOnlyAuctionRepository.findByAuctionUuid(participatedAuctionHistoryProjection.getAuctionUuid())
                     .orElseThrow(
                             () -> new CustomException(ResponseStatus.NO_DATA)
                     );
+
+            // Todo 배포환경 테스트 필요
+            String handle = getHandle(auction.getSellerUuid());
             participatedAuctionHistoryResponseVos.add(participatedAuctionHistoryResponseVo.toVo(auction, thumbnail, handle));
         }
         return participatedAuctionHistoryResponseVos;
