@@ -580,7 +580,7 @@ public class AuctionServiceImpl implements AuctionService {
     private String getHandle(String uuid) {
         URI uri = UriComponentsBuilder
                 .fromUriString(ServerPathEnum.MEMBER_SERVER.getServer())
-                .path(ServerPathEnum.GET_HANDLE + "/{uuid}")
+                .path(ServerPathEnum.GET_HANDLE.getServer() + "/{uuid}")
                 .encode()
                 .build()
                 .expand(uuid)   // path의 중괄호를 순서대로 입력
