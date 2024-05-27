@@ -577,7 +577,7 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     // 회원 서비스에 uuid를 이용해 handle 데이터 요청
-    public String getHandle(String uuid) {
+    private String getHandle(String uuid) {
         URI uri = UriComponentsBuilder
                 .fromUriString(ServerPathEnum.MEMBER_SERVER.getServer())
                 .path(ServerPathEnum.GET_HANDLE + "/{uuid}")
