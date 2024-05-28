@@ -41,6 +41,7 @@ dependencies {
 	runtimeOnly 'org.postgresql:postgresql'
 	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
 	implementation 'org.springframework.cloud:spring-cloud-starter-config'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.postgresql:postgresql'
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
@@ -65,6 +66,14 @@ dependencies {
 	// Quartz 스케쥴러
 	implementation 'org.springframework.boot:spring-boot-starter-quartz'
 
+	// kafka
+	implementation 'org.springframework.kafka:spring-kafka'
+	testImplementation 'org.springframework.kafka:spring-kafka-test'
+	implementation 'org.springframework.cloud:spring-cloud-starter-bus-kafka'
+	implementation 'com.github.danielwegener:logback-kafka-appender:0.1.0'
+
+	// Logstash
+	implementation 'net.logstash.logback:logstash-logback-encoder:6.2'
 }
 
 tasks.named('bootBuildImage') {
