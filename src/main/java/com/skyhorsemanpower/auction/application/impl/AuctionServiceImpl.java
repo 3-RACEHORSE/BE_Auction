@@ -170,7 +170,7 @@ public class AuctionServiceImpl implements AuctionService {
             // handle 값을 받아오고 나서 실행할 콜백함수를 지정한다.
             handleMono.subscribe(
               handle -> {
-                  searchAllAuctionList.add(SearchAllAuction.builder()
+                  SearchAllAuction searchAllAuction = SearchAllAuction.builder()
                           .auctionUuid(readOnlyAuction.getAuctionUuid())
                           .handle(handle)
                           .sellerUuid(readOnlyAuction.getSellerUuid())
@@ -181,10 +181,13 @@ public class AuctionServiceImpl implements AuctionService {
                           .thumbnail(thumbnail)
                           .createdAt(readOnlyAuction.getCreatedAt())
                           .endedAt(readOnlyAuction.getEndedAt())
-                          .build());
+                          .build();
+                  log.info("searchAllAuction : {}", searchAllAuction.toString() );
+                  searchAllAuctionList.add(searchAllAuction);
               }
             );
         }
+        log.info("result : , {}", searchAllAuctionList.toString());
 
         boolean hasNext = readOnlyAuctionPage.hasNext();
         return new SearchAllAuctionResponseVo(searchAllAuctionList, page, hasNext);
