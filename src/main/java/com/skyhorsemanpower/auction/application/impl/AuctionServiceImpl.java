@@ -163,21 +163,48 @@ public class AuctionServiceImpl implements AuctionService {
 
             // Todo 배포환경 테스트 필요
             // handle 값 통신되는지 확인 필요
-            String handle = getHandleByWebClientBlocking(readOnlyAuction.getSellerUuid());
+// <<<<<<< refactor/#93
 
-            searchAllAuctionList.add(SearchAllAuction.builder()
-                    .auctionUuid(readOnlyAuction.getAuctionUuid())
-                    .handle(handle)
-                    .sellerUuid(readOnlyAuction.getSellerUuid())
-                    .title(readOnlyAuction.getTitle())
-                    .content(readOnlyAuction.getContent())
-                    .category(readOnlyAuction.getCategory())
-                    .minimumBiddingPrice(readOnlyAuction.getMinimumBiddingPrice())
-                    .thumbnail(thumbnail)
-                    .createdAt(readOnlyAuction.getCreatedAt())
-                    .endedAt(readOnlyAuction.getEndedAt())
-                    .build());
+            // Mono 형식으로 handle 값을 받아온다.
+            Mono<String> handleMono = getHandleByWebClient(readOnlyAuction.getSellerUuid());
+
+            // handle 값을 받아오고 나서 실행할 콜백함수를 지정한다.
+            handleMono.subscribe(
+              handle -> {
+                  SearchAllAuction searchAllAuction = SearchAllAuction.builder()
+                          .auctionUuid(readOnlyAuction.getAuctionUuid())
+                          .handle(handle)
+                          .sellerUuid(readOnlyAuction.getSellerUuid())
+                          .title(readOnlyAuction.getTitle())
+                          .content(readOnlyAuction.getContent())
+                          .category(readOnlyAuction.getCategory())
+                          .minimumBiddingPrice(readOnlyAuction.getMinimumBiddingPrice())
+                          .thumbnail(thumbnail)
+                          .createdAt(readOnlyAuction.getCreatedAt())
+                          .endedAt(readOnlyAuction.getEndedAt())
+                          .build();
+                  log.info("searchAllAuction : {}", searchAllAuction.toString() );
+                  searchAllAuctionList.add(searchAllAuction);
+              }
+            );
+// =======
+//             String handle = getHandleByWebClientBlocking(readOnlyAuction.getSellerUuid());
+
+//             searchAllAuctionList.add(SearchAllAuction.builder()
+//                     .auctionUuid(readOnlyAuction.getAuctionUuid())
+//                     .handle(handle)
+//                     .sellerUuid(readOnlyAuction.getSellerUuid())
+//                     .title(readOnlyAuction.getTitle())
+//                     .content(readOnlyAuction.getContent())
+//                     .category(readOnlyAuction.getCategory())
+//                     .minimumBiddingPrice(readOnlyAuction.getMinimumBiddingPrice())
+//                     .thumbnail(thumbnail)
+//                     .createdAt(readOnlyAuction.getCreatedAt())
+//                     .endedAt(readOnlyAuction.getEndedAt())
+//                     .build());
+// >>>>>>> develop
         }
+        log.info("result : , {}", searchAllAuctionList.toString());
 
         boolean hasNext = readOnlyAuctionPage.hasNext();
         return new SearchAllAuctionResponseVo(searchAllAuctionList, page, hasNext);
@@ -259,9 +286,10 @@ public class AuctionServiceImpl implements AuctionService {
 
     @Override
     public void offerBiddingPrice(OfferBiddingPriceDto offerBiddingPriceDto) {
-        // 조건1. 마감 시간이 현재 시간보다 미래면 입찰 제시 가능
-        // 조건2. 입찰 제시가가 최고 입찰가보다 커야한다.
-        if (isAuctionActive(offerBiddingPriceDto.getAuctionUuid())
+        // 조건1. 경매 작성자는 경매에 참여할 수 없음
+        // 조건2. 마감 시간이 현재 시간보다 미래면 입찰 제시 가능
+        // 조건3. 입찰 제시가가 최고 입찰가보다 커야한다.
+        if (!isAuctionSeller(offerBiddingPriceDto.getAuctionUuid(), offerBiddingPriceDto.getBiddingUuid()) && isAuctionActive(offerBiddingPriceDto.getAuctionUuid())
                 && checkBiddingPrice(offerBiddingPriceDto.getBiddingUuid(), offerBiddingPriceDto.getAuctionUuid(), offerBiddingPriceDto.getBiddingPrice())) {
             AuctionHistory auctionHistory = AuctionHistory.builder()
                     .auctionUuid(offerBiddingPriceDto.getAuctionUuid())
@@ -274,7 +302,15 @@ public class AuctionServiceImpl implements AuctionService {
             } catch (Exception e) {
                 throw new CustomException(ResponseStatus.MONGODB_ERROR);
             }
-        }
+        } else throw new CustomException(ResponseStatus.CAN_NOT_BIDDING);
+    }
+
+    private boolean isAuctionSeller(String auctionUuid, String biddingUuid) {
+        String sellerUuid = readOnlyAuctionRepository.findByAuctionUuid(auctionUuid).orElseThrow(
+                () -> new CustomException(ResponseStatus.NO_DATA)
+        ).getSellerUuid();
+
+        return sellerUuid.equals(biddingUuid);
     }
 
     private boolean checkBiddingPrice(String biddingUuid, String auctionUuid, int biddingPrice) {
