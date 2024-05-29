@@ -26,4 +26,7 @@ public class SearchAuctionResponseVo {
         this.images = images;
     }
 
+    public void setHandle(String handle) {
+        this.handle = handle;
+    }
 }
