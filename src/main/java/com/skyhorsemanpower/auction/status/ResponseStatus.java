@@ -31,8 +31,11 @@ public enum ResponseStatus {
     // 조회 데이터가 없는 경우
     NO_DATA(404, "데이터가 없습니다."),
 
+    // 경매 입찰 불가능
+    CAN_NOT_BIDDING(404, "입찰이 불가능합니다."),
+
     // 예외 테스트 용
-    EXCEPTION_TEST(500, "예외 테스트");
+    EXCEPTION_TEST(500, "예외 테스트") ;
 
     private final int code;
     private final String message;
