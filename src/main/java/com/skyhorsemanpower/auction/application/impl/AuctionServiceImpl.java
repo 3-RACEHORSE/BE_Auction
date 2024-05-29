@@ -163,27 +163,20 @@ public class AuctionServiceImpl implements AuctionService {
 
             // Todo 배포환경 테스트 필요
             // handle 값 통신되는지 확인 필요
+            String handle = getHandleByWebClientBlocking(readOnlyAuction.getSellerUuid());
 
-            // Mono 형식으로 handle 값을 받아온다.
-            Mono<String> handleMono = getHandleByWebClient(readOnlyAuction.getSellerUuid());
-
-            // handle 값을 받아오고 나서 실행할 콜백함수를 지정한다.
-            handleMono.subscribe(
-              handle -> {
-                  searchAllAuctionList.add(SearchAllAuction.builder()
-                          .auctionUuid(readOnlyAuction.getAuctionUuid())
-                          .handle(handle)
-                          .sellerUuid(readOnlyAuction.getSellerUuid())
-                          .title(readOnlyAuction.getTitle())
-                          .content(readOnlyAuction.getContent())
-                          .category(readOnlyAuction.getCategory())
-                          .minimumBiddingPrice(readOnlyAuction.getMinimumBiddingPrice())
-                          .thumbnail(thumbnail)
-                          .createdAt(readOnlyAuction.getCreatedAt())
-                          .endedAt(readOnlyAuction.getEndedAt())
-                          .build());
-              }
-            );
+            searchAllAuctionList.add(SearchAllAuction.builder()
+                    .auctionUuid(readOnlyAuction.getAuctionUuid())
+                    .handle(handle)
+                    .sellerUuid(readOnlyAuction.getSellerUuid())
+                    .title(readOnlyAuction.getTitle())
+                    .content(readOnlyAuction.getContent())
+                    .category(readOnlyAuction.getCategory())
+                    .minimumBiddingPrice(readOnlyAuction.getMinimumBiddingPrice())
+                    .thumbnail(thumbnail)
+                    .createdAt(readOnlyAuction.getCreatedAt())
+                    .endedAt(readOnlyAuction.getEndedAt())
+                    .build());
         }
 
         boolean hasNext = readOnlyAuctionPage.hasNext();
@@ -254,21 +247,14 @@ public class AuctionServiceImpl implements AuctionService {
 
         // Todo 배포환경 테스트 필요
         // handle 값 통신되는지 확인 필요
-        Mono<String> handleMono = getHandleByWebClient(auction.getSellerUuid());
+        String handle = getHandleByWebClientBlocking(auction.getSellerUuid());
 
-        SearchAuctionResponseVo searchAuctionResponseVo = SearchAuctionResponseVo.builder()
+        return SearchAuctionResponseVo.builder()
                 .readOnlyAuction(auction)
+                .handle(handle)
                 .thumbnail(auctionImagesRepository.getThumbnailUrl(searchAuctionDto.getAuctionUuid()))
                 .images(auctionImagesRepository.getImagesUrl(searchAuctionDto.getAuctionUuid()))
                 .build();
-
-        handleMono.subscribe(
-                handle -> {
-                    searchAuctionResponseVo.setHandle(handle);
-                }
-        );
-
-        return searchAuctionResponseVo;
     }
 
     @Override
@@ -342,10 +328,8 @@ public class AuctionServiceImpl implements AuctionService {
 
                 // Todo 배포환경 테스트 필요
                 // 배포 환경에서 데이터 받아오는 지 확인 필요
-                Mono<String> handleMono = getHandleByWebClient(auction.getSellerUuid());
-                handleMono.subscribe(
-                        handle -> createdAuctionHistoryResponseVos.add(createdAuctionHistoryResponseVo.toVo(auction, thumbnail, handle))
-                );
+                String handle = getHandleByWebClientBlocking(auction.getSellerUuid());
+                createdAuctionHistoryResponseVos.add(createdAuctionHistoryResponseVo.toVo(auction, thumbnail, handle));
             }
             return createdAuctionHistoryResponseVos;
         }
@@ -372,10 +356,8 @@ public class AuctionServiceImpl implements AuctionService {
 
             // Todo 배포환경 테스트 필요
             // 배포 환경에서 데이터 받아오는 지 확인 필요
-            Mono<String> handleMono = getHandleByWebClient(auction.getSellerUuid());
-            handleMono.subscribe(
-                    handle -> participatedAuctionHistoryResponseVos.add(participatedAuctionHistoryResponseVo.toVo(auction, thumbnail, handle))
-            );
+            String handle = getHandleByWebClientBlocking(auction.getSellerUuid());
+            participatedAuctionHistoryResponseVos.add(participatedAuctionHistoryResponseVo.toVo(auction, thumbnail, handle));
         }
         return participatedAuctionHistoryResponseVos;
     }
