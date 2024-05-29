@@ -163,21 +163,48 @@ public class AuctionServiceImpl implements AuctionService {
 
             // Todo 배포환경 테스트 필요
             // handle 값 통신되는지 확인 필요
-            String handle = getHandleByWebClientBlocking(readOnlyAuction.getSellerUuid());
+// <<<<<<< refactor/#93
 
-            searchAllAuctionList.add(SearchAllAuction.builder()
-                    .auctionUuid(readOnlyAuction.getAuctionUuid())
-                    .handle(handle)
-                    .sellerUuid(readOnlyAuction.getSellerUuid())
-                    .title(readOnlyAuction.getTitle())
-                    .content(readOnlyAuction.getContent())
-                    .category(readOnlyAuction.getCategory())
-                    .minimumBiddingPrice(readOnlyAuction.getMinimumBiddingPrice())
-                    .thumbnail(thumbnail)
-                    .createdAt(readOnlyAuction.getCreatedAt())
-                    .endedAt(readOnlyAuction.getEndedAt())
-                    .build());
+            // Mono 형식으로 handle 값을 받아온다.
+            Mono<String> handleMono = getHandleByWebClient(readOnlyAuction.getSellerUuid());
+
+            // handle 값을 받아오고 나서 실행할 콜백함수를 지정한다.
+            handleMono.subscribe(
+              handle -> {
+                  SearchAllAuction searchAllAuction = SearchAllAuction.builder()
+                          .auctionUuid(readOnlyAuction.getAuctionUuid())
+                          .handle(handle)
+                          .sellerUuid(readOnlyAuction.getSellerUuid())
+                          .title(readOnlyAuction.getTitle())
+                          .content(readOnlyAuction.getContent())
+                          .category(readOnlyAuction.getCategory())
+                          .minimumBiddingPrice(readOnlyAuction.getMinimumBiddingPrice())
+                          .thumbnail(thumbnail)
+                          .createdAt(readOnlyAuction.getCreatedAt())
+                          .endedAt(readOnlyAuction.getEndedAt())
+                          .build();
+                  log.info("searchAllAuction : {}", searchAllAuction.toString() );
+                  searchAllAuctionList.add(searchAllAuction);
+              }
+            );
+// =======
+//             String handle = getHandleByWebClientBlocking(readOnlyAuction.getSellerUuid());
+
+//             searchAllAuctionList.add(SearchAllAuction.builder()
+//                     .auctionUuid(readOnlyAuction.getAuctionUuid())
+//                     .handle(handle)
+//                     .sellerUuid(readOnlyAuction.getSellerUuid())
+//                     .title(readOnlyAuction.getTitle())
+//                     .content(readOnlyAuction.getContent())
+//                     .category(readOnlyAuction.getCategory())
+//                     .minimumBiddingPrice(readOnlyAuction.getMinimumBiddingPrice())
+//                     .thumbnail(thumbnail)
+//                     .createdAt(readOnlyAuction.getCreatedAt())
+//                     .endedAt(readOnlyAuction.getEndedAt())
+//                     .build());
+// >>>>>>> develop
         }
+        log.info("result : , {}", searchAllAuctionList.toString());
 
         boolean hasNext = readOnlyAuctionPage.hasNext();
         return new SearchAllAuctionResponseVo(searchAllAuctionList, page, hasNext);
