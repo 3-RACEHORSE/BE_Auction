@@ -1,10 +1,13 @@
 package com.skyhorsemanpower.auction.presentation;
 
 import com.skyhorsemanpower.auction.application.AuctionService;
+import com.skyhorsemanpower.auction.common.CustomException;
 import com.skyhorsemanpower.auction.common.SuccessResponse;
 import com.skyhorsemanpower.auction.data.dto.*;
 import com.skyhorsemanpower.auction.data.vo.*;
 import com.skyhorsemanpower.auction.domain.AuctionHistory;
+import com.skyhorsemanpower.auction.repository.cqrs.read.ReadOnlyAuctionRepository;
+import com.skyhorsemanpower.auction.status.ResponseStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +24,7 @@ import java.util.List;
 @RequestMapping("/api/v1/non-authorization/auction")
 public class NonAuthorizationAuctionController {
     private final AuctionService auctionService;
+    private final ReadOnlyAuctionRepository readOnlyAuctionRepository;
 
     // 키워드와 카테고리를 통한 경매 리스트 조회
     @GetMapping("/search")
@@ -75,5 +79,15 @@ public class NonAuthorizationAuctionController {
     @Operation(summary = "메인 페이지_높은 입찰가 경매글", description = "메인 페이지_높은 입찰가 경매글")
     public SuccessResponse<List<MainHighBiddingPriceAuctionResponseVo>> mainHighBiddingPriceAuction() {
         return new SuccessResponse<>(auctionService.mainHighBiddingPriceAuction());
+    }
+
+    // 구독 서비스에 auctionUuid 요청 시, sellerUuid 반환
+    @GetMapping("/seller-uuid")
+    @Operation(summary = "경매글 작성자 uuid 조회(백엔드 통신)", description = "구독 서비스에 auctionUuid 요청 시, sellerUuid 반환")
+    public SuccessResponse<String> getSellerUuid(
+            @RequestHeader String auctionUuid) {
+        return new SuccessResponse<>(readOnlyAuctionRepository.findByAuctionUuid(auctionUuid).orElseThrow(
+                () -> new CustomException(ResponseStatus.NO_DATA)
+        ).getSellerUuid());
     }
 }
