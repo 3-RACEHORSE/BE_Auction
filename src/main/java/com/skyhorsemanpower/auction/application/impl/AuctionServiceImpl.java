@@ -259,9 +259,10 @@ public class AuctionServiceImpl implements AuctionService {
 
     @Override
     public void offerBiddingPrice(OfferBiddingPriceDto offerBiddingPriceDto) {
-        // 조건1. 마감 시간이 현재 시간보다 미래면 입찰 제시 가능
-        // 조건2. 입찰 제시가가 최고 입찰가보다 커야한다.
-        if (isAuctionActive(offerBiddingPriceDto.getAuctionUuid())
+        // 조건1. 경매 작성자는 경매에 참여할 수 없음
+        // 조건2. 마감 시간이 현재 시간보다 미래면 입찰 제시 가능
+        // 조건3. 입찰 제시가가 최고 입찰가보다 커야한다.
+        if (!isAuctionSeller(offerBiddingPriceDto.getAuctionUuid(), offerBiddingPriceDto.getBiddingUuid()) && isAuctionActive(offerBiddingPriceDto.getAuctionUuid())
                 && checkBiddingPrice(offerBiddingPriceDto.getBiddingUuid(), offerBiddingPriceDto.getAuctionUuid(), offerBiddingPriceDto.getBiddingPrice())) {
             AuctionHistory auctionHistory = AuctionHistory.builder()
                     .auctionUuid(offerBiddingPriceDto.getAuctionUuid())
@@ -274,7 +275,15 @@ public class AuctionServiceImpl implements AuctionService {
             } catch (Exception e) {
                 throw new CustomException(ResponseStatus.MONGODB_ERROR);
             }
-        }
+        } else throw new CustomException(ResponseStatus.CAN_NOT_BIDDING);
+    }
+
+    private boolean isAuctionSeller(String auctionUuid, String biddingUuid) {
+        String sellerUuid = readOnlyAuctionRepository.findByAuctionUuid(auctionUuid).orElseThrow(
+                () -> new CustomException(ResponseStatus.NO_DATA)
+        ).getSellerUuid();
+
+        return sellerUuid.equals(biddingUuid);
     }
 
     private boolean checkBiddingPrice(String biddingUuid, String auctionUuid, int biddingPrice) {
