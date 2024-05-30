@@ -153,7 +153,7 @@ public class AuctionServiceImpl implements AuctionService {
         }
 
         readOnlyAuctions = readOnlyAuctionPage.getContent();
-        List<SearchAllAuction> searchAllAuctionList = new ArrayList<>();
+        List<AuctionAndIsSubscribedDto> auctionAndIsSubscribedDtos = new ArrayList<>();
 
         for (ReadOnlyAuction readOnlyAuction : readOnlyAuctions) {
             // 각 경매의 auctionUuid를 통해 thumbnail 가져오기
@@ -162,25 +162,50 @@ public class AuctionServiceImpl implements AuctionService {
 
             // Todo 배포환경 테스트 필요
             // handle 값 통신되는지 확인 필요
-             String handle = getHandleByWebClientBlocking(readOnlyAuction.getSellerUuid());
+            String handle = getHandleByWebClientBlocking(readOnlyAuction.getSellerUuid());
 
-             searchAllAuctionList.add(SearchAllAuction.builder()
-                     .auctionUuid(readOnlyAuction.getAuctionUuid())
-                     .handle(handle)
-                     .sellerUuid(readOnlyAuction.getSellerUuid())
-                     .title(readOnlyAuction.getTitle())
-                     .content(readOnlyAuction.getContent())
-                     .category(readOnlyAuction.getCategory())
-                     .minimumBiddingPrice(readOnlyAuction.getMinimumBiddingPrice())
-                     .thumbnail(thumbnail)
-                     .createdAt(readOnlyAuction.getCreatedAt())
-                     .endedAt(readOnlyAuction.getEndedAt())
-                     .build());
+            // 로그인이 된 경우, 회원 서비스와 통신해서 구독 여부 획득
+            // 기본값 false
+            boolean isSubscribed;
+
+            if (searchAuctionDto.isUuid()) {
+                isSubscribed = getIsSubscribedByWebClientBlocking(searchAuctionDto.getUuid(), readOnlyAuction.getAuctionUuid());
+
+                auctionAndIsSubscribedDtos.add(AuctionAndIsSubscribedDto.builder()
+                        .auctionUuid(readOnlyAuction.getAuctionUuid())
+                        .handle(handle)
+                        .sellerUuid(readOnlyAuction.getSellerUuid())
+                        .title(readOnlyAuction.getTitle())
+                        .content(readOnlyAuction.getContent())
+                        .category(readOnlyAuction.getCategory())
+                        .minimumBiddingPrice(readOnlyAuction.getMinimumBiddingPrice())
+                        .thumbnail(thumbnail)
+                        .createdAt(readOnlyAuction.getCreatedAt())
+                        .endedAt(readOnlyAuction.getEndedAt())
+                        .isSubscribed(isSubscribed)
+                        .build());
+            }
+
+            // 로그인이 안된 경우, 통신을 진행하지 않는다.
+            // isSubscibed = false
+            else {
+                auctionAndIsSubscribedDtos.add(AuctionAndIsSubscribedDto.builder()
+                        .auctionUuid(readOnlyAuction.getAuctionUuid())
+                        .handle(handle)
+                        .sellerUuid(readOnlyAuction.getSellerUuid())
+                        .title(readOnlyAuction.getTitle())
+                        .content(readOnlyAuction.getContent())
+                        .category(readOnlyAuction.getCategory())
+                        .minimumBiddingPrice(readOnlyAuction.getMinimumBiddingPrice())
+                        .thumbnail(thumbnail)
+                        .createdAt(readOnlyAuction.getCreatedAt())
+                        .endedAt(readOnlyAuction.getEndedAt())
+                        .build());
+            }
         }
-        log.info("result : , {}", searchAllAuctionList.toString());
 
         boolean hasNext = readOnlyAuctionPage.hasNext();
-        return new SearchAllAuctionResponseVo(searchAllAuctionList, page, hasNext);
+        return new SearchAllAuctionResponseVo(auctionAndIsSubscribedDtos, page, hasNext);
     }
 
 
@@ -624,5 +649,23 @@ public class AuctionServiceImpl implements AuctionService {
                 .uri(uriBuilder -> uriBuilder.path(ServerPathEnum.GET_HANDLE.getServer() + "/{uuid}")
                         .build(uuid))
                 .retrieve().bodyToMono(String.class);
+    }
+
+    // webClient-blocking 통신으로 회원 서비스에 uuid를 이용해
+    private boolean getIsSubscribedByWebClientBlocking(String uuid, String auctionUuid) {
+        WebClient webClient = WebClient.create(ServerPathEnum.MEMBER_SERVER.getServer());
+
+        try {
+            ResponseEntity<Boolean> responseEntity = webClient.get()
+                    .uri(uriBuilder -> uriBuilder.path(ServerPathEnum.GET_ISSUBSCRIBED.getServer())
+                            .queryParam("auctionUuid", auctionUuid)
+                            .build(uuid))
+                    .header("uuid", uuid)
+                    .retrieve().toEntity(Boolean.class).block();
+            return responseEntity.getBody();
+
+        } catch (Exception e) {
+            throw new CustomException(ResponseStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }

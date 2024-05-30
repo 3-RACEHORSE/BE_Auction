@@ -30,11 +30,12 @@ public class NonAuthorizationAuctionController {
     @GetMapping("/search")
     @Operation(summary = "경매 리스트 조회", description = "경매 리스트 조회")
     public SuccessResponse<SearchAllAuctionResponseVo> searchAllAuction(
+            @RequestHeader(required = false) String uuid,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size) {
-        return new SuccessResponse<>(auctionService.searchAllAuction(SearchAllAuctionDto.builder().keyword(keyword).category(category).page(page).size(size).build()));
+        return new SuccessResponse<>(auctionService.searchAllAuction(SearchAllAuctionDto.builder().keyword(keyword).category(category).page(page).size(size).uuid(uuid).build()));
     }
 
     // auction_uuid를 통한 경매 상세 조회
