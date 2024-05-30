@@ -20,6 +20,7 @@ import com.skyhorsemanpower.auction.repository.AuctionImagesRepository;
 import com.skyhorsemanpower.auction.repository.cqrs.command.CommandOnlyAuctionRepository;
 import com.skyhorsemanpower.auction.repository.cqrs.read.ReadOnlyAuctionRepository;
 import com.skyhorsemanpower.auction.common.ServerPathEnum;
+import io.swagger.v3.core.util.Json;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.SchedulerException;
@@ -148,7 +149,7 @@ public class AuctionServiceImpl implements AuctionService {
             readOnlyAuctionPage = searchAuctionByCategory(searchAuctionDto.getCategory(), page, size);
         }
         // keyword, category 혼합 검색
-        else {
+        else if (!searchAuctionDto.getKeyword().isEmpty() && !searchAuctionDto.getCategory().isEmpty()){
             readOnlyAuctionPage = searchAuctionByKeywordAndCategory(searchAuctionDto.getKeyword(), searchAuctionDto.getCategory(), page, size);
         }
 
@@ -168,8 +169,9 @@ public class AuctionServiceImpl implements AuctionService {
             // 기본값 false
             boolean isSubscribed;
 
-            if (searchAuctionDto.isUuid()) {
-                isSubscribed = getIsSubscribedByWebClientBlocking(searchAuctionDto.getUuid(), readOnlyAuction.getAuctionUuid());
+            // 로그인이 된 경우
+            if (searchAuctionDto.getUuid() != null) {
+                isSubscribed = getIsSubscribedByWebClientBlocking(searchAuctionDto.getToken(), searchAuctionDto.getUuid(), readOnlyAuction.getAuctionUuid());
 
                 auctionAndIsSubscribedDtos.add(AuctionAndIsSubscribedDto.builder()
                         .auctionUuid(readOnlyAuction.getAuctionUuid())
@@ -651,19 +653,36 @@ public class AuctionServiceImpl implements AuctionService {
                 .retrieve().bodyToMono(String.class);
     }
 
-    // webClient-blocking 통신으로 회원 서비스에 uuid를 이용해
-    private boolean getIsSubscribedByWebClientBlocking(String uuid, String auctionUuid) {
+    // restTemplate를 이용한 회원 서비스에 uuid와 auctionuuid를 이용해 구독 여부 확인
+    private boolean getIsAuction(String uuid, String auctionUuid) {
+        URI uri = UriComponentsBuilder
+                .fromUriString(ServerPathEnum.MEMBER_SERVER.getServer())
+                .path(ServerPathEnum.GET_ISSUBSCRIBED.getServer())
+                .queryParam("auctionUuid", auctionUuid)
+                .encode()
+                .build()
+                .expand()
+                .toUri();
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<IsSubscribedDto> responseEntity = restTemplate.getForEntity(uri, IsSubscribedDto.class);
+
+        return responseEntity.getBody().isSubscribed();
+    }
+
+    // webClient-blocking 통신으로 회원 서비스에 uuid와 auctionUuid를 이용해 구독 여부 확인
+    private boolean getIsSubscribedByWebClientBlocking(String token, String uuid, String auctionUuid) {
         WebClient webClient = WebClient.create(ServerPathEnum.MEMBER_SERVER.getServer());
 
         try {
-            ResponseEntity<Boolean> responseEntity = webClient.get()
+            ResponseEntity<IsSubscribedDto> responseEntity = webClient.get()
                     .uri(uriBuilder -> uriBuilder.path(ServerPathEnum.GET_ISSUBSCRIBED.getServer())
                             .queryParam("auctionUuid", auctionUuid)
-                            .build(uuid))
+                            .build())
+                    .header("authorization", token)
                     .header("uuid", uuid)
-                    .retrieve().toEntity(Boolean.class).block();
-            return responseEntity.getBody();
-
+                    .retrieve().toEntity(IsSubscribedDto.class).block();
+            return responseEntity.getBody().isSubscribed();
         } catch (Exception e) {
             throw new CustomException(ResponseStatus.INTERNAL_SERVER_ERROR);
         }
