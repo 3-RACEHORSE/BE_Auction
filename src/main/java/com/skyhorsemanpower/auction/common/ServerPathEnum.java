@@ -10,6 +10,6 @@ public enum ServerPathEnum {
     GET_HANDLE("/api/v1/non-authorization/users/datarequest"),
 
 
-    GET_ISSUBSCRIBED("/authorization/subscription/auction/is-subscribed");
+    GET_ISSUBSCRIBED("/api/v1/authorization/subscription/auction/is-subscribed");
     private final String server;
 }
