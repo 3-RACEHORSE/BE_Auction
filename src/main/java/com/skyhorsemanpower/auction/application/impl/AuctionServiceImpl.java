@@ -20,7 +20,6 @@ import com.skyhorsemanpower.auction.repository.AuctionImagesRepository;
 import com.skyhorsemanpower.auction.repository.cqrs.command.CommandOnlyAuctionRepository;
 import com.skyhorsemanpower.auction.repository.cqrs.read.ReadOnlyAuctionRepository;
 import com.skyhorsemanpower.auction.common.ServerPathEnum;
-import io.swagger.v3.core.util.Json;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.SchedulerException;
@@ -171,7 +170,8 @@ public class AuctionServiceImpl implements AuctionService {
 
             // 로그인이 된 경우
             if (searchAuctionDto.getUuid() != null) {
-                isSubscribed = getIsSubscribedByWebClientBlocking(searchAuctionDto.getToken(), searchAuctionDto.getUuid(), readOnlyAuction.getAuctionUuid());
+                isSubscribed = getIsSubscribedByWebClientBlocking(searchAuctionDto.getToken(),
+                        searchAuctionDto.getUuid(), readOnlyAuction.getAuctionUuid());
 
                 auctionAndIsSubscribedDtos.add(AuctionAndIsSubscribedDto.builder()
                         .auctionUuid(readOnlyAuction.getAuctionUuid())
@@ -665,7 +665,7 @@ public class AuctionServiceImpl implements AuctionService {
                 .toUri();
 
         RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<IsSubscribedDto> responseEntity = restTemplate.getForEntity(uri, IsSubscribedDto.class);
+        ResponseEntity<IsSubscribedResponseVo> responseEntity = restTemplate.getForEntity(uri, IsSubscribedResponseVo.class);
 
         return responseEntity.getBody().isSubscribed();
     }
@@ -675,13 +675,13 @@ public class AuctionServiceImpl implements AuctionService {
         WebClient webClient = WebClient.create(ServerPathEnum.MEMBER_SERVER.getServer());
 
         try {
-            ResponseEntity<IsSubscribedDto> responseEntity = webClient.get()
+            ResponseEntity<IsSubscribedResponseVo> responseEntity = webClient.get()
                     .uri(uriBuilder -> uriBuilder.path(ServerPathEnum.GET_ISSUBSCRIBED.getServer())
                             .queryParam("auctionUuid", auctionUuid)
                             .build())
-                    .header("authorization", token)
                     .header("uuid", uuid)
-                    .retrieve().toEntity(IsSubscribedDto.class).block();
+                    .header("authorization", token)
+                    .retrieve().toEntity(IsSubscribedResponseVo.class).block();
             return responseEntity.getBody().isSubscribed();
         } catch (Exception e) {
             throw new CustomException(ResponseStatus.INTERNAL_SERVER_ERROR);
