@@ -3,7 +3,9 @@ package com.skyhorsemanpower.auction.presentation;
 import com.skyhorsemanpower.auction.application.AuctionService;
 import com.skyhorsemanpower.auction.common.CustomException;
 import com.skyhorsemanpower.auction.common.SuccessResponse;
-import com.skyhorsemanpower.auction.data.dto.*;
+import com.skyhorsemanpower.auction.data.dto.SearchAllAuctionDto;
+import com.skyhorsemanpower.auction.data.dto.SearchAuctionDto;
+import com.skyhorsemanpower.auction.data.dto.SearchBiddingPriceDto;
 import com.skyhorsemanpower.auction.data.vo.*;
 import com.skyhorsemanpower.auction.domain.AuctionHistory;
 import com.skyhorsemanpower.auction.repository.cqrs.read.ReadOnlyAuctionRepository;
@@ -36,7 +38,8 @@ public class NonAuthorizationAuctionController {
             @RequestParam(required = false) String category,
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size) {
-        return new SuccessResponse<>(auctionService.searchAllAuction(SearchAllAuctionDto.builder().keyword(keyword).category(category).page(page).size(size).uuid(uuid).token(authorization).build()));
+        return new SuccessResponse<>(auctionService.searchAllAuction(SearchAllAuctionDto.builder().keyword(keyword)
+                .category(category).page(page).size(size).uuid(uuid).token(authorization).build()));
     }
 
     // auction_uuid를 통한 경매 상세 조회
