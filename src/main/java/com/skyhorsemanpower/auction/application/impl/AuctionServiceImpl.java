@@ -44,10 +44,7 @@ import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -165,8 +162,7 @@ public class AuctionServiceImpl implements AuctionService {
 
             // Todo 배포환경 테스트 필요
             // handle 값 통신되는지 확인 필요
-            String handle = "getHandleByWebClientBlocking(readOnlyAuction.getSellerUuid())";
-//            String handle = getHandleByWebClientBlocking(readOnlyAuction.getSellerUuid());
+            String handle = getHandleByWebClientBlocking(readOnlyAuction.getSellerUuid());
 
             // 로그인이 된 경우, 회원 서비스와 통신해서 구독 여부 획득
             // 기본값 false
@@ -413,9 +409,9 @@ public class AuctionServiceImpl implements AuctionService {
 
             // Todo 배포환경 테스트 필요
             // 배포 환경에서 데이터 받아오는 지 확인 필요
-            String handle = "getHandleByWebClientBlocking(auction.getSellerUuid())";
-//            String handle = getHandleByWebClientBlocking(auction.getSellerUuid());
-            participatedAuctionHistoryResponseVos.add(participatedAuctionHistoryResponseVo.toVo(auction, thumbnail, handle));
+            String handle = getHandleByWebClientBlocking(auction.getSellerUuid());
+            participatedAuctionHistoryResponseVos.
+                    add(participatedAuctionHistoryResponseVo.toVo(auction, thumbnail, handle));
         }
         return participatedAuctionHistoryResponseVos;
     }
@@ -575,24 +571,16 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     private List<ParticipatedAuctionHistoryProjection> getAuctionUuidList(String participateUuid) {
-        Query query = new Query(Criteria.where("biddingUuid").is(participateUuid))
-                .with(Sort.by(Sort.Direction.DESC, "biddingTime"));
-
-        List<String> distinctAuctionUuids = mongoTemplate.query(AuctionHistory.class)
-                .distinct("auctionUuid")
-                .matching(query)
-                .as(String.class)
-                .all();
+        List<ParticipatedAuctionHistoryProjection> distinctAuctionUuids =
+                mongoTemplate.findDistinct(
+                        "auctionUuid", AuctionHistory.class, ParticipatedAuctionHistoryProjection.class);
 
         // 조회 결과가 없는 경우
         if (distinctAuctionUuids.isEmpty()) throw new CustomException(ResponseStatus.NO_DATA);
 
-        // 조회 결과가 있는 경우
-        return distinctAuctionUuids.stream()
-                .map(auctionUuid -> ParticipatedAuctionHistoryProjection.builder()
-                        .auctionUuid(auctionUuid)
-                        .build())
-                .collect(Collectors.toList());
+        // 조회 결과가 있는 경우, 입찰 결과를 내림차순 진행
+        Collections.reverse(distinctAuctionUuids);
+        return distinctAuctionUuids;
     }
 
     // MongoDB 경매글 저장
@@ -688,7 +676,8 @@ public class AuctionServiceImpl implements AuctionService {
                 .toUri();
 
         RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<IsSubscribedResponseVo> responseEntity = restTemplate.getForEntity(uri, IsSubscribedResponseVo.class);
+        ResponseEntity<IsSubscribedResponseVo> responseEntity =
+                restTemplate.getForEntity(uri, IsSubscribedResponseVo.class);
 
         return responseEntity.getBody().isSubscribed();
     }
