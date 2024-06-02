@@ -9,10 +9,10 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class ParticipatedAuctionHistoryDto {
-    private String sellerUuid;
+    private String participateUuid;
 
     @Builder
-    public ParticipatedAuctionHistoryDto(String sellerUuid) {
-        this.sellerUuid = sellerUuid;
+    public ParticipatedAuctionHistoryDto(String participateUuid) {
+        this.participateUuid = participateUuid;
     }
 }
