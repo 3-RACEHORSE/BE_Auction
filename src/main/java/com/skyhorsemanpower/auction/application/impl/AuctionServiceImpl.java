@@ -26,6 +26,7 @@ import org.quartz.SchedulerException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -163,7 +164,8 @@ public class AuctionServiceImpl implements AuctionService {
 
             // Todo 배포환경 테스트 필요
             // handle 값 통신되는지 확인 필요
-            String handle = getHandleByWebClientBlocking(readOnlyAuction.getSellerUuid());
+            String handle = "getHandleByWebClientBlocking(readOnlyAuction.getSellerUuid())";
+//            String handle = getHandleByWebClientBlocking(readOnlyAuction.getSellerUuid());
 
             // 로그인이 된 경우, 회원 서비스와 통신해서 구독 여부 획득
             // 기본값 false
@@ -214,7 +216,7 @@ public class AuctionServiceImpl implements AuctionService {
 
     // keyword, category 혼합 검색
     private Page<ReadOnlyAuction> searchAuctionByKeywordAndCategory(String keyword, String category, int page, int size) {
-        Page<ReadOnlyAuction> results = readOnlyAuctionRepository.findAllByTitleLikeAndCategory(keyword, category, PageRequest.of(page, size));
+        Page<ReadOnlyAuction> results = readOnlyAuctionRepository.findAllByTitleLikeAndCategoryOrderByCreatedAtDesc(keyword, category, PageRequest.of(page, size));
         // 조회 결과 있는 경우
         if (!results.isEmpty()) return results;
             // 조회 결과 없는 경우
@@ -224,7 +226,7 @@ public class AuctionServiceImpl implements AuctionService {
 
     // category 검색
     private Page<ReadOnlyAuction> searchAuctionByCategory(String category, int page, int size) {
-        Page<ReadOnlyAuction> results = readOnlyAuctionRepository.findAllByCategory(category, PageRequest.of(page, size));
+        Page<ReadOnlyAuction> results = readOnlyAuctionRepository.findAllByCategoryOrderByCreatedAtDesc(category, PageRequest.of(page, size));
         // 조회 결과 있는 경우
         if (!results.isEmpty()) return results;
             // 조회 결과 없는 경우
@@ -234,7 +236,7 @@ public class AuctionServiceImpl implements AuctionService {
 
     // keyword 검색
     private Page<ReadOnlyAuction> searchAuctionByKeyword(String keyword, int page, int size) {
-        Page<ReadOnlyAuction> results = readOnlyAuctionRepository.findAllByTitleLike(keyword, PageRequest.of(page, size));
+        Page<ReadOnlyAuction> results = readOnlyAuctionRepository.findAllByTitleLikeOrderByCreatedAtDesc(keyword, PageRequest.of(page, size));
         // 조회 결과 있는 경우
         if (!results.isEmpty()) return results;
             // 조회 결과 없는 경우
@@ -252,8 +254,8 @@ public class AuctionServiceImpl implements AuctionService {
         );
 
         Query query = new Query(criteria).with(pageable)
-                // 페이지 번호에 따라 결과를 건너뛴다.
-                .skip(pageable.getPageSize() * pageable.getPageNumber())
+                .with(Sort.by(Sort.Direction.DESC, "createdAt"))    // createdAt으로 내림차순 정렬
+                .skip(pageable.getPageSize() * pageable.getPageNumber())    // 페이지 번호에 따라 결과를 건너뛴다.
                 .limit(pageable.getPageSize());
 
         List<ReadOnlyAuction> filteredReadOnlyAuction = mongoTemplate.find(query, ReadOnlyAuction.class);
