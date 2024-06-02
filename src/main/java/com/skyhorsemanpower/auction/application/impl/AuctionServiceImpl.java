@@ -151,7 +151,8 @@ public class AuctionServiceImpl implements AuctionService {
         }
         // keyword, category 혼합 검색
         else if (!searchAuctionDto.getKeyword().isEmpty() && !searchAuctionDto.getCategory().isEmpty()){
-            readOnlyAuctionPage = searchAuctionByKeywordAndCategory(searchAuctionDto.getKeyword(), searchAuctionDto.getCategory(), page, size);
+            readOnlyAuctionPage = searchAuctionByKeywordAndCategory(searchAuctionDto.getKeyword(),
+                    searchAuctionDto.getCategory(), page, size);
         }
 
         readOnlyAuctions = readOnlyAuctionPage.getContent();
@@ -215,8 +216,10 @@ public class AuctionServiceImpl implements AuctionService {
 
 
     // keyword, category 혼합 검색
-    private Page<ReadOnlyAuction> searchAuctionByKeywordAndCategory(String keyword, String category, int page, int size) {
-        Page<ReadOnlyAuction> results = readOnlyAuctionRepository.findAllByTitleLikeAndCategoryOrderByCreatedAtDesc(keyword, category, PageRequest.of(page, size));
+    private Page<ReadOnlyAuction> searchAuctionByKeywordAndCategory(
+            String keyword, String category, int page, int size) {
+        Page<ReadOnlyAuction> results = readOnlyAuctionRepository
+                .findAllByTitleLikeAndCategoryOrderByCreatedAtDesc(keyword, category, PageRequest.of(page, size));
         // 조회 결과 있는 경우
         if (!results.isEmpty()) return results;
             // 조회 결과 없는 경우
@@ -226,7 +229,8 @@ public class AuctionServiceImpl implements AuctionService {
 
     // category 검색
     private Page<ReadOnlyAuction> searchAuctionByCategory(String category, int page, int size) {
-        Page<ReadOnlyAuction> results = readOnlyAuctionRepository.findAllByCategoryOrderByCreatedAtDesc(category, PageRequest.of(page, size));
+        Page<ReadOnlyAuction> results = readOnlyAuctionRepository
+                .findAllByCategoryOrderByCreatedAtDesc(category, PageRequest.of(page, size));
         // 조회 결과 있는 경우
         if (!results.isEmpty()) return results;
             // 조회 결과 없는 경우
@@ -236,7 +240,8 @@ public class AuctionServiceImpl implements AuctionService {
 
     // keyword 검색
     private Page<ReadOnlyAuction> searchAuctionByKeyword(String keyword, int page, int size) {
-        Page<ReadOnlyAuction> results = readOnlyAuctionRepository.findAllByTitleLikeOrderByCreatedAtDesc(keyword, PageRequest.of(page, size));
+        Page<ReadOnlyAuction> results = readOnlyAuctionRepository
+                .findAllByTitleLikeOrderByCreatedAtDesc(keyword, PageRequest.of(page, size));
         // 조회 결과 있는 경우
         if (!results.isEmpty()) return results;
             // 조회 결과 없는 경우
@@ -271,7 +276,8 @@ public class AuctionServiceImpl implements AuctionService {
 
     @Override
     public SearchAuctionResponseVo searchAuction(SearchAuctionDto searchAuctionDto) {
-        ReadOnlyAuction auction = readOnlyAuctionRepository.findByAuctionUuid(searchAuctionDto.getAuctionUuid()).orElseThrow(
+        ReadOnlyAuction auction = readOnlyAuctionRepository.findByAuctionUuid(
+                searchAuctionDto.getAuctionUuid()).orElseThrow(
                 () -> new CustomException(ResponseStatus.NO_DATA)
         );
 
@@ -293,8 +299,10 @@ public class AuctionServiceImpl implements AuctionService {
         // 조건1. 마감 시간이 현재 시간보다 미래면 입찰 제시 가능
         // 조건2. 경매 작성자는 경매에 참여할 수 없음
         // 조건3. 입찰 제시가가 최고 입찰가보다 커야한다.
-        if (isAuctionActive(offerBiddingPriceDto.getAuctionUuid()) && !isAuctionSeller(offerBiddingPriceDto.getAuctionUuid(), offerBiddingPriceDto.getBiddingUuid())
-                && checkBiddingPrice(offerBiddingPriceDto.getBiddingUuid(), offerBiddingPriceDto.getAuctionUuid(), offerBiddingPriceDto.getBiddingPrice())) {
+        if (isAuctionActive(offerBiddingPriceDto.getAuctionUuid()) &&
+                !isAuctionSeller(offerBiddingPriceDto.getAuctionUuid(), offerBiddingPriceDto.getBiddingUuid()) &&
+                checkBiddingPrice(offerBiddingPriceDto.getBiddingUuid(), offerBiddingPriceDto.getAuctionUuid(),
+                        offerBiddingPriceDto.getBiddingPrice())) {
             AuctionHistory auctionHistory = AuctionHistory.builder()
                     .auctionUuid(offerBiddingPriceDto.getAuctionUuid())
                     .biddingUuid(offerBiddingPriceDto.getBiddingUuid())
@@ -318,7 +326,8 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     private boolean checkBiddingPrice(String biddingUuid, String auctionUuid, int biddingPrice) {
-        Optional<CheckBiddingPriceProjection> optionalMaxBiddingPrice = auctionHistoryRepository.findMaxBiddingPriceByAuctionUuid(auctionUuid);
+        Optional<CheckBiddingPriceProjection> optionalMaxBiddingPrice = auctionHistoryRepository
+                .findMaxBiddingPriceByAuctionUuid(auctionUuid);
         int minimumBiddingPrice = readOnlyAuctionRepository.findByAuctionUuid(auctionUuid).orElseThrow(
                 () -> new CustomException(ResponseStatus.NO_DATA)
         ).getMinimumBiddingPrice();
@@ -350,12 +359,14 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     @Override
-    public List<CreatedAuctionHistoryResponseVo> createdAuctionHistory(CreatedAuctionHistoryDto createdAuctionHistoryDto) {
+    public List<CreatedAuctionHistoryResponseVo> createdAuctionHistory(
+            CreatedAuctionHistoryDto createdAuctionHistoryDto) {
         List<CreatedAuctionHistoryResponseVo> createdAuctionHistoryResponseVos = new ArrayList<>();
         CreatedAuctionHistoryResponseVo createdAuctionHistoryResponseVo = new CreatedAuctionHistoryResponseVo();
 
         // 최신순으로 자신의 경매 내역 조회
-        List<ReadOnlyAuction> auctions = readOnlyAuctionRepository.findAllBySellerUuidOrderByCreatedAtDesc(createdAuctionHistoryDto.getSellerUuid());
+        List<ReadOnlyAuction> auctions = readOnlyAuctionRepository
+                .findAllBySellerUuidOrderByCreatedAtDesc(createdAuctionHistoryDto.getSellerUuid());
 
         // 조회 결과 없는 경우
         if (auctions.isEmpty()) throw new CustomException(ResponseStatus.NO_DATA);
@@ -376,27 +387,34 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     @Override
-    public List<ParticipatedAuctionHistoryResponseVo> participatedAuctionHistory(ParticipatedAuctionHistoryDto participatedAuctionHistoryDto) {
+    public List<ParticipatedAuctionHistoryResponseVo> participatedAuctionHistory(
+            ParticipatedAuctionHistoryDto participatedAuctionHistoryDto) {
         List<ParticipatedAuctionHistoryResponseVo> participatedAuctionHistoryResponseVos = new ArrayList<>();
-        ParticipatedAuctionHistoryResponseVo participatedAuctionHistoryResponseVo = new ParticipatedAuctionHistoryResponseVo();
+        ParticipatedAuctionHistoryResponseVo participatedAuctionHistoryResponseVo =
+                new ParticipatedAuctionHistoryResponseVo();
 
         // 참여한 경매의 중복 제거한 auctionUuid 리스트 조회
-        List<ParticipatedAuctionHistoryProjection> participatedAuctionHistoryProjections = getAuctionUuidList(participatedAuctionHistoryDto.getSellerUuid());
+        List<ParticipatedAuctionHistoryProjection> participatedAuctionHistoryProjections =
+                getAuctionUuidList(participatedAuctionHistoryDto.getParticipateUuid());
 
         // auctionHistoryProjection 객체를 통해 auctionUuid를 반환
-        for (ParticipatedAuctionHistoryProjection participatedAuctionHistoryProjection : participatedAuctionHistoryProjections) {
+        for (ParticipatedAuctionHistoryProjection participatedAuctionHistoryProjection :
+                participatedAuctionHistoryProjections) {
             // thumbnail 호출
-            String thumbnail = auctionImagesRepository.getThumbnailUrl(participatedAuctionHistoryProjection.getAuctionUuid());
+            String thumbnail = auctionImagesRepository
+                    .getThumbnailUrl(participatedAuctionHistoryProjection.getAuctionUuid());
 
             // auction 엔티티 조회
-            ReadOnlyAuction auction = readOnlyAuctionRepository.findByAuctionUuid(participatedAuctionHistoryProjection.getAuctionUuid())
+            ReadOnlyAuction auction = readOnlyAuctionRepository
+                    .findByAuctionUuid(participatedAuctionHistoryProjection.getAuctionUuid())
                     .orElseThrow(
                             () -> new CustomException(ResponseStatus.NO_DATA)
                     );
 
             // Todo 배포환경 테스트 필요
             // 배포 환경에서 데이터 받아오는 지 확인 필요
-            String handle = getHandleByWebClientBlocking(auction.getSellerUuid());
+            String handle = "getHandleByWebClientBlocking(auction.getSellerUuid())";
+//            String handle = getHandleByWebClientBlocking(auction.getSellerUuid());
             participatedAuctionHistoryResponseVos.add(participatedAuctionHistoryResponseVo.toVo(auction, thumbnail, handle));
         }
         return participatedAuctionHistoryResponseVos;
@@ -556,8 +574,9 @@ public class AuctionServiceImpl implements AuctionService {
         return mainHighBiddingPriceAuctionResponseVos;
     }
 
-    private List<ParticipatedAuctionHistoryProjection> getAuctionUuidList(String sellerUuid) {
-        Query query = new Query(Criteria.where("biddingUuid").is(sellerUuid));
+    private List<ParticipatedAuctionHistoryProjection> getAuctionUuidList(String participateUuid) {
+        Query query = new Query(Criteria.where("biddingUuid").is(participateUuid))
+                .with(Sort.by(Sort.Direction.DESC, "biddingTime"));
 
         List<String> distinctAuctionUuids = mongoTemplate.query(AuctionHistory.class)
                 .distinct("auctionUuid")

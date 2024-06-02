@@ -60,7 +60,7 @@ public class AuthorizationAuctionController {
     public SuccessResponse<List<ParticipatedAuctionHistoryResponseVo>> participatedAuctionHistory(
             @RequestHeader String uuid) {
         List<ParticipatedAuctionHistoryResponseVo> participatedAuctionHistoryResponseVos = auctionService.
-                participatedAuctionHistory(ParticipatedAuctionHistoryDto.builder().sellerUuid(uuid).build());
+                participatedAuctionHistory(ParticipatedAuctionHistoryDto.builder().participateUuid(uuid).build());
         return new SuccessResponse<>(participatedAuctionHistoryResponseVos);
     }
 }
