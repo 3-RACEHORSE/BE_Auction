@@ -49,7 +49,8 @@ public class AuthorizationAuctionController {
     @Operation(summary = "경매글 이력 조회", description = "경매글 이력 조회")
     public SuccessResponse<List<CreatedAuctionHistoryResponseVo>> createdAuctionHistory(
             @RequestHeader String uuid) {
-        List<CreatedAuctionHistoryResponseVo> createdAuctionHistoryResponseVos = auctionService.createdAuctionHistory(CreatedAuctionHistoryDto.builder().sellerUuid(uuid).build());
+        List<CreatedAuctionHistoryResponseVo> createdAuctionHistoryResponseVos = auctionService.
+                createdAuctionHistory(CreatedAuctionHistoryDto.builder().sellerUuid(uuid).build());
         return new SuccessResponse<>(createdAuctionHistoryResponseVos);
     }
 
@@ -58,7 +59,8 @@ public class AuthorizationAuctionController {
     @Operation(summary = "참여한 경매 이력 조회", description = "참여한 경매 이력 조회")
     public SuccessResponse<List<ParticipatedAuctionHistoryResponseVo>> participatedAuctionHistory(
             @RequestHeader String uuid) {
-        List<ParticipatedAuctionHistoryResponseVo> participatedAuctionHistoryResponseVos = auctionService.participatedAuctionHistory(ParticipatedAuctionHistoryDto.builder().sellerUuid(uuid).build());
+        List<ParticipatedAuctionHistoryResponseVo> participatedAuctionHistoryResponseVos = auctionService.
+                participatedAuctionHistory(ParticipatedAuctionHistoryDto.builder().participateUuid(uuid).build());
         return new SuccessResponse<>(participatedAuctionHistoryResponseVos);
     }
 }

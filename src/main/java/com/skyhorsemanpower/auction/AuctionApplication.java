@@ -7,6 +7,8 @@ import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
+import java.util.TimeZone;
+
 
 @SpringBootApplication
 @EnableJpaRepositories
@@ -16,6 +18,9 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 public class AuctionApplication {
 
 	public static void main(String[] args) {
+		// application 전체 timezone을 UTC로 설정
+		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+
 		SpringApplication.run(AuctionApplication.class, args);
 	}
 
