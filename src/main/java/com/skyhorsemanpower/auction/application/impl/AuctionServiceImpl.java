@@ -41,6 +41,7 @@ import reactor.core.publisher.Mono;
 
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -85,7 +86,7 @@ public class AuctionServiceImpl implements AuctionService {
     private String generateAuctionUuid() {
         // 현재 날짜와 시간을 "yyyyMMddHHmm" 형식으로 포맷
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
-        String dateTime = LocalDateTime.now().format(formatter);
+        String dateTime = LocalDateTime.now(ZoneId.of("Asia/Seoul")).format(formatter);
 
         // UUID 생성 후 앞부분의 10자리 문자열 추출
         String uuid = UUID.randomUUID().toString().replace("-", "").substring(0, 10);
@@ -286,10 +287,11 @@ public class AuctionServiceImpl implements AuctionService {
 
     @Override
     public void offerBiddingPrice(OfferBiddingPriceDto offerBiddingPriceDto) {
-        // 조건1. 경매 작성자는 경매에 참여할 수 없음
-        // 조건2. 마감 시간이 현재 시간보다 미래면 입찰 제시 가능
+        // 우선순위가 있는 입찰 조건
+        // 조건1. 마감 시간이 현재 시간보다 미래면 입찰 제시 가능
+        // 조건2. 경매 작성자는 경매에 참여할 수 없음
         // 조건3. 입찰 제시가가 최고 입찰가보다 커야한다.
-        if (!isAuctionSeller(offerBiddingPriceDto.getAuctionUuid(), offerBiddingPriceDto.getBiddingUuid()) && isAuctionActive(offerBiddingPriceDto.getAuctionUuid())
+        if (isAuctionActive(offerBiddingPriceDto.getAuctionUuid()) && !isAuctionSeller(offerBiddingPriceDto.getAuctionUuid(), offerBiddingPriceDto.getBiddingUuid())
                 && checkBiddingPrice(offerBiddingPriceDto.getBiddingUuid(), offerBiddingPriceDto.getAuctionUuid(), offerBiddingPriceDto.getBiddingPrice())) {
             AuctionHistory auctionHistory = AuctionHistory.builder()
                     .auctionUuid(offerBiddingPriceDto.getAuctionUuid())

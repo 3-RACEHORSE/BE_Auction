@@ -46,7 +46,8 @@ public class NonAuthorizationAuctionController {
     @GetMapping("/{auctionUuid}")
     @Operation(summary = "경매 상세 조회", description = "경매 상세 조회")
     public SuccessResponse<SearchAuctionResponseVo> searchAuction(@PathVariable("auctionUuid") String auctionUuid) {
-        SearchAuctionResponseVo searchAuctionResponseVo = auctionService.searchAuction(SearchAuctionDto.builder().auctionUuid(auctionUuid).build());
+        SearchAuctionResponseVo searchAuctionResponseVo = auctionService.searchAuction(SearchAuctionDto.builder()
+                .auctionUuid(auctionUuid).build());
         return new SuccessResponse<>(searchAuctionResponseVo);
     }
 
@@ -55,7 +56,8 @@ public class NonAuthorizationAuctionController {
     @Operation(summary = "경매 입찰 내역 조회", description = "경매 입찰 내역 조회")
     public Flux<AuctionHistory> searchBiddingPrice(
             @PathVariable("auctionUuid") String auctionUuid) {
-        return auctionService.searchBiddingPrice(SearchBiddingPriceDto.builder().auctionUuid(auctionUuid).build()).subscribeOn(Schedulers.boundedElastic());
+        return auctionService.searchBiddingPrice(SearchBiddingPriceDto.builder().auctionUuid(auctionUuid).build())
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     // 메인 페이지_통계
