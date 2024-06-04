@@ -656,13 +656,13 @@ public class AuctionServiceImpl implements AuctionService {
     // webClient-blocking 통신으로 회원 서비스에 uuid를 이용해 handle 데이터 요청
     private String getHandleByWebClientBlocking(String uuid) {
         WebClient webClient = WebClient.create(ServerPathEnum.MEMBER_SERVER.getServer());
-
-        ResponseEntity<String> responseEntity = webClient.get()
+        log.info(">>>>>>>>>>>>");
+        ResponseEntity<MemberInfoResponseVo> responseEntity = webClient.get()
                 .uri(uriBuilder -> uriBuilder.path(ServerPathEnum.GET_HANDLE.getServer() + "/{uuid}")
                         .build(uuid))
-                .retrieve().toEntity(String.class).block();
-
-        return responseEntity.getBody();
+                .retrieve().toEntity(MemberInfoResponseVo.class).block();
+        log.info("handle >>> ", responseEntity.getBody().getHandle());
+        return responseEntity.getBody().getHandle();
     }
 
     // webClient-nonBlocking 통신으로 회원 서비스에 uuid를 이용해 handle 데이터 요청
