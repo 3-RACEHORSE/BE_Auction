@@ -281,11 +281,22 @@ public class AuctionServiceImpl implements AuctionService {
         // handle 값 통신되는지 확인 필요
         String handle = getHandleByWebClientBlocking(auction.getSellerUuid());
 
+        // 구독 여부
+        boolean isSubscribed = false;
+
+        // 로그인이 된 경우
+        if(searchAuctionDto.getUuid() != null) {
+            isSubscribed = getIsSubscribedByWebClientBlocking(searchAuctionDto.getToken(),
+                    searchAuctionDto.getUuid(), searchAuctionDto.getAuctionUuid());
+        }
+
+        // 로그인이 안 된 경우는 false
         return SearchAuctionResponseVo.builder()
                 .readOnlyAuction(auction)
                 .handle(handle)
                 .thumbnail(auctionImagesRepository.getThumbnailUrl(searchAuctionDto.getAuctionUuid()))
                 .images(auctionImagesRepository.getImagesUrl(searchAuctionDto.getAuctionUuid()))
+                .isSubscribed(isSubscribed)
                 .build();
     }
 

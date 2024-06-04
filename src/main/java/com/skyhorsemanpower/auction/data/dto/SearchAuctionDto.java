@@ -10,9 +10,13 @@ import lombok.Setter;
 @NoArgsConstructor
 public class SearchAuctionDto {
     private String auctionUuid;
+    private String token;
+    private String uuid;
 
     @Builder
-    public SearchAuctionDto(String auctionUuid) {
+    public SearchAuctionDto(String auctionUuid, String token, String uuid) {
         this.auctionUuid = auctionUuid;
+        this.token = token;
+        this.uuid = uuid;
     }
 }
