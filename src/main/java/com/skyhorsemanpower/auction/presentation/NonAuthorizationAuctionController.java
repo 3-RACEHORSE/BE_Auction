@@ -45,9 +45,12 @@ public class NonAuthorizationAuctionController {
     // auction_uuid를 통한 경매 상세 조회
     @GetMapping("/{auctionUuid}")
     @Operation(summary = "경매 상세 조회", description = "경매 상세 조회")
-    public SuccessResponse<SearchAuctionResponseVo> searchAuction(@PathVariable("auctionUuid") String auctionUuid) {
+    public SuccessResponse<SearchAuctionResponseVo> searchAuction(
+            @PathVariable("auctionUuid") String auctionUuid,
+            @RequestHeader(required = false) String authorization,
+            @RequestHeader(required = false) String uuid) {
         SearchAuctionResponseVo searchAuctionResponseVo = auctionService.searchAuction(SearchAuctionDto.builder()
-                .auctionUuid(auctionUuid).build());
+                .auctionUuid(auctionUuid).token(authorization).uuid(uuid).build());
         return new SuccessResponse<>(searchAuctionResponseVo);
     }
 
