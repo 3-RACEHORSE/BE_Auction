@@ -162,20 +162,33 @@ public class AuctionServiceImpl implements AuctionService {
 
             // Todo 배포환경 테스트 필요
             // handle 값 통신되는지 확인 필요
-            String handle = "getHandleByWebClientBlocking(readOnlyAuction.getSellerUuid())";
-//            String handle = getHandleByWebClientBlocking(readOnlyAuction.getSellerUuid());
+            String handle = getHandleByWebClientBlocking(readOnlyAuction.getSellerUuid());
 
             // 로그인이 된 경우, 회원 서비스와 통신해서 구독 여부 획득
             // 기본값 false
             boolean isSubscribed = false;
 
-            // 로그인이 된 경우, 구독 여부 확인
+            // 로그인이 된 경우에만, 구독 여부 확인
             if (searchAuctionDto.getUuid() != null) {
                 isSubscribed = getIsSubscribedByWebClientBlocking(searchAuctionDto.getToken(),
                         searchAuctionDto.getUuid(), readOnlyAuction.getAuctionUuid());
             }
 
-            // 로그인이 안된 경우, 통신을 진행하지 않는다.
+            // 경매 최소 입찰가로 maxBiddingPrice 초기화
+            int maxBiddingPrice = readOnlyAuction.getMinimumBiddingPrice();
+
+            Optional<CheckBiddingPriceProjection> optionalMaxBiddingPrice =
+                    auctionHistoryRepository.findMaxBiddingPriceByAuctionUuid(readOnlyAuction.getAuctionUuid());
+
+            // 경매 입찰이 있는 경우, maxBiddingPrice 갱신
+            if (optionalMaxBiddingPrice.isPresent()) {
+                log.info("max bidding price of {} >> {}",
+                        readOnlyAuction.getAuctionUuid(), optionalMaxBiddingPrice.get().getBiddingPrice());
+                maxBiddingPrice = optionalMaxBiddingPrice.get().getBiddingPrice();
+            }
+
+            // minimumBiddingPrice 갱신
+            readOnlyAuction.setMinimumBiddingPrice(maxBiddingPrice);
 
             auctionAndIsSubscribedDtos.add(AuctionAndIsSubscribedDto.builder()
                     .auctionUuid(readOnlyAuction.getAuctionUuid())
@@ -643,7 +656,6 @@ public class AuctionServiceImpl implements AuctionService {
     // webClient-blocking 통신으로 회원 서비스에 uuid를 이용해 handle 데이터 요청
     private String getHandleByWebClientBlocking(String uuid) {
         WebClient webClient = WebClient.create(ServerPathEnum.MEMBER_SERVER.getServer());
-        log.info(">>>>>>>>>>>>");
         ResponseEntity<MemberInfoResponseVo> responseEntity = webClient.get()
                 .uri(uriBuilder -> uriBuilder.path(ServerPathEnum.GET_HANDLE.getServer() + "/{uuid}")
                         .build(uuid))
