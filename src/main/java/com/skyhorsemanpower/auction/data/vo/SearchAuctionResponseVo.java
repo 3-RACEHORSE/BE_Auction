@@ -17,13 +17,15 @@ public class SearchAuctionResponseVo {
     private String handle;
     private String thumbnail;
     private List<String> images;
+    private boolean isSubscribed;
 
     @Builder
-    public SearchAuctionResponseVo(ReadOnlyAuction readOnlyAuction, String handle, String thumbnail, List<String> images) {
+    public SearchAuctionResponseVo(ReadOnlyAuction readOnlyAuction, String handle, String thumbnail, List<String> images, boolean isSubscribed) {
         this.readOnlyAuction = readOnlyAuction;
         this.handle = handle;
         this.thumbnail = thumbnail;
         this.images = images;
+        this.isSubscribed = isSubscribed;
     }
 
     public void setHandle(String handle) {
