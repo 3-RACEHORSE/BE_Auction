@@ -147,7 +147,7 @@ public class AuctionServiceImpl implements AuctionService {
             readOnlyAuctionPage = searchAuctionByCategory(searchAuctionDto.getCategory(), page, size);
         }
         // keyword, category 혼합 검색
-        else if (!searchAuctionDto.getKeyword().isEmpty() && !searchAuctionDto.getCategory().isEmpty()){
+        else if (!searchAuctionDto.getKeyword().isEmpty() && !searchAuctionDto.getCategory().isEmpty()) {
             readOnlyAuctionPage = searchAuctionByKeywordAndCategory(searchAuctionDto.getKeyword(),
                     searchAuctionDto.getCategory(), page, size);
         }
@@ -162,48 +162,35 @@ public class AuctionServiceImpl implements AuctionService {
 
             // Todo 배포환경 테스트 필요
             // handle 값 통신되는지 확인 필요
-            String handle = getHandleByWebClientBlocking(readOnlyAuction.getSellerUuid());
+            String handle = "getHandleByWebClientBlocking(readOnlyAuction.getSellerUuid())";
+//            String handle = getHandleByWebClientBlocking(readOnlyAuction.getSellerUuid());
 
             // 로그인이 된 경우, 회원 서비스와 통신해서 구독 여부 획득
             // 기본값 false
-            boolean isSubscribed;
+            boolean isSubscribed = false;
 
-            // 로그인이 된 경우
+            // 로그인이 된 경우, 구독 여부 확인
             if (searchAuctionDto.getUuid() != null) {
                 isSubscribed = getIsSubscribedByWebClientBlocking(searchAuctionDto.getToken(),
                         searchAuctionDto.getUuid(), readOnlyAuction.getAuctionUuid());
-
-                auctionAndIsSubscribedDtos.add(AuctionAndIsSubscribedDto.builder()
-                        .auctionUuid(readOnlyAuction.getAuctionUuid())
-                        .handle(handle)
-                        .sellerUuid(readOnlyAuction.getSellerUuid())
-                        .title(readOnlyAuction.getTitle())
-                        .content(readOnlyAuction.getContent())
-                        .category(readOnlyAuction.getCategory())
-                        .minimumBiddingPrice(readOnlyAuction.getMinimumBiddingPrice())
-                        .thumbnail(thumbnail)
-                        .createdAt(readOnlyAuction.getCreatedAt())
-                        .endedAt(readOnlyAuction.getEndedAt())
-                        .isSubscribed(isSubscribed)
-                        .build());
             }
 
             // 로그인이 안된 경우, 통신을 진행하지 않는다.
-            // isSubscibed = false
-            else {
-                auctionAndIsSubscribedDtos.add(AuctionAndIsSubscribedDto.builder()
-                        .auctionUuid(readOnlyAuction.getAuctionUuid())
-                        .handle(handle)
-                        .sellerUuid(readOnlyAuction.getSellerUuid())
-                        .title(readOnlyAuction.getTitle())
-                        .content(readOnlyAuction.getContent())
-                        .category(readOnlyAuction.getCategory())
-                        .minimumBiddingPrice(readOnlyAuction.getMinimumBiddingPrice())
-                        .thumbnail(thumbnail)
-                        .createdAt(readOnlyAuction.getCreatedAt())
-                        .endedAt(readOnlyAuction.getEndedAt())
-                        .build());
-            }
+
+            auctionAndIsSubscribedDtos.add(AuctionAndIsSubscribedDto.builder()
+                    .auctionUuid(readOnlyAuction.getAuctionUuid())
+                    .handle(handle)
+                    .sellerUuid(readOnlyAuction.getSellerUuid())
+                    .title(readOnlyAuction.getTitle())
+                    .content(readOnlyAuction.getContent())
+                    .category(readOnlyAuction.getCategory())
+                    .minimumBiddingPrice(readOnlyAuction.getMinimumBiddingPrice())
+                    .thumbnail(thumbnail)
+                    .createdAt(readOnlyAuction.getCreatedAt())
+                    .endedAt(readOnlyAuction.getEndedAt())
+                    .isSubscribed(isSubscribed)
+                    .build());
+
         }
 
         boolean hasNext = readOnlyAuctionPage.hasNext();
@@ -285,7 +272,7 @@ public class AuctionServiceImpl implements AuctionService {
         boolean isSubscribed = false;
 
         // 로그인이 된 경우
-        if(searchAuctionDto.getUuid() != null) {
+        if (searchAuctionDto.getUuid() != null) {
             isSubscribed = getIsSubscribedByWebClientBlocking(searchAuctionDto.getToken(),
                     searchAuctionDto.getUuid(), searchAuctionDto.getAuctionUuid());
         }
