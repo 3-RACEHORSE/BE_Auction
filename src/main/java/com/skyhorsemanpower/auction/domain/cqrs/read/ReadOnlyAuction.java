@@ -44,4 +44,8 @@ public class ReadOnlyAuction {
         this.bidPrice = bidPrice;
         this.state = state;
     }
+
+    public void setMinimumBiddingPrice(int maxBiddingPrice) {
+        this.minimumBiddingPrice = maxBiddingPrice;
+    }
 }
