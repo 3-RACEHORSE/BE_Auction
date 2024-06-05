@@ -3,6 +3,7 @@ package com.skyhorsemanpower.auction.presentation;
 import com.skyhorsemanpower.auction.application.AuctionService;
 import com.skyhorsemanpower.auction.common.CustomException;
 import com.skyhorsemanpower.auction.common.SuccessResponse;
+import com.skyhorsemanpower.auction.data.dto.CreatedAuctionHistoryDto;
 import com.skyhorsemanpower.auction.data.dto.SearchAllAuctionDto;
 import com.skyhorsemanpower.auction.data.dto.SearchAuctionDto;
 import com.skyhorsemanpower.auction.data.dto.SearchBiddingPriceDto;
@@ -99,5 +100,15 @@ public class NonAuthorizationAuctionController {
         return new SuccessResponse<>(readOnlyAuctionRepository.findByAuctionUuid(auctionUuid).orElseThrow(
                 () -> new CustomException(ResponseStatus.NO_DATA)
         ).getSellerUuid());
+    }
+
+    // 경매글 이력 조회
+    @GetMapping("/history")
+    @Operation(summary = "특정 인물이 작성한 경매글 이력 조회", description = "특정 인물이 작성한 경매글 이력 조회")
+    public SuccessResponse<List<CreatedAuctionHistoryResponseVo>> createdAuctionHistory(
+            @RequestParam("handle") String handle) {
+        List<CreatedAuctionHistoryResponseVo> createdAuctionHistoryResponseVos = auctionService.
+                createdAuctionHistory(CreatedAuctionHistoryDto.builder().handle(handle).build());
+        return new SuccessResponse<>(createdAuctionHistoryResponseVos);
     }
 }

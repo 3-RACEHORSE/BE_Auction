@@ -44,16 +44,6 @@ public class AuthorizationAuctionController {
         return new SuccessResponse<>(null);
     }
 
-    // 경매글 이력 조회
-    @GetMapping("/history")
-    @Operation(summary = "경매글 이력 조회", description = "경매글 이력 조회")
-    public SuccessResponse<List<CreatedAuctionHistoryResponseVo>> createdAuctionHistory(
-            @RequestHeader String uuid) {
-        List<CreatedAuctionHistoryResponseVo> createdAuctionHistoryResponseVos = auctionService.
-                createdAuctionHistory(CreatedAuctionHistoryDto.builder().sellerUuid(uuid).build());
-        return new SuccessResponse<>(createdAuctionHistoryResponseVos);
-    }
-
     // 자신이 참여한 경매 이력 조회
     @GetMapping("/participate-history")
     @Operation(summary = "참여한 경매 이력 조회", description = "참여한 경매 이력 조회")
