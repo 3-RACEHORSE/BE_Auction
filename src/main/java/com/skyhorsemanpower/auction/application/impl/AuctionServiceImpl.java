@@ -371,9 +371,12 @@ public class AuctionServiceImpl implements AuctionService {
         List<CreatedAuctionHistoryResponseVo> createdAuctionHistoryResponseVos = new ArrayList<>();
         CreatedAuctionHistoryResponseVo createdAuctionHistoryResponseVo = new CreatedAuctionHistoryResponseVo();
 
+        // 회원 서비스와 통신하여 uuid 데이터 조회
+        String uuid = getUuidByHandle(createdAuctionHistoryDto.getHandle());
+
         // 최신순으로 자신의 경매 내역 조회
         List<ReadOnlyAuction> auctions = readOnlyAuctionRepository
-                .findAllBySellerUuidOrderByCreatedAtDesc(createdAuctionHistoryDto.getSellerUuid());
+                .findAllBySellerUuidOrderByCreatedAtDesc(uuid);
 
         // 조회 결과 없는 경우
         if (auctions.isEmpty()) throw new CustomException(ResponseStatus.NO_DATA);
@@ -383,11 +386,8 @@ public class AuctionServiceImpl implements AuctionService {
             for (ReadOnlyAuction auction : auctions) {
                 // thumbnail 호출
                 String thumbnail = auctionImagesRepository.getThumbnailUrl(auction.getAuctionUuid());
-
-                // Todo 배포환경 테스트 필요
-                // 배포 환경에서 데이터 받아오는 지 확인 필요
-                String handle = getHandleByWebClientBlocking(auction.getSellerUuid());
-                createdAuctionHistoryResponseVos.add(createdAuctionHistoryResponseVo.toVo(auction, thumbnail, handle));
+                createdAuctionHistoryResponseVos.add(createdAuctionHistoryResponseVo.toVo(auction, thumbnail
+                        , createdAuctionHistoryResponseVo.getHandle()));
             }
             return createdAuctionHistoryResponseVos;
         }
@@ -660,7 +660,7 @@ public class AuctionServiceImpl implements AuctionService {
                 .uri(uriBuilder -> uriBuilder.path(ServerPathEnum.GET_HANDLE.getServer() + "/{uuid}")
                         .build(uuid))
                 .retrieve().toEntity(MemberInfoResponseVo.class).block();
-        log.info("handle >>> ", responseEntity.getBody().getHandle());
+        log.info("handle >>> {}", responseEntity.getBody().getHandle());
         return responseEntity.getBody().getHandle();
     }
 
@@ -706,6 +706,25 @@ public class AuctionServiceImpl implements AuctionService {
                     .retrieve().toEntity(IsSubscribedResponseVo.class).block();
             return responseEntity.getBody().isSubscribed();
         } catch (Exception e) {
+            throw new CustomException(ResponseStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // webClient-blocking 통신으로 회원 서비스에 handle 값 입력하여 uuid 반환
+    private String getUuidByHandle(String handle) {
+        WebClient webClient = WebClient.create(ServerPathEnum.MEMBER_SERVER.getServer());
+
+        try {
+            ResponseEntity<MemberUuidResponseVo> responseEntity = webClient.get()
+                    .uri(uriBuilder -> uriBuilder.path(ServerPathEnum.GET_UUID.getServer())
+                            .queryParam("handle", handle)
+                            .build())
+                    .retrieve().toEntity(MemberUuidResponseVo.class).block();
+            String uuid = responseEntity.getBody().getUuid();
+            log.info("uuid >>> {}", uuid);
+            return uuid;
+        } catch (Exception e) {
+            log.error(e.toString());
             throw new CustomException(ResponseStatus.INTERNAL_SERVER_ERROR);
         }
     }
