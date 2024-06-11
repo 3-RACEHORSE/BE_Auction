@@ -2,37 +2,29 @@ package com.skyhorsemanpower.auction.presentation;
 
 import com.skyhorsemanpower.auction.application.AuctionService;
 import com.skyhorsemanpower.auction.common.SuccessResponse;
-import com.skyhorsemanpower.auction.data.dto.CreateAuctionDto;
-import com.skyhorsemanpower.auction.data.dto.CreatedAuctionHistoryDto;
 import com.skyhorsemanpower.auction.data.dto.OfferBiddingPriceDto;
 import com.skyhorsemanpower.auction.data.dto.ParticipatedAuctionHistoryDto;
-import com.skyhorsemanpower.auction.data.vo.CreateAuctionRequestVo;
-import com.skyhorsemanpower.auction.data.vo.CreatedAuctionHistoryResponseVo;
+import com.skyhorsemanpower.auction.data.dto.SearchBiddingPriceDto;
 import com.skyhorsemanpower.auction.data.vo.OfferBiddingPriceRequestVo;
 import com.skyhorsemanpower.auction.data.vo.ParticipatedAuctionHistoryResponseVo;
+import com.skyhorsemanpower.auction.domain.AuctionHistory;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@Tag(name = "인가가 필요한 경매 서비스", description = "인가가 필요한 경매 서비스 API")
-@RequestMapping("/api/v1/authorization/auction")
-public class AuthorizationAuctionController {
+@Tag(name = "경매 서비스", description = "경매 서비스 API")
+@RequestMapping("/api/v1/auction")
+public class AuctionController {
     private final AuctionService auctionService;
 
-    // 경매 등록
-    @PostMapping("")
-    @Operation(summary = "경매 등록", description = "경매 등록")
-    public SuccessResponse<Object> createAuction(
-            @RequestHeader String uuid,
-            @RequestBody CreateAuctionRequestVo createAuctionRequestVo) {
-        auctionService.createAuction(CreateAuctionDto.createAuctionVoToDto(uuid, createAuctionRequestVo));
-        return new SuccessResponse<>(null);
-    }
 
     // 경매 입찰가 제시
     @PostMapping("/bidding")
@@ -52,5 +44,14 @@ public class AuthorizationAuctionController {
         List<ParticipatedAuctionHistoryResponseVo> participatedAuctionHistoryResponseVos = auctionService.
                 participatedAuctionHistory(ParticipatedAuctionHistoryDto.builder().participateUuid(uuid).build());
         return new SuccessResponse<>(participatedAuctionHistoryResponseVos);
+    }
+
+    // 경매 입찰 내역 조회
+    @GetMapping(value = "/{auctionUuid}/bidding-history", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @Operation(summary = "경매 입찰 내역 조회", description = "경매 입찰 내역 조회")
+    public Flux<AuctionHistory> searchBiddingPrice(
+            @PathVariable("auctionUuid") String auctionUuid) {
+        return auctionService.searchBiddingPrice(SearchBiddingPriceDto.builder().auctionUuid(auctionUuid).build())
+                .subscribeOn(Schedulers.boundedElastic());
     }
 }

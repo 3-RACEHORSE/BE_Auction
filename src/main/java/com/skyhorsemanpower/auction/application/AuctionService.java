@@ -9,25 +9,9 @@ import reactor.core.publisher.Flux;
 import java.util.List;
 
 public interface AuctionService {
-    void createAuction(CreateAuctionDto createAuctionDto);
-
-    SearchAllAuctionResponseVo searchAllAuction(SearchAllAuctionDto searchAuctionDto);
-
-    SearchAuctionResponseVo searchAuction(SearchAuctionDto searchAuctionDto);
-
     void offerBiddingPrice(OfferBiddingPriceDto offerBiddingPriceDto);
 
     Flux<AuctionHistory> searchBiddingPrice(SearchBiddingPriceDto searchBiddingPriceDto);
 
-    List<CreatedAuctionHistoryResponseVo> createdAuctionHistory(CreatedAuctionHistoryDto createdAuctionHistoryDto);
-
     List<ParticipatedAuctionHistoryResponseVo> participatedAuctionHistory(ParticipatedAuctionHistoryDto participatedAuctionHistoryDto);
-
-    MainStatisticResponseVo mainStatistic();
-
-    List<MainHotAuctionResponseVo> mainHotAuction();
-
-    List<MainCategoryHotAuctionResponseVo> mainCategoryHotAuction();
-
-    List<MainHighBiddingPriceAuctionResponseVo> mainHighBiddingPriceAuction();
 }
