@@ -20,6 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Tag(name = "경매 서비스", description = "경매 서비스 API")
 @RequestMapping("/api/v1/auction")
+@CrossOrigin(value = "*")
 public class AuctionController {
     private final AuctionService auctionService;
 
