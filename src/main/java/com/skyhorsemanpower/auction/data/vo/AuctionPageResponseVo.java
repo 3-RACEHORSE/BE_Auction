@@ -1,9 +1,12 @@
 package com.skyhorsemanpower.auction.data.vo;
 
+import com.skyhorsemanpower.auction.common.exception.CustomException;
+import com.skyhorsemanpower.auction.common.exception.ResponseStatus;
 import com.skyhorsemanpower.auction.common.redis.RedisVariableEnum;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -12,6 +15,7 @@ import java.util.Map;
 
 @Getter
 @NoArgsConstructor
+@Slf4j
 public class AuctionPageResponseVo {
     private int round;
     private LocalDateTime currentRoundStartTime;
@@ -30,15 +34,22 @@ public class AuctionPageResponseVo {
     }
 
     public static AuctionPageResponseVo converter(Map<Object, Object> resultMap) {
-        return AuctionPageResponseVo.builder()
-                .round(Integer.parseInt((String) resultMap.get(RedisVariableEnum.ROUND.getVariable())))
-                .currentRoundStartTime(LocalDateTime.parse((String) resultMap.get(
-                        RedisVariableEnum.CURRENT_ROUND_START_TIME.getVariable()), DateTimeFormatter.ISO_DATE_TIME))
-                .currentRoundEndTime(LocalDateTime.parse((String) resultMap.get(
-                        RedisVariableEnum.CURRENT_ROUND_END_TIME.getVariable()), DateTimeFormatter.ISO_DATE_TIME))
-                .currentPrice(new BigDecimal((String) resultMap.get(RedisVariableEnum.CURRENT_PRICE.getVariable())))
-                .numberOfEventParticipants(Integer.parseInt((String) resultMap.get(
-                        RedisVariableEnum.NUMBER_OF_EVENT_PARTICIPANTS.getVariable())))
-                .build();
+        AuctionPageResponseVo auctionPageResponseVo;
+        try {
+            auctionPageResponseVo = AuctionPageResponseVo.builder()
+                    .round(Integer.parseInt((String) resultMap.get(RedisVariableEnum.ROUND.getVariable())))
+                    .currentRoundStartTime(LocalDateTime.parse((String) resultMap.get(
+                            RedisVariableEnum.CURRENT_ROUND_START_TIME.getVariable()), DateTimeFormatter.ISO_DATE_TIME))
+                    .currentRoundEndTime(LocalDateTime.parse((String) resultMap.get(
+                            RedisVariableEnum.CURRENT_ROUND_END_TIME.getVariable()), DateTimeFormatter.ISO_DATE_TIME))
+                    .currentPrice(new BigDecimal((String) resultMap.get(RedisVariableEnum.CURRENT_PRICE.getVariable())))
+                    .numberOfEventParticipants(Integer.parseInt((String) resultMap.get(
+                            RedisVariableEnum.NUMBER_OF_EVENT_PARTICIPANTS.getVariable())))
+                    .build();
+        } catch (Exception e) {
+            log.warn("Auction Page API Error >>> {}", e.getMessage());
+            throw new CustomException(ResponseStatus.NO_DATA);
+        }
+        return auctionPageResponseVo;
     }
 }
