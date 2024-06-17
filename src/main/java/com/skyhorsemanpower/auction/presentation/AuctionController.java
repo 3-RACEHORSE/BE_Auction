@@ -1,9 +1,11 @@
 package com.skyhorsemanpower.auction.presentation;
 
 import com.skyhorsemanpower.auction.application.AuctionService;
+import com.skyhorsemanpower.auction.application.RedisService;
 import com.skyhorsemanpower.auction.common.SuccessResponse;
 import com.skyhorsemanpower.auction.data.dto.OfferBiddingPriceDto;
 import com.skyhorsemanpower.auction.data.dto.SearchBiddingPriceDto;
+import com.skyhorsemanpower.auction.data.vo.AuctionPageResponseVo;
 import com.skyhorsemanpower.auction.data.vo.OfferBiddingPriceRequestVo;
 import com.skyhorsemanpower.auction.domain.AuctionHistory;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,6 +24,7 @@ import java.util.List;
 @RequestMapping("/api/v1/auction")
 public class AuctionController {
     private final AuctionService auctionService;
+    private final RedisService redisService;
 
     // 경매 입찰가 제시
     @PostMapping("/bidding")
@@ -40,5 +43,13 @@ public class AuctionController {
             @PathVariable("auctionUuid") String auctionUuid) {
         return auctionService.searchBiddingPrice(SearchBiddingPriceDto.builder().auctionUuid(auctionUuid).build())
                 .subscribeOn(Schedulers.boundedElastic());
+    }
+
+    // 경매 페이지 API
+    @GetMapping("/auction-page/{auctionUuid}")
+    @Operation(summary = "경매 페이지 API", description = "경매 페이지에 보여줄 데이터 조회")
+    public SuccessResponse<AuctionPageResponseVo> auctionPage(
+            @PathVariable("auctionUuid") String auctionUuid) {
+        return new SuccessResponse<>(redisService.getAuctionPage(auctionUuid));
     }
 }
