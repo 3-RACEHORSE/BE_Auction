@@ -2,11 +2,15 @@ package com.skyhorsemanpower.auction.application.impl;
 
 import com.skyhorsemanpower.auction.application.RedisService;
 import com.skyhorsemanpower.auction.data.vo.AuctionPageResponseVo;
+import com.skyhorsemanpower.auction.data.vo.StandbyResponseVo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,5 +28,14 @@ public class RedisServiceImpl implements RedisService {
 
         // 결과를 VO에 맞게 변환해서 반환
         return AuctionPageResponseVo.converter(resultMap);
+    }
+
+    @Override
+    public StandbyResponseVo getStandbyPage(String auctionUuid) {
+        // redis 결과 조회
+        Map<Object, Object> resultMap = redisTemplate.opsForHash().entries(auctionUuid);
+
+        // 결과를 VO에 맞게 변환해서 반환
+        return StandbyResponseVo.converter(resultMap);
     }
 }

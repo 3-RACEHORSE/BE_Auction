@@ -7,6 +7,7 @@ import com.skyhorsemanpower.auction.data.dto.OfferBiddingPriceDto;
 import com.skyhorsemanpower.auction.data.dto.SearchBiddingPriceDto;
 import com.skyhorsemanpower.auction.data.vo.AuctionPageResponseVo;
 import com.skyhorsemanpower.auction.data.vo.OfferBiddingPriceRequestVo;
+import com.skyhorsemanpower.auction.data.vo.StandbyResponseVo;
 import com.skyhorsemanpower.auction.domain.AuctionHistory;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -52,5 +53,13 @@ public class AuctionController {
     public SuccessResponse<AuctionPageResponseVo> auctionPage(
             @PathVariable("auctionUuid") String auctionUuid) {
         return new SuccessResponse<>(redisService.getAuctionPage(auctionUuid));
+    }
+
+    // 대기 페이지 API
+    @PutMapping("/standby-page/{auctionUuid}")
+    @Operation(summary = "대기 페이지 API", description = "대기 페이지에 보여줄 데이터 조회 및 갱신")
+    public SuccessResponse<StandbyResponseVo> standByPage(
+            @PathVariable("auctionUuid") String auctionUuid) {
+        return new SuccessResponse<>(redisService.getStandbyPage(auctionUuid));
     }
 }
