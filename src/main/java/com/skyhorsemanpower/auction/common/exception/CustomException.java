@@ -1,6 +1,4 @@
-package com.skyhorsemanpower.auction.common;
-
-import com.skyhorsemanpower.auction.status.ResponseStatus;
+package com.skyhorsemanpower.auction.common.exception;
 
 public class CustomException extends RuntimeException {
     private final ResponseStatus responseStatus;

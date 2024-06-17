@@ -1,9 +1,9 @@
 package com.skyhorsemanpower.auction.application.impl;
 
 import com.skyhorsemanpower.auction.application.AuctionService;
-import com.skyhorsemanpower.auction.common.CustomException;
+import com.skyhorsemanpower.auction.common.exception.CustomException;
 import com.skyhorsemanpower.auction.repository.AuctionHistoryRepository;
-import com.skyhorsemanpower.auction.status.ResponseStatus;
+import com.skyhorsemanpower.auction.common.exception.ResponseStatus;
 import com.skyhorsemanpower.auction.data.dto.*;
 import com.skyhorsemanpower.auction.domain.AuctionHistory;
 import com.skyhorsemanpower.auction.repository.AuctionHistoryReactiveRepository;
