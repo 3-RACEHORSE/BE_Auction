@@ -7,6 +7,9 @@ import com.skyhorsemanpower.auction.common.redis.RedisVariableEnum;
 import com.skyhorsemanpower.auction.data.vo.AuctionPageResponseVo;
 import com.skyhorsemanpower.auction.data.vo.StandbyResponseVo;
 import com.skyhorsemanpower.auction.repository.AuctionHistoryRepository;
+import com.skyhorsemanpower.auction.status.AuctionBidTimeEnum;
+import com.skyhorsemanpower.auction.status.StandbyTimeEnum;
+import com.skyhorsemanpower.auction.status.UpdateReferenceTableEnum;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.HashOperations;
@@ -59,9 +62,10 @@ public class RedisServiceImpl implements RedisService {
             currentPrice = currentPrice.add(incrementUnit);
 
             DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
-            LocalDateTime currentRoundEndTime = LocalDateTime.parse((String) resultMap.get(RedisVariableEnum.CURRENT_ROUND_END_TIME.getVariable()), formatter);
-            LocalDateTime currentRoundStartTime = currentRoundEndTime.plusSeconds(15);
-            LocalDateTime newRoundEndTime = currentRoundStartTime.plusMinutes(1);
+
+            // 다음 라운드 시작 시간은 입찰자 다 찬 순간에서 대기 시간의 합
+            LocalDateTime currentRoundStartTime = LocalDateTime.now().plusSeconds(StandbyTimeEnum.SECONDS_15.getSecond());
+            LocalDateTime newRoundEndTime = currentRoundStartTime.plusSeconds(AuctionBidTimeEnum.SECONDS_60.getSecond());
 
             Map<Object, Object> map = new HashMap<>();
             map.put(RedisVariableEnum.ROUND.getVariable(), String.valueOf(round));
