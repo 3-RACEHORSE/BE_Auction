@@ -55,9 +55,18 @@ public class AuctionController {
         return new SuccessResponse<>(redisService.getAuctionPage(auctionUuid));
     }
 
+    // 경매 참고 테이블 갱신 API
+    @PutMapping("/update-reference-table/{auctionUuid}")
+    @Operation(summary = "경매 참고 테이블 갱신 API", description = "입찰 남은 인원 수가 0이 되면 경매 참고 테이블 갱신")
+    public SuccessResponse<Object> updateAuctionReferenceTable(
+            @PathVariable("auctionUuid") String auctionUuid) {
+        redisService.updateAuctionReferenceTable(auctionUuid);
+        return new SuccessResponse<>(null);
+    }
+
     // 대기 페이지 API
     @PutMapping("/standby-page/{auctionUuid}")
-    @Operation(summary = "대기 페이지 API", description = "대기 페이지에 보여줄 데이터 조회 및 갱신")
+    @Operation(summary = "대기 페이지 API", description = "경매 참고 테이블 갱신 후 대기 페이지에 보여줄 데이터 조회 및 갱신")
     public SuccessResponse<StandbyResponseVo> standByPage(
             @PathVariable("auctionUuid") String auctionUuid) {
         return new SuccessResponse<>(redisService.getStandbyPage(auctionUuid));

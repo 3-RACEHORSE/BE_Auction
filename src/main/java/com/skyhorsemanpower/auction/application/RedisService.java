@@ -7,4 +7,6 @@ public interface RedisService {
     AuctionPageResponseVo getAuctionPage(String auctionUuid);
 
     StandbyResponseVo getStandbyPage(String auctionUuid);
+
+    void updateAuctionReferenceTable(String auctionUuid);
 }

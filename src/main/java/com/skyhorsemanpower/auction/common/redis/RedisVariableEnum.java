@@ -10,7 +10,8 @@ public enum RedisVariableEnum {
     CURRENT_ROUND_START_TIME("currentRoundStartTime"),
     CURRENT_ROUND_END_TIME("currentRoundEndTime"),
     CURRENT_PRICE("currentPrice"),
-    NUMBER_OF_EVENT_PARTICIPANTS("numberOfEventParticipants");
+    NUMBER_OF_EVENT_PARTICIPANTS("numberOfEventParticipants"),
+    INCREMENT_UNIT("incrementUnit");
 
     private final String variable;
 }
