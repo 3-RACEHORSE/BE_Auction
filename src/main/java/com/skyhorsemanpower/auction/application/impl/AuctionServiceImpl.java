@@ -7,12 +7,12 @@ import com.skyhorsemanpower.auction.common.exception.ResponseStatus;
 import com.skyhorsemanpower.auction.data.dto.*;
 import com.skyhorsemanpower.auction.domain.AuctionHistory;
 import com.skyhorsemanpower.auction.repository.AuctionHistoryReactiveRepository;
+import com.skyhorsemanpower.auction.repository.RoundInfoReactiveRepository;
+import com.skyhorsemanpower.auction.repository.RoundInfoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
-
 import java.time.LocalDateTime;
 
 @Service
@@ -23,6 +23,8 @@ public class AuctionServiceImpl implements AuctionService {
     private final AuctionHistoryRepository auctionHistoryRepository;
     private final AuctionHistoryReactiveRepository auctionHistoryReactiveRepository;
     private final MongoTemplate mongoTemplate;
+    private final RoundInfoReactiveRepository roundInfoReactiveRepository;
+    private final RoundInfoRepository roundInfoRepository;
 
     @Override
     public void offerBiddingPrice(OfferBiddingPriceDto offerBiddingPriceDto) {
@@ -61,9 +63,4 @@ public class AuctionServiceImpl implements AuctionService {
         return true;
     }
 
-    @Override
-    public Flux<AuctionHistory> searchBiddingPrice(SearchBiddingPriceDto searchBiddingPriceDto) {
-
-        return auctionHistoryReactiveRepository.searchBiddingPrice(searchBiddingPriceDto.getAuctionUuid());
-    }
 }

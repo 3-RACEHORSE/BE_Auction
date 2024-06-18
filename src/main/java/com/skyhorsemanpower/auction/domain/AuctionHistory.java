@@ -21,12 +21,15 @@ public class AuctionHistory {
     private String biddingUuid;
     private int biddingPrice;
     private LocalDateTime biddingTime;
+    private Integer round;
 
     @Builder
-    public AuctionHistory(String auctionUuid, String biddingUuid, int biddingPrice, LocalDateTime biddingTime) {
+    public AuctionHistory(String auctionUuid, String biddingUuid, int biddingPrice,
+                          LocalDateTime biddingTime, Integer round) {
         this.auctionUuid = auctionUuid;
         this.biddingUuid = biddingUuid;
         this.biddingPrice = biddingPrice;
         this.biddingTime = biddingTime;
+        this.round = round;
     }
 }

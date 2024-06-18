@@ -4,11 +4,10 @@ import com.skyhorsemanpower.auction.application.AuctionService;
 import com.skyhorsemanpower.auction.application.RedisService;
 import com.skyhorsemanpower.auction.common.SuccessResponse;
 import com.skyhorsemanpower.auction.data.dto.OfferBiddingPriceDto;
-import com.skyhorsemanpower.auction.data.dto.SearchBiddingPriceDto;
-import com.skyhorsemanpower.auction.data.vo.AuctionPageResponseVo;
 import com.skyhorsemanpower.auction.data.vo.OfferBiddingPriceRequestVo;
+import com.skyhorsemanpower.auction.data.vo.RoundInfoResponseVo;
 import com.skyhorsemanpower.auction.data.vo.StandbyResponseVo;
-import com.skyhorsemanpower.auction.domain.AuctionHistory;
+import com.skyhorsemanpower.auction.repository.RoundInfoReactiveRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +26,7 @@ import java.util.List;
 public class AuctionController {
     private final AuctionService auctionService;
     private final RedisService redisService;
+    private final RoundInfoReactiveRepository roundInfoReactiveRepository;
 
     // 경매 입찰가 제시
     @PostMapping("/bidding")
@@ -38,21 +38,12 @@ public class AuctionController {
         return new SuccessResponse<>(null);
     }
 
-    // 경매 입찰 내역 조회
-    @GetMapping(value = "/{auctionUuid}/bidding-history", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    @Operation(summary = "경매 입찰 내역 조회", description = "경매 입찰 내역 조회")
-    public Flux<AuctionHistory> searchBiddingPrice(
-            @PathVariable("auctionUuid") String auctionUuid) {
-        return auctionService.searchBiddingPrice(SearchBiddingPriceDto.builder().auctionUuid(auctionUuid).build())
-                .subscribeOn(Schedulers.boundedElastic());
-    }
-
     // 경매 페이지 API
-    @GetMapping("/auction-page/{auctionUuid}")
-    @Operation(summary = "경매 페이지 API", description = "경매 페이지에 보여줄 데이터 조회")
-    public SuccessResponse<AuctionPageResponseVo> auctionPage(
+    @GetMapping(value = "/auction-page/{auctionUuid}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @Operation(summary = "경매 페이지 API", description = "경매 페이지에 보여줄 데이터 실시간 조회")
+    public Flux<RoundInfoResponseVo> auctionPage(
             @PathVariable("auctionUuid") String auctionUuid) {
-        return new SuccessResponse<>(redisService.getAuctionPage(auctionUuid));
+        return roundInfoReactiveRepository.searchRoundInfo(auctionUuid).subscribeOn(Schedulers.boundedElastic());
     }
 
     // 대기 페이지 API
