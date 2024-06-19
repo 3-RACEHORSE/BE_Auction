@@ -1,4 +1,4 @@
-package com.skyhorsemanpower.auction.domain;
+package com.skyhorsemanpower.auction.data.vo.domain;
 
 import lombok.Builder;
 import lombok.Getter;
