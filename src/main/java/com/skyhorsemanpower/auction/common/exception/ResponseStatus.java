@@ -34,6 +34,12 @@ public enum ResponseStatus {
     // 경매 입찰 불가능
     CAN_NOT_BIDDING(404, "입찰이 불가능합니다."),
 
+    // 라운드 정보(입찰가, 라운드) 불일치
+    NOT_EQUAL_ROUND_INFORMATION(404, "라운드 또는 입찰가가 일치하지 않습니다."),
+
+    // 입찰자를 다 모집한 경우
+    FULL_PARTICIPANTS(404, "현 라운드는 입찰자가 다 찼습니다."),
+
     // 예외 테스트 용
     EXCEPTION_TEST(500, "예외 테스트") ;
 

@@ -9,7 +9,7 @@ import com.skyhorsemanpower.auction.data.dto.OfferBiddingPriceDto;
 import com.skyhorsemanpower.auction.data.vo.OfferBiddingPriceRequestVo;
 import com.skyhorsemanpower.auction.data.vo.RoundInfoResponseVo;
 import com.skyhorsemanpower.auction.data.vo.StandbyResponseVo;
-import com.skyhorsemanpower.auction.data.vo.domain.RoundInfo;
+import com.skyhorsemanpower.auction.domain.RoundInfo;
 import com.skyhorsemanpower.auction.repository.RoundInfoReactiveRepository;
 import com.skyhorsemanpower.auction.repository.RoundInfoRepository;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,8 +19,6 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -54,7 +52,7 @@ public class AuctionController {
     // 경매 페이지 최초 진입 시 현재 데이터 조회 API
     @GetMapping("/initial-auction-page/{auctionUuid}")
     @Operation(summary = "경매 페이지 입장 시 사용되는 API", description = "경매 페이지 최초 진입 시 현재 데이터 조회")
-    public SuccessResponse<RoundInfoResponseVo> initialAuctionPage(
+    public SuccessResponse<RoundInfo> initialAuctionPage(
             @PathVariable("auctionUuid") String auctionUuid) {
         return new SuccessResponse<>(roundInfoRepository.findFirstByAuctionUuidOrderByCreatedAtDesc(auctionUuid).orElseThrow(
                 () -> new CustomException(ResponseStatus.NO_DATA)));
