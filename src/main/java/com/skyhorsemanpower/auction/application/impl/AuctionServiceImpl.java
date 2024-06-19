@@ -90,8 +90,8 @@ public class AuctionServiceImpl implements AuctionService {
         log.info("남은 인원 통과");
 
         // 조건3. round 입찰가와 입력한 입찰가 확인
-        checkBiddingPrice(roundInfo.getPrice(), offerBiddingPriceDto.getBiddingPrice());
-        log.info("입찰가 통과");
+        checkRoundAndBiddingPrice(offerBiddingPriceDto, roundInfo);
+        log.info("라운드 및 입찰가 통과");
     }
 
     private void checkLeftNumberOfParticipant(Long leftNumberOfParticipants) {
@@ -99,11 +99,18 @@ public class AuctionServiceImpl implements AuctionService {
         if (leftNumberOfParticipants < 1L) throw new CustomException(ResponseStatus.FULL_PARTICIPANTS);
     }
 
-    private void checkBiddingPrice(BigDecimal price, BigDecimal biddingPrice) {
-        log.info("price >>> {}, biddingPrice >>> {}", price, biddingPrice);
-        log.info("biddingPrice.compareTo(price) == 0 >>> {}", biddingPrice.compareTo(price) == 0);
-        if (!(biddingPrice.compareTo(price) == 0)) {
-            throw new CustomException(ResponseStatus.NOT_EQUAL_PRICE);
+    private void checkRoundAndBiddingPrice(OfferBiddingPriceDto offerBiddingPriceDto, RoundInfo roundInfo) {
+        log.info("input round >>> {}, document round >>> {}, input price >>> {}, document price >>> {}",
+                offerBiddingPriceDto.getRound(), roundInfo.getRound(),
+                offerBiddingPriceDto.getBiddingPrice(), roundInfo.getPrice());
+
+        log.info("inputRound == documentRound >>> {}", offerBiddingPriceDto.getRound() == roundInfo.getRound());
+        log.info("inputPrice.compareTo(documentPrice) == 0 >>> {}",
+                offerBiddingPriceDto.getBiddingPrice().compareTo(roundInfo.getPrice()) == 0);
+
+        if (!(offerBiddingPriceDto.getBiddingPrice().compareTo(roundInfo.getPrice()) == 0) ||
+                !(offerBiddingPriceDto.getRound() == roundInfo.getRound())) {
+            throw new CustomException(ResponseStatus.NOT_EQUAL_ROUND_INFORMATION);
         }
     }
 
