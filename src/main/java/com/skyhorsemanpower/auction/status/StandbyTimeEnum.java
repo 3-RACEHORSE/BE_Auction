@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum StandbyTimeEnum {
-    SECONDS_15(-15),
-    SECONDS_30(-30);
+    SECONDS_15(15),
+    SECONDS_30(30);
     private final int second;
 }
