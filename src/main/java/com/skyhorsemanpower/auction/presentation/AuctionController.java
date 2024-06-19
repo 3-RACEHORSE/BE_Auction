@@ -9,7 +9,6 @@ import com.skyhorsemanpower.auction.data.dto.OfferBiddingPriceDto;
 import com.skyhorsemanpower.auction.data.vo.OfferBiddingPriceRequestVo;
 import com.skyhorsemanpower.auction.data.vo.RoundInfoResponseVo;
 import com.skyhorsemanpower.auction.data.vo.StandbyResponseVo;
-import com.skyhorsemanpower.auction.data.vo.domain.RoundInfo;
 import com.skyhorsemanpower.auction.repository.RoundInfoReactiveRepository;
 import com.skyhorsemanpower.auction.repository.RoundInfoRepository;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,8 +18,6 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
