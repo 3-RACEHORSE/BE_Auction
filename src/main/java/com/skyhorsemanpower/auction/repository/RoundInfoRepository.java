@@ -8,7 +8,7 @@ import javax.swing.text.html.Option;
 import java.util.Optional;
 
 public interface RoundInfoRepository extends MongoRepository<RoundInfo, String> {
-    Optional<RoundInfoResponseVo> findFirstByAuctionUuidOrderByCreatedAtDesc(String auctionUuid);
+    Optional<RoundInfo> findFirstByAuctionUuidOrderByCreatedAtDesc(String auctionUuid);
 
-    Optional<RoundInfo> findByAuctionUuidAndRound(String auctionUuid, int round);
+//    Optional<RoundInfo> findFirstByAuctionUuidAndRoundOrderByCreatedAtDesc(String auctionUuid, int round);
 }

@@ -1,5 +1,7 @@
 package com.skyhorsemanpower.auction.domain;
 
+import com.skyhorsemanpower.auction.status.RoundTimeEnum;
+import com.skyhorsemanpower.auction.status.StandbyTimeEnum;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -43,5 +45,40 @@ public class RoundInfo {
         this.numberOfParticipants = numberOfParticipants;
         this.leftNumberOfParticipants = leftNumberOfParticipants;
         this.createdAt = LocalDateTime.now();
+    }
+
+    public static RoundInfo nextRoundUpdate(RoundInfo roundInfo) {
+        Integer nextRound = roundInfo.getRound() + 1;
+        LocalDateTime nextRoundStartTime = LocalDateTime.now().plusSeconds(StandbyTimeEnum.SECONDS_15.getSecond());
+        LocalDateTime nextRoundEndTime = nextRoundStartTime.plusSeconds(RoundTimeEnum.SECONDS_60.getSecond());
+        BigDecimal nextPrice = roundInfo.getPrice().add(roundInfo.getIncrementUnit());
+
+        return RoundInfo.builder()
+                .auctionUuid(roundInfo.getAuctionUuid())
+                .round(nextRound)
+                .roundStartTime(nextRoundStartTime)
+                .roundEndTime(nextRoundEndTime)
+                .incrementUnit(roundInfo.getIncrementUnit())
+                .price(nextPrice)
+                .isActive(true)
+                .numberOfParticipants(roundInfo.getNumberOfParticipants())
+                .leftNumberOfParticipants(roundInfo.getNumberOfParticipants())
+                .build();
+    }
+
+    public static RoundInfo currentRoundUpdate(RoundInfo roundInfo) {
+        Long nextNumberOfParticipants = roundInfo.getLeftNumberOfParticipants() - 1;
+
+        return RoundInfo.builder()
+                .auctionUuid(roundInfo.getAuctionUuid())
+                .round(roundInfo.getRound())
+                .roundStartTime(roundInfo.getRoundStartTime())
+                .roundEndTime(roundInfo.getRoundEndTime())
+                .incrementUnit(roundInfo.getIncrementUnit())
+                .price(roundInfo.getPrice())
+                .isActive(true)
+                .numberOfParticipants(roundInfo.getNumberOfParticipants())
+                .leftNumberOfParticipants(nextNumberOfParticipants)
+                .build();
     }
 }

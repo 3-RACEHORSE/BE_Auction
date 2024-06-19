@@ -31,10 +31,18 @@ public class AuctionServiceImpl implements AuctionService {
     private final RoundInfoRepository roundInfoRepository;
 
     @Override
+    @Transactional
     public void offerBiddingPrice(OfferBiddingPriceDto offerBiddingPriceDto) {
+
+        // 현재 경매의 라운드 정보 추출
+        RoundInfo roundInfo = roundInfoRepository.
+                findFirstByAuctionUuidOrderByCreatedAtDesc(offerBiddingPriceDto.getAuctionUuid()).orElseThrow(
+                        () -> new CustomException(ResponseStatus.NO_DATA));
+
         // 입찰 가능 확인
         // 입찰이 안되면 아래 메서드 내에서 예외를 던진다.
-        isBiddingPossible(offerBiddingPriceDto);
+        // isUpdateRoundInfo boolean 데이터는 round_info 도큐먼트를 갱신 트리거
+        isBiddingPossible(offerBiddingPriceDto, roundInfo);
 
         // 입찰 정보 저장
         AuctionHistory auctionHistory = AuctionHistory.converter(offerBiddingPriceDto);
@@ -45,22 +53,40 @@ public class AuctionServiceImpl implements AuctionService {
         } catch (Exception e) {
             throw new CustomException(ResponseStatus.MONGODB_ERROR);
         }
+
+        // 입찰 후, round_info 도큐먼트 갱신
+        updateRoundInfo(roundInfo);
     }
 
-    @Transactional
-    private void isBiddingPossible(OfferBiddingPriceDto offerBiddingPriceDto) {
-        // 현재 경매의 라운드 정보 추출
-        RoundInfo roundInfo = roundInfoRepository.
-                findByAuctionUuidAndRound(offerBiddingPriceDto.getAuctionUuid(),
-                        offerBiddingPriceDto.getRound()).orElseThrow(
-                        () -> new CustomException(ResponseStatus.NO_DATA));
+    private void updateRoundInfo(RoundInfo roundInfo) {
+        RoundInfo updatedRoundInfo;
 
+        // 다음 라운드로 round_info 도큐먼트 갱신
+        if(roundInfo.getLeftNumberOfParticipants().equals(1L)) {
+            updatedRoundInfo = RoundInfo.nextRoundUpdate(roundInfo);
+        }
+
+        // 동일 라운드에서 round_info 도큐먼트 갱신
+        else {
+            updatedRoundInfo = RoundInfo.currentRoundUpdate(roundInfo);
+        }
+
+        log.info("Updated round_info Document >>> {}", updatedRoundInfo.toString());
+
+        try {
+            roundInfoRepository.save(updatedRoundInfo);
+        } catch (Exception e) {
+            throw new CustomException(ResponseStatus.MONGODB_ERROR);
+        }
+    }
+
+    private void isBiddingPossible(OfferBiddingPriceDto offerBiddingPriceDto, RoundInfo roundInfo) {
         // 조건1. 입찰 시간 확인
         checkBiddingTime(roundInfo.getRoundStartTime(), roundInfo.getRoundEndTime());
         log.info("입찰 시간 통과");
 
         // 조건2. 남은 인원이 1 이상
-        boolean isUpdateRoundInfo = checkLeftNumberOfParticipant(roundInfo.getLeftNumberOfParticipants());
+        checkLeftNumberOfParticipant(roundInfo.getLeftNumberOfParticipants());
         log.info("남은 인원 통과");
 
         // 조건3. round 입찰가와 입력한 입찰가 확인
@@ -68,13 +94,9 @@ public class AuctionServiceImpl implements AuctionService {
         log.info("입찰가 통과");
     }
 
-    private boolean checkLeftNumberOfParticipant(Long leftNumberOfParticipants) {
+    private void checkLeftNumberOfParticipant(Long leftNumberOfParticipants) {
         log.info("leftNumberOfParticipants >>> {}", leftNumberOfParticipants);
         if (leftNumberOfParticipants < 1L) throw new CustomException(ResponseStatus.FULL_PARTICIPANTS);
-
-        // round_info 도큐먼트 갱신 트리거
-        log.info("Is Update round_info? >>> {}", leftNumberOfParticipants.equals(1L));
-        return leftNumberOfParticipants.equals(1L);
     }
 
     private void checkBiddingPrice(BigDecimal price, BigDecimal biddingPrice) {
