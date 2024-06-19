@@ -1,4 +1,4 @@
-package com.skyhorsemanpower.auction.domain;
+package com.skyhorsemanpower.auction.data.vo.domain;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -27,12 +27,12 @@ public class RoundInfo {
     private Boolean isActive;
     private Long numberOfParticipants;
     private Long leftNumberOfParticipants;
+    private LocalDateTime createdAt;
 
     @Builder
-
     public RoundInfo(String auctionUuid, Integer round, LocalDateTime roundStartTime, LocalDateTime roundEndTime,
                      BigDecimal incrementUnit, BigDecimal price, Boolean isActive, Long numberOfParticipants,
-                     Long leftNumberOfParticipants) {
+                     Long leftNumberOfParticipants, LocalDateTime createdAt) {
         this.auctionUuid = auctionUuid;
         this.round = round;
         this.roundStartTime = roundStartTime;
@@ -42,5 +42,6 @@ public class RoundInfo {
         this.isActive = isActive;
         this.numberOfParticipants = numberOfParticipants;
         this.leftNumberOfParticipants = leftNumberOfParticipants;
+        this.createdAt = LocalDateTime.now();
     }
 }

@@ -1,7 +1,7 @@
 package com.skyhorsemanpower.auction.repository;
 
 import com.skyhorsemanpower.auction.data.projection.CheckBiddingPriceProjection;
-import com.skyhorsemanpower.auction.domain.AuctionHistory;
+import com.skyhorsemanpower.auction.data.vo.domain.AuctionHistory;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;

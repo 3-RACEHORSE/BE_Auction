@@ -3,11 +3,15 @@ package com.skyhorsemanpower.auction.presentation;
 import com.skyhorsemanpower.auction.application.AuctionService;
 import com.skyhorsemanpower.auction.application.RedisService;
 import com.skyhorsemanpower.auction.common.SuccessResponse;
+import com.skyhorsemanpower.auction.common.exception.CustomException;
+import com.skyhorsemanpower.auction.common.exception.ResponseStatus;
 import com.skyhorsemanpower.auction.data.dto.OfferBiddingPriceDto;
 import com.skyhorsemanpower.auction.data.vo.OfferBiddingPriceRequestVo;
 import com.skyhorsemanpower.auction.data.vo.RoundInfoResponseVo;
 import com.skyhorsemanpower.auction.data.vo.StandbyResponseVo;
+import com.skyhorsemanpower.auction.data.vo.domain.RoundInfo;
 import com.skyhorsemanpower.auction.repository.RoundInfoReactiveRepository;
+import com.skyhorsemanpower.auction.repository.RoundInfoRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +31,7 @@ public class AuctionController {
     private final AuctionService auctionService;
     private final RedisService redisService;
     private final RoundInfoReactiveRepository roundInfoReactiveRepository;
+    private final RoundInfoRepository roundInfoRepository;
 
     // 경매 입찰가 제시
     @PostMapping("/bidding")
@@ -44,6 +49,15 @@ public class AuctionController {
     public Flux<RoundInfoResponseVo> auctionPage(
             @PathVariable("auctionUuid") String auctionUuid) {
         return roundInfoReactiveRepository.searchRoundInfo(auctionUuid).subscribeOn(Schedulers.boundedElastic());
+    }
+
+    // 경매 페이지 최초 진입 시 현재 데이터 조회 API
+    @GetMapping("/initial-auction-page/{auctionUuid}")
+    @Operation(summary = "경매 페이지 입장 시 사용되는 API", description = "경매 페이지 최초 진입 시 현재 데이터 조회")
+    public SuccessResponse<RoundInfoResponseVo> initialAuctionPage(
+            @PathVariable("auctionUuid") String auctionUuid) {
+        return new SuccessResponse<>(roundInfoRepository.findFirstByAuctionUuidOrderByCreatedAtDesc(auctionUuid).orElseThrow(
+                () -> new CustomException(ResponseStatus.NO_DATA)));
     }
 
     // 대기 페이지 API

@@ -1,6 +1,6 @@
 package com.skyhorsemanpower.auction.repository;
 
-import com.skyhorsemanpower.auction.domain.AuctionHistory;
+import com.skyhorsemanpower.auction.data.vo.domain.AuctionHistory;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.data.mongodb.repository.Tailable;

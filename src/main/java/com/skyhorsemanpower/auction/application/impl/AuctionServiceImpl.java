@@ -5,7 +5,7 @@ import com.skyhorsemanpower.auction.common.exception.CustomException;
 import com.skyhorsemanpower.auction.repository.AuctionHistoryRepository;
 import com.skyhorsemanpower.auction.common.exception.ResponseStatus;
 import com.skyhorsemanpower.auction.data.dto.*;
-import com.skyhorsemanpower.auction.domain.AuctionHistory;
+import com.skyhorsemanpower.auction.data.vo.domain.AuctionHistory;
 import com.skyhorsemanpower.auction.repository.AuctionHistoryReactiveRepository;
 import com.skyhorsemanpower.auction.repository.RoundInfoReactiveRepository;
 import com.skyhorsemanpower.auction.repository.RoundInfoRepository;
