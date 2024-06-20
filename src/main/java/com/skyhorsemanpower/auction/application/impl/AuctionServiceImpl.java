@@ -21,7 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -90,20 +92,19 @@ public class AuctionServiceImpl implements AuctionService {
         log.info("Last Round Auction History >>> {}", lastRoundAuctionHistory.toString());
 
         // 마지막 - 1 라운드 입찰 이력
-        List<AuctionHistory> beforeLastRoundAuctionHistory = auctionHistoryRepository.
+        List<AuctionHistory> lastMinusOneRoundAuctionHistory = auctionHistoryRepository.
                 findByAuctionUuidAndRoundOrderByBiddingTime(auctionUuid, round - 1);
-        log.info("Before Last Round Auction History >>> {}", beforeLastRoundAuctionHistory.toString());
+        log.info("Before Last Round Auction History >>> {}", lastMinusOneRoundAuctionHistory.toString());
 
         // 마지막 라운드 입찰자를 낙찰자로 고정
-        List<String> memberUuids = new ArrayList<>();
+        Set<String> memberUuids = new HashSet<>();
         for(AuctionHistory auctionHistory : lastRoundAuctionHistory) {
             memberUuids.add(auctionHistory.getBiddingUuid());
         }
 
         // 마지막 직전 라운드 입찰자 중 낙찰자 추가
-        for(AuctionHistory auctionHistory : beforeLastRoundAuctionHistory) {
+        for(AuctionHistory auctionHistory : lastMinusOneRoundAuctionHistory) {
             // 동일 입찰자 제외하고 추가
-            if (memberUuids.contains(auctionHistory.getBiddingUuid())) continue;
             memberUuids.add(auctionHistory.getBiddingUuid());
 
             // 낙찰 가능 인원 수 만큼 리스트 추가
@@ -113,7 +114,7 @@ public class AuctionServiceImpl implements AuctionService {
         log.info("memberUuids >>> {}", memberUuids.toString());
 
         // 낙찰가는 마지막 이전 라운드에서 biddingPrice로 결정
-        BigDecimal price = beforeLastRoundAuctionHistory.get(0).getBiddingPrice();
+        BigDecimal price = lastMinusOneRoundAuctionHistory.get(0).getBiddingPrice();
         log.info("price >>> {}", price);
 
         // 마감 후 auction_close_state = true 처리
@@ -123,7 +124,7 @@ public class AuctionServiceImpl implements AuctionService {
         // 카프카로 경매 서비스 메시지 전달
         SuccessfulBidDto successfulBidDto = SuccessfulBidDto.builder()
                 .auctionUuid(auctionUuid)
-                .memberUuids(memberUuids)
+                .memberUuids(memberUuids.stream().toList())
                 .price(price)
                 .auctionState(AuctionStateEnum.AUCTION_NORMAL_CLOSING)
                 .build();
