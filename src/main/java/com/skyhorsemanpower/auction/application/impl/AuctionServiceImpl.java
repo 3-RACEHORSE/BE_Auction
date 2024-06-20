@@ -4,10 +4,14 @@ import com.skyhorsemanpower.auction.application.AuctionService;
 import com.skyhorsemanpower.auction.common.exception.CustomException;
 import com.skyhorsemanpower.auction.domain.AuctionCloseState;
 import com.skyhorsemanpower.auction.domain.RoundInfo;
+import com.skyhorsemanpower.auction.kafka.KafkaProducerCluster;
+import com.skyhorsemanpower.auction.kafka.Topics;
+import com.skyhorsemanpower.auction.kafka.dto.SuccessfulBidDto;
 import com.skyhorsemanpower.auction.repository.*;
 import com.skyhorsemanpower.auction.common.exception.ResponseStatus;
 import com.skyhorsemanpower.auction.data.dto.*;
 import com.skyhorsemanpower.auction.domain.AuctionHistory;
+import com.skyhorsemanpower.auction.status.AuctionStateEnum;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -30,6 +34,7 @@ public class AuctionServiceImpl implements AuctionService {
     private final RoundInfoReactiveRepository roundInfoReactiveRepository;
     private final RoundInfoRepository roundInfoRepository;
     private final AuctionCloseStateRepository auctionCloseStateRepository;
+    private final KafkaProducerCluster producer;
 
     @Override
     @Transactional
@@ -107,12 +112,24 @@ public class AuctionServiceImpl implements AuctionService {
 
         log.info("memberUuids >>> {}", memberUuids.toString());
 
+        // 낙찰가는 마지막 이전 라운드에서 biddingPrice로 결정
+        BigDecimal price = beforeLastRoundAuctionHistory.get(0).getBiddingPrice();
+        log.info("price >>> {}", price);
+
         // 마감 후 auction_close_state = true 처리
         auctionCloseStateRepository.save(AuctionCloseState.builder()
                 .auctionUuid(auctionUuid).auctionCloseState(true).build());
 
-        // 카프카로 경매 서비스에 메시지 전달
+        // 카프카로 경매 서비스 메시지 전달
+        SuccessfulBidDto successfulBidDto = SuccessfulBidDto.builder()
+                .auctionUuid(auctionUuid)
+                .memberUuids(memberUuids)
+                .price(price)
+                .auctionState(AuctionStateEnum.AUCTION_NORMAL_CLOSING)
+                .build();
+        log.info("Kafka Message To Payment Service >>> {}", successfulBidDto.toString());
 
+        producer.sendMessage(Topics.Constant.SUCCESSFUL_BID, successfulBidDto);
     }
 
     private void updateRoundInfo(RoundInfo roundInfo) {
