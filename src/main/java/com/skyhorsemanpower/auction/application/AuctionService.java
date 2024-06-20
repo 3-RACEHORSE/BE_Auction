@@ -5,4 +5,5 @@ import com.skyhorsemanpower.auction.data.dto.*;
 public interface AuctionService {
     void offerBiddingPrice(OfferBiddingPriceDto offerBiddingPriceDto);
 
+    void auctionClose(String auctionUuid);
 }
