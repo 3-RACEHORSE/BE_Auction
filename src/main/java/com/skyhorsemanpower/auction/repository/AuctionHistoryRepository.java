@@ -21,5 +21,5 @@ public interface AuctionHistoryRepository extends MongoRepository<AuctionHistory
     })
     Optional<CheckBiddingPriceProjection> findMaxBiddingPriceByAuctionUuid(String auctionUuid);
 
-    List<AuctionHistory> findByAuctionUuidAndRoundOrderByBiddingTimeDesc(String auctionUuid, int round);
+    List<AuctionHistory> findByAuctionUuidAndRoundOrderByBiddingTime(String auctionUuid, int round);
 }

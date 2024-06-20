@@ -86,12 +86,12 @@ public class AuctionServiceImpl implements AuctionService {
         // 마감 로직
         // 마지막 라운드 입찰 이력
         List<AuctionHistory> lastRoundAuctionHistory = auctionHistoryRepository.
-                findByAuctionUuidAndRoundOrderByBiddingTimeDesc(auctionUuid, round);
+                findByAuctionUuidAndRoundOrderByBiddingTime(auctionUuid, round);
         log.info("Last Round Auction History >>> {}", lastRoundAuctionHistory.toString());
 
         // 마지막 - 1 라운드 입찰 이력
         List<AuctionHistory> beforeLastRoundAuctionHistory = auctionHistoryRepository.
-                findByAuctionUuidAndRoundOrderByBiddingTimeDesc(auctionUuid, round - 1);
+                findByAuctionUuidAndRoundOrderByBiddingTime(auctionUuid, round - 1);
         log.info("Before Last Round Auction History >>> {}", beforeLastRoundAuctionHistory.toString());
 
         // 마지막 라운드 입찰자를 낙찰자로 고정
