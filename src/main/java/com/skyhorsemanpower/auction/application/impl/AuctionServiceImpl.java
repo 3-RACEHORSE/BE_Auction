@@ -2,14 +2,12 @@ package com.skyhorsemanpower.auction.application.impl;
 
 import com.skyhorsemanpower.auction.application.AuctionService;
 import com.skyhorsemanpower.auction.common.exception.CustomException;
+import com.skyhorsemanpower.auction.domain.AuctionCloseState;
 import com.skyhorsemanpower.auction.domain.RoundInfo;
-import com.skyhorsemanpower.auction.repository.AuctionHistoryRepository;
+import com.skyhorsemanpower.auction.repository.*;
 import com.skyhorsemanpower.auction.common.exception.ResponseStatus;
 import com.skyhorsemanpower.auction.data.dto.*;
 import com.skyhorsemanpower.auction.domain.AuctionHistory;
-import com.skyhorsemanpower.auction.repository.AuctionHistoryReactiveRepository;
-import com.skyhorsemanpower.auction.repository.RoundInfoReactiveRepository;
-import com.skyhorsemanpower.auction.repository.RoundInfoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -18,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +29,7 @@ public class AuctionServiceImpl implements AuctionService {
     private final MongoTemplate mongoTemplate;
     private final RoundInfoReactiveRepository roundInfoReactiveRepository;
     private final RoundInfoRepository roundInfoRepository;
+    private final AuctionCloseStateRepository auctionCloseStateRepository;
 
     @Override
     @Transactional
@@ -56,6 +57,62 @@ public class AuctionServiceImpl implements AuctionService {
 
         // 입찰 후, round_info 도큐먼트 갱신
         updateRoundInfo(roundInfo);
+    }
+
+    @Override
+    public void auctionClose(String auctionUuid) {
+        // auction_close_state 도큐먼트에 acutionUuid 데이터가 있으면(마감됐으면) 바로 return
+        if(auctionCloseStateRepository.findByAuctionUuid(auctionUuid).isPresent()) {
+            log.info("Auction already close");
+            return;
+        }
+
+        log.info("Auction Close Start");
+
+        // 마지막 라운드 수, 낙찰 가능 인원 수 조회
+        RoundInfo lastRoundInfo = roundInfoRepository.findFirstByAuctionUuidOrderByCreatedAtDesc(auctionUuid)
+                .orElseThrow(() -> new CustomException(ResponseStatus.NO_DATA)
+        );
+        log.info("Last Round Info >>> {}", lastRoundInfo.toString());
+
+        int round = lastRoundInfo.getRound();
+        long numberOfParticipants = lastRoundInfo.getNumberOfParticipants();
+
+        // 마감 로직
+        // 마지막 라운드 입찰 이력
+        List<AuctionHistory> lastRoundAuctionHistory = auctionHistoryRepository.
+                findByAuctionUuidAndRoundOrderByBiddingTimeDesc(auctionUuid, round);
+        log.info("Last Round Auction History >>> {}", lastRoundAuctionHistory.toString());
+
+        // 마지막 - 1 라운드 입찰 이력
+        List<AuctionHistory> beforeLastRoundAuctionHistory = auctionHistoryRepository.
+                findByAuctionUuidAndRoundOrderByBiddingTimeDesc(auctionUuid, round - 1);
+        log.info("Before Last Round Auction History >>> {}", beforeLastRoundAuctionHistory.toString());
+
+        // 마지막 라운드 입찰자를 낙찰자로 고정
+        List<String> memberUuids = new ArrayList<>();
+        for(AuctionHistory auctionHistory : lastRoundAuctionHistory) {
+            memberUuids.add(auctionHistory.getBiddingUuid());
+        }
+
+        // 마지막 직전 라운드 입찰자 중 낙찰자 추가
+        for(AuctionHistory auctionHistory : beforeLastRoundAuctionHistory) {
+            // 동일 입찰자 제외하고 추가
+            if (memberUuids.contains(auctionHistory.getBiddingUuid())) continue;
+            memberUuids.add(auctionHistory.getBiddingUuid());
+
+            // 낙찰 가능 인원 수 만큼 리스트 추가
+            if (memberUuids.size() == numberOfParticipants) break;
+        }
+
+        log.info("memberUuids >>> {}", memberUuids.toString());
+
+        // 마감 후 auction_close_state = true 처리
+        auctionCloseStateRepository.save(AuctionCloseState.builder()
+                .auctionUuid(auctionUuid).auctionCloseState(true).build());
+
+        // 카프카로 경매 서비스에 메시지 전달
+
     }
 
     private void updateRoundInfo(RoundInfo roundInfo) {

@@ -6,6 +6,7 @@ import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -19,4 +20,6 @@ public interface AuctionHistoryRepository extends MongoRepository<AuctionHistory
             "{ '$project': { 'biddingPrice': 1 } }"
     })
     Optional<CheckBiddingPriceProjection> findMaxBiddingPriceByAuctionUuid(String auctionUuid);
+
+    List<AuctionHistory> findByAuctionUuidAndRoundOrderByBiddingTimeDesc(String auctionUuid, int round);
 }

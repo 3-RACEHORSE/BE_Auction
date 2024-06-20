@@ -65,4 +65,13 @@ public class AuctionController {
             @PathVariable("auctionUuid") String auctionUuid) {
         return new SuccessResponse<>(redisService.getStandbyPage(auctionUuid));
     }
+
+    // 경매 마감 API 구현
+    @GetMapping("/auction-close/{auctionUuid}")
+    @Operation(summary = "경매 마감 API", description = "경매 마감 처리 후 결제 서비스에 메시지 전달")
+    public SuccessResponse<Object> auctionClose(
+            @PathVariable("auctionUuid") String auctionUuid) {
+        auctionService.auctionClose(auctionUuid);
+        return new SuccessResponse<>(null);
+    }
 }
