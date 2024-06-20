@@ -1,21 +1,19 @@
 package com.skyhorsemanpower.auction.kafka.dto;
 
-
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.skyhorsemanpower.auction.status.AuctionStateEnum;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-@JsonSerialize
-@JsonDeserialize
+@Getter
 @NoArgsConstructor
 @ToString
 public class SuccessfulBidDto {
+
     private String auctionUuid;
     private List<String> memberUuids;
     private BigDecimal price;
