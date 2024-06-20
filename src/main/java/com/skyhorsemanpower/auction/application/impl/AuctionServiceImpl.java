@@ -159,13 +159,23 @@ public class AuctionServiceImpl implements AuctionService {
         checkBiddingTime(roundInfo.getRoundStartTime(), roundInfo.getRoundEndTime());
         log.info("입찰 시간 통과");
 
-        // 조건2. 남은 인원이 1 이상
+        // 조건2. 해당 라운드에 참여 여부
+        checkBiddingRound(offerBiddingPriceDto.getBiddingUuid(), offerBiddingPriceDto.getRound());
+        log.info("현재 라운드에 참여한 적 없음");
+
+        // 조건3. 남은 인원이 1 이상
         checkLeftNumberOfParticipant(roundInfo.getLeftNumberOfParticipants());
         log.info("남은 인원 통과");
 
-        // 조건3. round 입찰가와 입력한 입찰가 확인
+        // 조건4. round 입찰가와 입력한 입찰가 확인
         checkRoundAndBiddingPrice(offerBiddingPriceDto, roundInfo);
         log.info("라운드 및 입찰가 통과");
+    }
+
+    private void checkBiddingRound(String biddingUuid, int round) {
+        if(auctionHistoryRepository.findByBiddingUuidAndRound(biddingUuid, round).isPresent()) {
+            throw new CustomException(ResponseStatus.ALREADY_BID_IN_ROUND);
+        };
     }
 
     private void checkLeftNumberOfParticipant(Long leftNumberOfParticipants) {
