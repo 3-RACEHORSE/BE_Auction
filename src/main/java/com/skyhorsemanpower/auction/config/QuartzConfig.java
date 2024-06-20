@@ -1,13 +1,15 @@
 package com.skyhorsemanpower.auction.config;
 
-import com.skyhorsemanpower.auction.quartz.EndAuction;
+import com.skyhorsemanpower.auction.common.DateTimeConverter;
+import com.skyhorsemanpower.auction.kafka.dto.InitialAuctionDto;
+import com.skyhorsemanpower.auction.quartz.AuctionClose;
 import lombok.RequiredArgsConstructor;
 import org.quartz.*;
-import org.quartz.impl.StdSchedulerFactory;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.Calendar;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Configuration
@@ -15,50 +17,68 @@ import java.util.Date;
 public class QuartzConfig {
     private final Scheduler scheduler;
 
-    @Bean
-    public Scheduler scheduler() throws SchedulerException {
-        Scheduler scheduler = new StdSchedulerFactory().getScheduler();
-        scheduler.start();
-        return scheduler;
-    }
+//    @Bean
+//    public Scheduler scheduler() throws SchedulerException {
+//        Scheduler scheduler = new StdSchedulerFactory().getScheduler();
+//        scheduler.start();
+//        return scheduler;
+//    }
 
-    // SimpleScheduler 메서드
-    public void schedulerEndAuctionJob(String auctionUuid) throws SchedulerException {
-        // 경매를 만드는 시간에서 하루를 더한 endedAt
-        Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.DAY_OF_MONTH, 1);
-        Date endedAt = calendar.getTime();
-
+    // 경매 시작과 경매 마감의 상태 변경 스케줄링
+    public void schedulerUpdateAuctionStateJob(InitialAuctionDto initialAuctionDto) throws SchedulerException {
         // JobDataMap 생성 및 auctionUuid 설정
         JobDataMap jobDataMap = new JobDataMap();
-        jobDataMap.put("auctionUuid", auctionUuid);
-
-        // 오류로 실행되지 않았을 때를 위한 retryCount key 값
-        jobDataMap.put("retryCount", 0);
+        jobDataMap.put("auctionUuid", initialAuctionDto.getAuctionUuid());
 
         // Job 생성
-        JobDetail job = JobBuilder
-                .newJob(EndAuction.class)
-                .withIdentity("EndAuctionJob_" + auctionUuid, "EndAuctionGroup")
+        JobDetail auctionStartJob = JobBuilder
+                .newJob(AuctionClose.class)
+                .withIdentity("AuctionStartJob_" + initialAuctionDto.getAuctionUuid(),
+                        "AuctionStartGroup")
+                .usingJobData(jobDataMap)
+                .withDescription("경매 시작 Job")
+                .build();
+
+        JobDetail auctionCloseJob = JobBuilder
+                .newJob(AuctionClose.class)
+                .withIdentity("AuctionCloseJob_" + initialAuctionDto.getAuctionUuid(),
+                        "AuctionCloseGroup")
                 .usingJobData(jobDataMap)
                 .withDescription("경매 마감 Job")
                 .build();
 
-        // Trigger 생성
-        Trigger trigger = TriggerBuilder
-                .newTrigger()
-                .withIdentity("EndAuctionTrigger_" + auctionUuid, "EndAuctionGroup")
-                .withDescription("경매 마감 Trigger")
+        Date auctionStartDate = Date.from(Instant.ofEpochMilli(initialAuctionDto.getAuctionStartTime()));
+        Date auctionEndDate = Date.from(Instant.ofEpochMilli(initialAuctionDto.getAuctionStartTime()));
 
-                // test용 30초 후 시작하는 스케줄러
-                .startAt(DateBuilder.futureDate(60, DateBuilder.IntervalUnit.SECOND))
+        // Trigger 생성
+        Trigger auctionStartTrigger = TriggerBuilder
+                .newTrigger()
+                .withIdentity("AuctionStartTrigger_" + initialAuctionDto.getAuctionUuid(),
+                        "AuctionStartGroup")
+                .withDescription("경매 시작 Trigger")
+
+                // test용 10초 후 시작하는 스케줄러
+                .startAt(DateBuilder.futureDate(10, DateBuilder.IntervalUnit.SECOND))
 
                 //Todo 실제 배포에서는 endedAt을 사용해야 한다.
-//                .startAt(endedAt)
+//                .startAt(auctionStartDate)
+                .build();
+
+        Trigger auctionCloseTrigger = TriggerBuilder
+                .newTrigger()
+                .withIdentity("AuctionCloseTrigger_" + initialAuctionDto.getAuctionUuid(),
+                        "AuctionCloseGroup")
+                .withDescription("경매 마감 Trigger")
+
+                // test용 20초 후 시작하는 스케줄러
+                .startAt(DateBuilder.futureDate(20, DateBuilder.IntervalUnit.SECOND))
+
+                //Todo 실제 배포에서는 endedAt을 사용해야 한다.
+//                .startAt(auctionCloseDate)
                 .build();
 
         // 스케줄러 생성 및 Job, Trigger 등록
-        scheduler.scheduleJob(job, trigger);
-
+        scheduler.scheduleJob(auctionStartJob, auctionStartTrigger);
+        scheduler.scheduleJob(auctionCloseJob, auctionCloseTrigger);
     }
 }
