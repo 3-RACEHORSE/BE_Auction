@@ -22,7 +22,7 @@ public enum Topics {
         public static final String PAYMENT_SERVICE = "event-preview-topic";
         public static final String SUCCESSFUL_BID_ALARM = "successful-bid-alarm-topic";
         public static final String INITIAL_AUCTION = "initial-auction-topic";
-        public static final String AUCTION_CLOSE_STATE = "auction-close-state-topic";
+        public static final String AUCTION_CLOSE_STATE = "auction-close-topic";
 
     }
 
