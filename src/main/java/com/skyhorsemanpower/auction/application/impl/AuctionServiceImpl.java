@@ -6,6 +6,7 @@ import com.skyhorsemanpower.auction.domain.AuctionCloseState;
 import com.skyhorsemanpower.auction.domain.RoundInfo;
 import com.skyhorsemanpower.auction.kafka.KafkaProducerCluster;
 import com.skyhorsemanpower.auction.kafka.Topics;
+import com.skyhorsemanpower.auction.kafka.dto.AuctionCloseDto;
 import com.skyhorsemanpower.auction.kafka.dto.SuccessfulBidDto;
 import com.skyhorsemanpower.auction.repository.*;
 import com.skyhorsemanpower.auction.common.exception.ResponseStatus;
@@ -76,6 +77,16 @@ public class AuctionServiceImpl implements AuctionService {
 
         log.info("Auction Close Start");
 
+        // auction_history 도큐먼트를 조회하여 경매 상태를 변경
+        if(auctionHistoryRepository.findFirstByAuctionUuidOrderByBiddingTimeDesc(auctionUuid).isEmpty()) {
+            log.info("auction_history is not exist! No one bid at auction!");
+            producer.sendMessage(Topics.AUCTION_CLOSE_STATE.getTopic(), AuctionStateEnum.AUCTION_NO_PARTICIPANTS);
+            return;
+        };
+
+        log.info("auction_history is exist!");
+
+        // 경매 마감 로직
         // 마지막 라운드 수, 낙찰 가능 인원 수 조회
         RoundInfo lastRoundInfo = roundInfoRepository.findFirstByAuctionUuidOrderByCreatedAtDesc(auctionUuid)
                 .orElseThrow(() -> new CustomException(ResponseStatus.NO_DATA)
@@ -131,6 +142,14 @@ public class AuctionServiceImpl implements AuctionService {
         log.info("Kafka Message To Payment Service >>> {}", successfulBidDto.toString());
 
         producer.sendMessage(Topics.Constant.SUCCESSFUL_BID, successfulBidDto);
+
+        AuctionCloseDto auctionCloseDto = AuctionCloseDto.builder()
+                .auctionUuid(auctionUuid)
+                .auctionState(AuctionStateEnum.AUCTION_NORMAL_CLOSING)
+                .build();
+        log.info("auctionCloseDto >>> {}", auctionCloseDto.toString());
+
+        producer.sendMessage(Topics.Constant.AUCTION_CLOSE_STATE, auctionCloseDto);
     }
 
     private void updateRoundInfo(RoundInfo roundInfo) {

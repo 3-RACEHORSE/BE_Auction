@@ -9,6 +9,7 @@ import com.skyhorsemanpower.auction.kafka.KafkaProducerCluster;
 import com.skyhorsemanpower.auction.kafka.Topics;
 import com.skyhorsemanpower.auction.kafka.dto.AuctionCloseDto;
 import com.skyhorsemanpower.auction.kafka.dto.SuccessfulBidDto;
+import com.skyhorsemanpower.auction.repository.AuctionCloseStateRepository;
 import com.skyhorsemanpower.auction.repository.AuctionHistoryRepository;
 import com.skyhorsemanpower.auction.repository.RoundInfoRepository;
 import com.skyhorsemanpower.auction.status.AuctionStateEnum;
@@ -31,6 +32,7 @@ public class AuctionClose implements Job {
     private final KafkaProducerCluster producer;
     private final AuctionHistoryRepository auctionHistoryRepository;
     private final RoundInfoRepository roundInfoRepository;
+    private final AuctionCloseStateRepository auctionCloseStateRepository;
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
@@ -40,10 +42,17 @@ public class AuctionClose implements Job {
         JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
         String auctionUuid = jobDataMap.getString("auctionUuid");
 
+        // auction_close_state 도큐먼트에 acutionUuid 데이터가 있으면(마감됐으면) 바로 return
+        if(auctionCloseStateRepository.findByAuctionUuid(auctionUuid).isPresent()) {
+            log.info("Auction already close");
+            return;
+        }
+
         // auction_history 도큐먼트를 조회하여 경매 상태를 변경
         if(auctionHistoryRepository.findFirstByAuctionUuidOrderByBiddingTimeDesc(auctionUuid).isEmpty()) {
             log.info("auction_history is not exist! No one bid at auction!");
             producer.sendMessage(Topics.AUCTION_CLOSE_STATE.getTopic(), AuctionStateEnum.AUCTION_NO_PARTICIPANTS);
+            return;
         };
 
         log.info("auction_history is exist!");
