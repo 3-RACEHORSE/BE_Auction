@@ -56,7 +56,7 @@ public class AuctionClose implements Job {
                     .auctionState(AuctionStateEnum.AUCTION_NO_PARTICIPANTS)
                     .build();
             log.info("No one bid the auction message >>> {}", noParticipantsAuctionCloseDto);
-            producer.sendMessage(Topics.AUCTION_CLOSE_STATE.getTopic(), noParticipantsAuctionCloseDto);
+            producer.sendMessage(Topics.AUCTION_CLOSE.getTopic(), noParticipantsAuctionCloseDto);
             return;
         }
 
@@ -114,6 +114,6 @@ public class AuctionClose implements Job {
         log.info("Kafka Message To Payment Service >>> {}", auctionCloseDto.toString());
 
         // 경매글 마감 처리 메시지와 결제 서비스 메시지 동일 토픽으로 진행
-        producer.sendMessage(Topics.Constant.AUCTION_CLOSE_STATE, auctionCloseDto);
+        producer.sendMessage(Topics.Constant.AUCTION_CLOSE, auctionCloseDto);
     }
 }

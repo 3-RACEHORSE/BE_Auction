@@ -12,7 +12,7 @@ public enum Topics {
     PAYMENT_SERVICE(Constant.PAYMENT_SERVICE),
     SUCCESSFUL_BID_ALARM(Constant.SUCCESSFUL_BID_ALARM),
     INITIAL_AUCTION(Constant.INITIAL_AUCTION),
-    AUCTION_CLOSE_STATE(Constant.AUCTION_CLOSE)
+    AUCTION_CLOSE(Constant.AUCTION_CLOSE)
     ;
 
     public static class Constant {

@@ -7,7 +7,6 @@ import com.skyhorsemanpower.auction.domain.RoundInfo;
 import com.skyhorsemanpower.auction.kafka.KafkaProducerCluster;
 import com.skyhorsemanpower.auction.kafka.Topics;
 import com.skyhorsemanpower.auction.kafka.dto.AuctionCloseDto;
-import com.skyhorsemanpower.auction.kafka.dto.SuccessfulBidDto;
 import com.skyhorsemanpower.auction.repository.*;
 import com.skyhorsemanpower.auction.common.exception.ResponseStatus;
 import com.skyhorsemanpower.auction.data.dto.*;
@@ -80,7 +79,7 @@ public class AuctionServiceImpl implements AuctionService {
         // auction_history 도큐먼트를 조회하여 경매 상태를 변경
         if(auctionHistoryRepository.findFirstByAuctionUuidOrderByBiddingTimeDesc(auctionUuid).isEmpty()) {
             log.info("auction_history is not exist! No one bid at auction!");
-            producer.sendMessage(Topics.AUCTION_CLOSE_STATE.getTopic(), AuctionStateEnum.AUCTION_NO_PARTICIPANTS);
+            producer.sendMessage(Topics.AUCTION_CLOSE.getTopic(), AuctionStateEnum.AUCTION_NO_PARTICIPANTS);
             return;
         };
 
@@ -128,28 +127,17 @@ public class AuctionServiceImpl implements AuctionService {
         BigDecimal price = lastMinusOneRoundAuctionHistory.get(0).getBiddingPrice();
         log.info("price >>> {}", price);
 
-        // 마감 후 auction_close_state = true 처리
-        auctionCloseStateRepository.save(AuctionCloseState.builder()
-                .auctionUuid(auctionUuid).auctionCloseState(true).build());
-
         // 카프카로 경매 서비스 메시지 전달
-        SuccessfulBidDto successfulBidDto = SuccessfulBidDto.builder()
+        AuctionCloseDto auctionCloseDto = AuctionCloseDto.builder()
                 .auctionUuid(auctionUuid)
                 .memberUuids(memberUuids.stream().toList())
                 .price(price)
                 .auctionState(AuctionStateEnum.AUCTION_NORMAL_CLOSING)
                 .build();
-        log.info("Kafka Message To Payment Service >>> {}", successfulBidDto.toString());
+        log.info("Kafka Message To Payment Service >>> {}", auctionCloseDto.toString());
 
-        producer.sendMessage(Topics.Constant.SUCCESSFUL_BID, successfulBidDto);
-
-        AuctionCloseDto auctionCloseDto = AuctionCloseDto.builder()
-                .auctionUuid(auctionUuid)
-                .auctionState(AuctionStateEnum.AUCTION_NORMAL_CLOSING)
-                .build();
-        log.info("auctionCloseDto >>> {}", auctionCloseDto.toString());
-
-        producer.sendMessage(Topics.Constant.AUCTION_CLOSE_STATE, auctionCloseDto);
+        // 경매글 마감 처리 메시지와 결제 서비스 메시지 동일 토픽으로 진행
+        producer.sendMessage(Topics.Constant.AUCTION_CLOSE, auctionCloseDto);
     }
 
     private void updateRoundInfo(RoundInfo roundInfo) {
