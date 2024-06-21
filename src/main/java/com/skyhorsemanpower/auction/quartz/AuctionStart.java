@@ -18,6 +18,8 @@ public class AuctionStart implements Job {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
+        log.info("Auction Start Job Start!");
+
         // JobDataMap에서 auctionUuid 추출
         JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
         String auctionUuid = jobDataMap.getString("auctionUuid");

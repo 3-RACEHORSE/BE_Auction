@@ -25,5 +25,5 @@ public interface AuctionHistoryRepository extends MongoRepository<AuctionHistory
 
     Optional<AuctionHistory> findByBiddingUuidAndRound(String biddingUuid, int round);
 
-    Optional<AuctionHistory> findByAuctionUuid(String auctionUuid);
+    Optional<AuctionHistory> findFirstByAuctionUuidOrderByBiddingTimeDesc(String auctionUuid);
 }

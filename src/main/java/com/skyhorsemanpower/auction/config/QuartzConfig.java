@@ -3,6 +3,7 @@ package com.skyhorsemanpower.auction.config;
 import com.skyhorsemanpower.auction.common.DateTimeConverter;
 import com.skyhorsemanpower.auction.kafka.dto.InitialAuctionDto;
 import com.skyhorsemanpower.auction.quartz.AuctionClose;
+import com.skyhorsemanpower.auction.quartz.AuctionStart;
 import lombok.RequiredArgsConstructor;
 import org.quartz.*;
 import org.springframework.context.annotation.Configuration;
@@ -32,7 +33,7 @@ public class QuartzConfig {
 
         // Job 생성
         JobDetail auctionStartJob = JobBuilder
-                .newJob(AuctionClose.class)
+                .newJob(AuctionStart.class)
                 .withIdentity("AuctionStartJob_" + initialAuctionDto.getAuctionUuid(),
                         "AuctionStartGroup")
                 .usingJobData(jobDataMap)

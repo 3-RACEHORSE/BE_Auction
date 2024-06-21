@@ -36,8 +36,8 @@ public class KafkaConsumerCluster {
                 .auctionUuid(message.get("auctionUuid").toString())
                 .startPrice(new BigDecimal(message.get("startPrice").toString()))
                 .numberOfEventParticipants((Integer) message.get("numberOfEventParticipants"))
-                .auctionStartTime((Long) message.get("auctionStartTime"))
-                .auctionEndTime((Long) message.get("auctionEndTime"))
+                .auctionStartTime(((Long) message.get("auctionStartTime")).intValue())
+                .auctionEndTime(((Long) message.get("auctionEndTime")).intValue())
                 .incrementUnit(new BigDecimal(message.get("incrementUnit").toString()))
                 .build();
         log.info("InitialAuctionDto >>> {}", initialAuctionDto.toString());

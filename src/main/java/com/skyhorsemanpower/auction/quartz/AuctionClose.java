@@ -34,12 +34,14 @@ public class AuctionClose implements Job {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
+        log.info("Auction Close Job Start!");
+
         // JobDataMap에서 auctionUuid 추출
         JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
         String auctionUuid = jobDataMap.getString("auctionUuid");
 
         // auction_history 도큐먼트를 조회하여 경매 상태를 변경
-        if(auctionHistoryRepository.findByAuctionUuid(auctionUuid).isEmpty()) {
+        if(auctionHistoryRepository.findFirstByAuctionUuidOrderByBiddingTimeDesc(auctionUuid).isEmpty()) {
             log.info("auction_history is not exist! No one bid at auction!");
             producer.sendMessage(Topics.AUCTION_CLOSE_STATE.getTopic(), AuctionStateEnum.AUCTION_NO_PARTICIPANTS);
         };
