@@ -3,7 +3,7 @@ package com.skyhorsemanpower.auction.kafka;
 import com.skyhorsemanpower.auction.common.DateTimeConverter;
 import com.skyhorsemanpower.auction.config.QuartzConfig;
 import com.skyhorsemanpower.auction.domain.RoundInfo;
-import com.skyhorsemanpower.auction.kafka.dto.InitialAuctionDto;
+import com.skyhorsemanpower.auction.kafka.data.dto.InitialAuctionDto;
 import com.skyhorsemanpower.auction.repository.RoundInfoRepository;
 import com.skyhorsemanpower.auction.status.RoundTimeEnum;
 import lombok.RequiredArgsConstructor;
