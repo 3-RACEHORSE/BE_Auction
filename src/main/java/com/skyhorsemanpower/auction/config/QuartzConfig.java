@@ -1,49 +1,43 @@
 package com.skyhorsemanpower.auction.config;
 
-import com.skyhorsemanpower.auction.kafka.data.dto.InitialAuctionDto;
-import com.skyhorsemanpower.auction.quartz.AuctionClose;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.quartz.*;
+import org.quartz.spi.JobFactory;
+import org.springframework.boot.autoconfigure.quartz.QuartzProperties;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.quartz.SchedulerFactoryBean;
+import org.springframework.scheduling.quartz.SpringBeanJobFactory;
 
-import java.time.Instant;
-import java.util.Date;
+import javax.sql.DataSource;
+import java.util.Properties;
 
 @Configuration
 @RequiredArgsConstructor
-@Slf4j
 public class QuartzConfig {
-    private final Scheduler scheduler;
 
-    // 경매 시작과 경매 마감의 상태 변경 스케줄링
-    public void schedulerUpdateAuctionStateJob(InitialAuctionDto initialAuctionDto) throws SchedulerException {
-        // JobDataMap 생성 및 auctionUuid 설정
-        JobDataMap jobDataMap = new JobDataMap();
-        jobDataMap.put("auctionUuid", initialAuctionDto.getAuctionUuid());
+    private final DataSource dataSource;
+    private final QuartzProperties quartzProperties;
+    private final ApplicationContext applicationContext;
 
-        // Job 생성
-        JobDetail auctionCloseJob = JobBuilder
-                .newJob(AuctionClose.class)
-                .withIdentity("AuctionCloseJob_" + initialAuctionDto.getAuctionUuid(),
-                        "AuctionCloseGroup")
-                .usingJobData(jobDataMap)
-                .withDescription("경매 마감 Job")
-                .build();
+    @Bean
+    public JobFactory springBeanJobFactory() {
+        SpringBeanJobFactory jobFactory = new SpringBeanJobFactory();
+        jobFactory.setApplicationContext(applicationContext);
+        return jobFactory;
+    }
 
-        Date auctionEndDate = Date.from(Instant.ofEpochMilli(initialAuctionDto.getAuctionEndTime()));
-        log.info("Auction Close Job Will Start At >>> {}", auctionEndDate);
+    @Bean
+    public SchedulerFactoryBean schedulerFactoryBean(JobFactory jobFactory) {
+        Properties properties = new Properties();
+        properties.putAll(quartzProperties.getProperties());
 
-        // Trigger 생성
-        Trigger auctionCloseTrigger = TriggerBuilder
-                .newTrigger()
-                .withIdentity("AuctionCloseTrigger_" + initialAuctionDto.getAuctionUuid(),
-                        "AuctionCloseGroup")
-                .withDescription("경매 마감 Trigger")
-                .startAt(auctionEndDate)
-                .build();
-
-        // 스케줄러 생성 및 Job, Trigger 등록
-        scheduler.scheduleJob(auctionCloseJob, auctionCloseTrigger);
+        SchedulerFactoryBean factory = new SchedulerFactoryBean();
+        factory.setJobFactory(jobFactory);
+        factory.setDataSource(dataSource);
+        factory.setQuartzProperties(properties);
+        factory.setOverwriteExistingJobs(true);
+        factory.setWaitForJobsToCompleteOnShutdown(true);
+        return factory;
     }
 }
