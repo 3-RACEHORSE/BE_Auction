@@ -40,6 +40,9 @@ public enum ResponseStatus {
     // 입찰자를 다 모집한 경우
     FULL_PARTICIPANTS(404, "현 라운드는 입찰자가 다 찼습니다."),
 
+    // 이번 라운드에 입찰하고 또 한 경우
+    ALREADY_BID_IN_ROUND(404, "이미 이번 라운드에 입찰하셨습니다."),
+
     // 예외 테스트 용
     EXCEPTION_TEST(500, "예외 테스트") ;
 
