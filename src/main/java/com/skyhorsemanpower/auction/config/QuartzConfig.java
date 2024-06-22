@@ -38,8 +38,8 @@ public class QuartzConfig {
                         "AuctionCloseGroup")
                 .withDescription("경매 마감 Trigger")
 
-                // test용 20초 후 시작하는 스케줄러
-                .startAt(DateBuilder.futureDate(20, DateBuilder.IntervalUnit.SECOND))
+                // test용 60초 후 시작하는 스케줄러
+                .startAt(DateBuilder.futureDate(60, DateBuilder.IntervalUnit.SECOND))
 
                 //Todo 실제 배포에서는 auctionEndDate을 사용해야 한다.
 //                .startAt(auctionEndDate)

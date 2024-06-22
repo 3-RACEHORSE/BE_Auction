@@ -39,8 +39,7 @@ public class AuctionClose implements Job {
 
         // JobDataMap에서 auctionUuid 추출
         JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
-        String auctionUuid = "abc123";
-//        String auctionUuid = jobDataMap.getString("auctionUuid");
+        String auctionUuid = jobDataMap.getString("auctionUuid");
 
         // auction_close_state 도큐먼트에 acutionUuid 데이터가 있으면(마감됐으면) 바로 return
         if(auctionCloseStateRepository.findByAuctionUuid(auctionUuid).isPresent()) {
