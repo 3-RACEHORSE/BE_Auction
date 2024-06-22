@@ -1,6 +1,6 @@
 package com.skyhorsemanpower.auction.config;
 
-import com.skyhorsemanpower.auction.kafka.dto.InitialAuctionDto;
+import com.skyhorsemanpower.auction.kafka.data.dto.InitialAuctionDto;
 import com.skyhorsemanpower.auction.quartz.AuctionClose;
 import lombok.RequiredArgsConstructor;
 import org.quartz.*;

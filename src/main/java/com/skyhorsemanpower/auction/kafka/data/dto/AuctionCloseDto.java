@@ -1,4 +1,4 @@
-package com.skyhorsemanpower.auction.kafka.dto;
+package com.skyhorsemanpower.auction.kafka.data.dto;
 
 import com.skyhorsemanpower.auction.status.AuctionStateEnum;
 import lombok.Builder;

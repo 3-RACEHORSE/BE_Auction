@@ -12,7 +12,8 @@ public enum Topics {
     PAYMENT_SERVICE(Constant.PAYMENT_SERVICE),
     SUCCESSFUL_BID_ALARM(Constant.SUCCESSFUL_BID_ALARM),
     INITIAL_AUCTION(Constant.INITIAL_AUCTION),
-    AUCTION_CLOSE(Constant.AUCTION_CLOSE)
+    AUCTION_CLOSE(Constant.AUCTION_CLOSE),
+    ALARM(Constant.ALARM)
     ;
 
     public static class Constant {
@@ -23,6 +24,7 @@ public enum Topics {
         public static final String SUCCESSFUL_BID_ALARM = "successful-bid-alarm-topic";
         public static final String INITIAL_AUCTION = "initial-auction-topic";
         public static final String AUCTION_CLOSE = "auction-close-topic";
+        public static final String ALARM ="alarm-topic";
 
     }
 
