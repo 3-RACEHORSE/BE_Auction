@@ -2,6 +2,7 @@ package com.skyhorsemanpower.auction.quartz;
 
 import com.skyhorsemanpower.auction.common.exception.CustomException;
 import com.skyhorsemanpower.auction.common.exception.ResponseStatus;
+import com.skyhorsemanpower.auction.domain.AuctionCloseState;
 import com.skyhorsemanpower.auction.domain.AuctionHistory;
 import com.skyhorsemanpower.auction.domain.RoundInfo;
 import com.skyhorsemanpower.auction.kafka.KafkaProducerCluster;
@@ -38,7 +39,8 @@ public class AuctionClose implements Job {
 
         // JobDataMap에서 auctionUuid 추출
         JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
-        String auctionUuid = jobDataMap.getString("auctionUuid");
+        String auctionUuid = "abc123";
+//        String auctionUuid = jobDataMap.getString("auctionUuid");
 
         // auction_close_state 도큐먼트에 acutionUuid 데이터가 있으면(마감됐으면) 바로 return
         if(auctionCloseStateRepository.findByAuctionUuid(auctionUuid).isPresent()) {
@@ -115,5 +117,11 @@ public class AuctionClose implements Job {
 
         // 경매글 마감 처리 메시지와 결제 서비스 메시지 동일 토픽으로 진행
         producer.sendMessage(Topics.Constant.AUCTION_CLOSE, auctionCloseDto);
+
+        // 경매 마감 여부 저장
+        auctionCloseStateRepository.save(AuctionCloseState.builder()
+                .auctionUuid(auctionUuid)
+                .auctionCloseState(true)
+                .build());
     }
 }

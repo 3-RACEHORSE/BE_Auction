@@ -69,7 +69,7 @@ public class AuctionServiceImpl implements AuctionService {
     @Override
     public void auctionClose(String auctionUuid) {
         // auction_close_state 도큐먼트에 acutionUuid 데이터가 있으면(마감됐으면) 바로 return
-        if(auctionCloseStateRepository.findByAuctionUuid(auctionUuid).isPresent()) {
+        if (auctionCloseStateRepository.findByAuctionUuid(auctionUuid).isPresent()) {
             log.info("Auction already close");
             return;
         }
@@ -77,11 +77,12 @@ public class AuctionServiceImpl implements AuctionService {
         log.info("Auction Close Start");
 
         // auction_history 도큐먼트를 조회하여 경매 상태를 변경
-        if(auctionHistoryRepository.findFirstByAuctionUuidOrderByBiddingTimeDesc(auctionUuid).isEmpty()) {
+        if (auctionHistoryRepository.findFirstByAuctionUuidOrderByBiddingTimeDesc(auctionUuid).isEmpty()) {
             log.info("auction_history is not exist! No one bid at auction!");
             producer.sendMessage(Topics.AUCTION_CLOSE.getTopic(), AuctionStateEnum.AUCTION_NO_PARTICIPANTS);
             return;
-        };
+        }
+        ;
 
         log.info("auction_history is exist!");
 
@@ -89,7 +90,7 @@ public class AuctionServiceImpl implements AuctionService {
         // 마지막 라운드 수, 낙찰 가능 인원 수 조회
         RoundInfo lastRoundInfo = roundInfoRepository.findFirstByAuctionUuidOrderByCreatedAtDesc(auctionUuid)
                 .orElseThrow(() -> new CustomException(ResponseStatus.NO_DATA)
-        );
+                );
         log.info("Last Round Info >>> {}", lastRoundInfo.toString());
 
         int round = lastRoundInfo.getRound();
@@ -108,12 +109,12 @@ public class AuctionServiceImpl implements AuctionService {
 
         // 마지막 라운드 입찰자를 낙찰자로 고정
         Set<String> memberUuids = new HashSet<>();
-        for(AuctionHistory auctionHistory : lastRoundAuctionHistory) {
+        for (AuctionHistory auctionHistory : lastRoundAuctionHistory) {
             memberUuids.add(auctionHistory.getBiddingUuid());
         }
 
         // 마지막 직전 라운드 입찰자 중 낙찰자 추가
-        for(AuctionHistory auctionHistory : lastMinusOneRoundAuctionHistory) {
+        for (AuctionHistory auctionHistory : lastMinusOneRoundAuctionHistory) {
             // 동일 입찰자 제외하고 추가
             memberUuids.add(auctionHistory.getBiddingUuid());
 
@@ -138,13 +139,19 @@ public class AuctionServiceImpl implements AuctionService {
 
         // 경매글 마감 처리 메시지와 결제 서비스 메시지 동일 토픽으로 진행
         producer.sendMessage(Topics.Constant.AUCTION_CLOSE, auctionCloseDto);
+
+        // 경매 마감 여부 저장
+        auctionCloseStateRepository.save(AuctionCloseState.builder()
+                .auctionUuid(auctionUuid)
+                .auctionCloseState(true)
+                .build());
     }
 
     private void updateRoundInfo(RoundInfo roundInfo) {
         RoundInfo updatedRoundInfo;
 
         // 다음 라운드로 round_info 도큐먼트 갱신
-        if(roundInfo.getLeftNumberOfParticipants().equals(1L)) {
+        if (roundInfo.getLeftNumberOfParticipants().equals(1L)) {
             updatedRoundInfo = RoundInfo.nextRoundUpdate(roundInfo);
         }
 
@@ -181,9 +188,10 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     private void checkBiddingRound(String biddingUuid, int round) {
-        if(auctionHistoryRepository.findByBiddingUuidAndRound(biddingUuid, round).isPresent()) {
+        if (auctionHistoryRepository.findByBiddingUuidAndRound(biddingUuid, round).isPresent()) {
             throw new CustomException(ResponseStatus.ALREADY_BID_IN_ROUND);
-        };
+        }
+        ;
     }
 
     private void checkLeftNumberOfParticipant(Long leftNumberOfParticipants) {
