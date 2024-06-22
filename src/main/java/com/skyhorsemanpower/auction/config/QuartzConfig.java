@@ -3,6 +3,7 @@ package com.skyhorsemanpower.auction.config;
 import com.skyhorsemanpower.auction.kafka.data.dto.InitialAuctionDto;
 import com.skyhorsemanpower.auction.quartz.AuctionClose;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 import org.springframework.context.annotation.Configuration;
 
@@ -11,6 +12,7 @@ import java.util.Date;
 
 @Configuration
 @RequiredArgsConstructor
+@Slf4j
 public class QuartzConfig {
     private final Scheduler scheduler;
 
@@ -29,7 +31,8 @@ public class QuartzConfig {
                 .withDescription("경매 마감 Job")
                 .build();
 
-        Date auctionEndDate = Date.from(Instant.ofEpochMilli(initialAuctionDto.getAuctionStartTime()));
+        Date auctionEndDate = Date.from(Instant.ofEpochMilli(initialAuctionDto.getAuctionEndTime()));
+        log.info("Auction Close Job Will Start At >>> {}", auctionEndDate);
 
         // Trigger 생성
         Trigger auctionCloseTrigger = TriggerBuilder
@@ -37,12 +40,7 @@ public class QuartzConfig {
                 .withIdentity("AuctionCloseTrigger_" + initialAuctionDto.getAuctionUuid(),
                         "AuctionCloseGroup")
                 .withDescription("경매 마감 Trigger")
-
-                // test용 60초 후 시작하는 스케줄러
-                .startAt(DateBuilder.futureDate(60, DateBuilder.IntervalUnit.SECOND))
-
-                //Todo 실제 배포에서는 auctionEndDate을 사용해야 한다.
-//                .startAt(auctionEndDate)
+                .startAt(auctionEndDate)
                 .build();
 
         // 스케줄러 생성 및 Job, Trigger 등록
