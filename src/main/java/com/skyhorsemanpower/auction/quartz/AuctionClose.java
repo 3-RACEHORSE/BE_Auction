@@ -57,8 +57,14 @@ public class AuctionClose implements Job {
                     .auctionUuid(auctionUuid)
                     .auctionState(AuctionStateEnum.AUCTION_NO_PARTICIPANTS)
                     .build();
-            log.info("No one bid the auction message >>> {}", noParticipantsAuctionCloseDto);
+            log.info("No one bid the auction message >>> {}", noParticipantsAuctionCloseDto.toString());
             producer.sendMessage(Topics.AUCTION_CLOSE.getTopic(), noParticipantsAuctionCloseDto);
+
+            // 경매 마감 여부 저장
+            auctionCloseStateRepository.save(AuctionCloseState.builder()
+                    .auctionUuid(auctionUuid)
+                    .auctionCloseState(true)
+                    .build());
             return;
         }
 
@@ -75,19 +81,10 @@ public class AuctionClose implements Job {
         long numberOfParticipants = lastRoundInfo.getNumberOfParticipants();
 
         // 마감 로직
-        // 마지막 라운드 입찰 이력
-        List<AuctionHistory> lastRoundAuctionHistory = auctionHistoryRepository.
-                findByAuctionUuidAndRoundOrderByBiddingTime(auctionUuid, round);
-        log.info("Last Round Auction History >>> {}", lastRoundAuctionHistory.toString());
-
-        // 마지막 - 1 라운드 입찰 이력
-        List<AuctionHistory> lastMinusOneRoundAuctionHistory = auctionHistoryRepository.
-                findByAuctionUuidAndRoundOrderByBiddingTime(auctionUuid, round - 1);
-        log.info("Before Last Round Auction History >>> {}", lastMinusOneRoundAuctionHistory.toString());
+        MemberUuidsAndPrice memberUuidsAndPrice = getMemberUuidsAndPrice(
+                round, auctionUuid, numberOfParticipants);
 
         // 낙찰가와 낙찰자 획득
-        MemberUuidsAndPrice memberUuidsAndPrice = getMemberUuidsAndPrice(
-                lastRoundAuctionHistory, lastMinusOneRoundAuctionHistory, numberOfParticipants);
         Set<String> memberUuids = memberUuidsAndPrice.getMemberUuids();
         BigDecimal price = memberUuidsAndPrice.getPrice();
 
@@ -110,14 +107,18 @@ public class AuctionClose implements Job {
                 .build());
     }
 
-    private MemberUuidsAndPrice getMemberUuidsAndPrice(List<AuctionHistory> lastRoundAuctionHistory,
-                                            List<AuctionHistory> lastMinusOneRoundAuctionHistory,
-                                            long numberOfParticipants) {
+    private MemberUuidsAndPrice getMemberUuidsAndPrice(int round, String auctionUuid, long numberOfParticipants) {
         Set<String> memberUuids = new HashSet<>();
         BigDecimal price;
 
+        // 마지막 라운드 입찰 이력
+        List<AuctionHistory> lastRoundAuctionHistory = auctionHistoryRepository.
+                findByAuctionUuidAndRoundOrderByBiddingTime(auctionUuid, round);
+        log.info("Last Round Auction History >>> {}", lastRoundAuctionHistory.toString());
+
         // 1라운드에서 경매가 마감된 경우
-        if (lastMinusOneRoundAuctionHistory.isEmpty()) {
+        if (round == 1) {
+            log.info("One Round Close");
             // 마지막 라운드 입찰자를 낙찰자로 고정
             for (AuctionHistory auctionHistory : lastRoundAuctionHistory) {
                 memberUuids.add(auctionHistory.getBiddingUuid());
@@ -125,13 +126,20 @@ public class AuctionClose implements Job {
 
             log.info("memberUuids >>> {}", memberUuids.toString());
 
-            // 낙찰가는 마지막 이전 라운드에서 biddingPrice로 결정
+            // 낙찰가는 마지막 라운드에서 biddingPrice로 결정
             price = lastRoundAuctionHistory.get(0).getBiddingPrice();
             log.info("price >>> {}", price);
         }
 
         // 1라운드 제외한 라운드에서 경매가 마감된 경우
         else {
+            log.info("{} Round Close", round);
+
+            // 마지막 - 1 라운드 입찰 이력
+            List<AuctionHistory> lastMinusOneRoundAuctionHistory = auctionHistoryRepository.
+                    findByAuctionUuidAndRoundOrderByBiddingTime(auctionUuid, round - 1);
+            log.info("Before Last Round Auction History >>> {}", lastMinusOneRoundAuctionHistory.toString());
+
             // 마지막 라운드 입찰자를 낙찰자로 고정
             for (AuctionHistory auctionHistory : lastRoundAuctionHistory) {
                 memberUuids.add(auctionHistory.getBiddingUuid());
