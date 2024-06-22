@@ -8,7 +8,6 @@ import com.skyhorsemanpower.auction.domain.RoundInfo;
 import com.skyhorsemanpower.auction.kafka.KafkaProducerCluster;
 import com.skyhorsemanpower.auction.kafka.Topics;
 import com.skyhorsemanpower.auction.kafka.dto.AuctionCloseDto;
-import com.skyhorsemanpower.auction.kafka.dto.SuccessfulBidDto;
 import com.skyhorsemanpower.auction.repository.AuctionCloseStateRepository;
 import com.skyhorsemanpower.auction.repository.AuctionHistoryRepository;
 import com.skyhorsemanpower.auction.repository.RoundInfoRepository;
@@ -50,10 +49,17 @@ public class AuctionClose implements Job {
 
         // auction_history 도큐먼트를 조회하여 경매 상태를 변경
         if(auctionHistoryRepository.findFirstByAuctionUuidOrderByBiddingTimeDesc(auctionUuid).isEmpty()) {
-            log.info("auction_history is not exist! No one bid at auction!");
-            producer.sendMessage(Topics.AUCTION_CLOSE_STATE.getTopic(), AuctionStateEnum.AUCTION_NO_PARTICIPANTS);
+            log.info("auction_history is not exist! No one bid the auction!");
+
+            // 아무도 참여하지 않은 경우에는 auctionUuid와 auctionState(AUCTION_NO_PARTICIPANTS) 전송
+            AuctionCloseDto noParticipantsAuctionCloseDto = AuctionCloseDto.builder()
+                    .auctionUuid(auctionUuid)
+                    .auctionState(AuctionStateEnum.AUCTION_NO_PARTICIPANTS)
+                    .build();
+            log.info("No one bid the auction message >>> {}", noParticipantsAuctionCloseDto);
+            producer.sendMessage(Topics.AUCTION_CLOSE.getTopic(), noParticipantsAuctionCloseDto);
             return;
-        };
+        }
 
         log.info("auction_history is exist!");
 
@@ -100,24 +106,21 @@ public class AuctionClose implements Job {
         log.info("price >>> {}", price);
 
         // 카프카로 경매 서비스 메시지 전달
-        SuccessfulBidDto successfulBidDto = SuccessfulBidDto.builder()
+        AuctionCloseDto auctionCloseDto = AuctionCloseDto.builder()
                 .auctionUuid(auctionUuid)
                 .memberUuids(memberUuids.stream().toList())
                 .price(price)
                 .auctionState(AuctionStateEnum.AUCTION_NORMAL_CLOSING)
                 .build();
-        log.info("Kafka Message To Payment Service >>> {}", successfulBidDto.toString());
+        log.info("Kafka Message To Payment Service >>> {}", auctionCloseDto.toString());
 
-        //todo
-        // 경매 마감이라는 사건에 대해서 여러 토픽을 사용 중, 추후에 하나의 토픽으로 묶어야 한다.
-        producer.sendMessage(Topics.Constant.SUCCESSFUL_BID, successfulBidDto);
+        // 경매글 마감 처리 메시지와 결제 서비스 메시지 동일 토픽으로 진행
+        producer.sendMessage(Topics.Constant.AUCTION_CLOSE, auctionCloseDto);
 
-        AuctionCloseDto auctionCloseDto = AuctionCloseDto.builder()
+        // 경매 마감 여부 저장
+        auctionCloseStateRepository.save(AuctionCloseState.builder()
                 .auctionUuid(auctionUuid)
-                .auctionState(AuctionStateEnum.AUCTION_NORMAL_CLOSING)
-                .build();
-        log.info("auctionCloseDto >>> {}", auctionCloseDto.toString());
-
-        producer.sendMessage(Topics.Constant.AUCTION_CLOSE_STATE, auctionCloseDto);
+                .auctionCloseState(true)
+                .build());
     }
 }

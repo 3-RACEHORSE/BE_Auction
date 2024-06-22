@@ -2,7 +2,6 @@ package com.skyhorsemanpower.auction.config;
 
 import com.skyhorsemanpower.auction.kafka.dto.InitialAuctionDto;
 import com.skyhorsemanpower.auction.quartz.AuctionClose;
-import com.skyhorsemanpower.auction.quartz.AuctionStart;
 import lombok.RequiredArgsConstructor;
 import org.quartz.*;
 import org.springframework.context.annotation.Configuration;
@@ -39,8 +38,8 @@ public class QuartzConfig {
                         "AuctionCloseGroup")
                 .withDescription("경매 마감 Trigger")
 
-                // test용 20초 후 시작하는 스케줄러
-                .startAt(DateBuilder.futureDate(20, DateBuilder.IntervalUnit.SECOND))
+                // test용 60초 후 시작하는 스케줄러
+                .startAt(DateBuilder.futureDate(60, DateBuilder.IntervalUnit.SECOND))
 
                 //Todo 실제 배포에서는 auctionEndDate을 사용해야 한다.
 //                .startAt(auctionEndDate)
