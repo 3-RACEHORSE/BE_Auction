@@ -15,11 +15,13 @@ import com.skyhorsemanpower.auction.repository.RoundInfoRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "경매 서비스", description = "경매 서비스 API")
@@ -46,7 +48,14 @@ public class AuctionController {
     @Operation(summary = "경매 페이지 API", description = "경매 페이지에 보여줄 데이터 실시간 조회")
     public Flux<RoundInfoResponseVo> auctionPage(
             @PathVariable("auctionUuid") String auctionUuid) {
-        return roundInfoReactiveRepository.searchRoundInfo(auctionUuid).subscribeOn(Schedulers.boundedElastic());
+        return roundInfoReactiveRepository.searchRoundInfo(auctionUuid).subscribeOn(Schedulers.boundedElastic())
+                .doOnError(error -> {
+                    log.info("SSE error occured!! >>> {}", error.toString());
+                })
+                .onErrorResume(error -> {
+                    // 에러 발생 시, 빈 Flux 객체를 반환
+                    return Flux.empty();
+                });
     }
 
     // 경매 페이지 최초 진입 시 현재 데이터 조회 API
