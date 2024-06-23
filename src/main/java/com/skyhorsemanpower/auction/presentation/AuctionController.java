@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
+import java.time.Duration;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -48,7 +50,7 @@ public class AuctionController {
     @Operation(summary = "경매 페이지 API", description = "경매 페이지에 보여줄 데이터 실시간 조회")
     public Flux<RoundInfoResponseVo> auctionPage(
             @PathVariable("auctionUuid") String auctionUuid) {
-        return roundInfoReactiveRepository.searchRoundInfo(auctionUuid).subscribeOn(Schedulers.boundedElastic())
+        Flux<RoundInfoResponseVo> roundInfoResponseVoFlux = roundInfoReactiveRepository.searchRoundInfo(auctionUuid).subscribeOn(Schedulers.boundedElastic())
                 .doOnError(error -> {
                     log.info("SSE error occured!! >>> {}", error.toString());
                 })
@@ -56,6 +58,14 @@ public class AuctionController {
                     // 에러 발생 시, 빈 Flux 객체를 반환
                     return Flux.empty();
                 });
+
+        // heartbeat 스트림
+        Flux<RoundInfoResponseVo> heartbeat = Flux.interval(Duration.ofDays(1))
+                .map(tick -> new RoundInfoResponseVo());
+
+        // 메시지 및 heartbeat 반환
+        return roundInfoResponseVoFlux.mergeWith(heartbeat)
+                .doOnSubscribe(sub -> log.info("roundInfoResponseVo, heartbeat"));
     }
 
     // 경매 페이지 최초 진입 시 현재 데이터 조회 API
