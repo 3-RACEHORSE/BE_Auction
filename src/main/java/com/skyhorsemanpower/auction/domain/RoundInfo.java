@@ -60,7 +60,7 @@ public class RoundInfo {
                 .roundEndTime(nextRoundEndTime)
                 .incrementUnit(roundInfo.getIncrementUnit())
                 .price(nextPrice)
-                .isActive(true)
+                .isActive(false)        // 대기 상태로 변경
                 .numberOfParticipants(roundInfo.getNumberOfParticipants())
                 .leftNumberOfParticipants(roundInfo.getNumberOfParticipants())
                 .build();
