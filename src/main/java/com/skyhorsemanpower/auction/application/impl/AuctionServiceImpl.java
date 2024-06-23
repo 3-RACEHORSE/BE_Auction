@@ -196,7 +196,8 @@ public class AuctionServiceImpl implements AuctionService {
         log.info("입찰 시간 통과");
 
         // 조건2. 해당 라운드에 참여 여부
-        checkBiddingRound(offerBiddingPriceDto.getBiddingUuid(), offerBiddingPriceDto.getRound());
+        checkBiddingRound(offerBiddingPriceDto.getAuctionUuid(), offerBiddingPriceDto.getBiddingUuid(),
+                offerBiddingPriceDto.getRound());
         log.info("현재 라운드에 참여한 적 없음");
 
         // 조건3. 남은 인원이 1 이상
@@ -208,8 +209,9 @@ public class AuctionServiceImpl implements AuctionService {
         log.info("라운드 및 입찰가 통과");
     }
 
-    private void checkBiddingRound(String biddingUuid, int round) {
-        if (auctionHistoryRepository.findByBiddingUuidAndRound(biddingUuid, round).isPresent()) {
+    private void checkBiddingRound(String auctionUuid, String biddingUuid, int round) {
+        if (auctionHistoryRepository.findByAuctionUuidAndBiddingUuidAndRound(
+                auctionUuid, biddingUuid, round).isPresent()) {
             throw new CustomException(ResponseStatus.ALREADY_BID_IN_ROUND);
         }
     }
