@@ -7,5 +7,5 @@ public interface AuctionService {
 
     void auctionClose(String auctionUuid);
 
-    void auctionStateChangeToStandby(String auctionUuid);
+    void auctionStateChangeTrue(String auctionUuid);
 }

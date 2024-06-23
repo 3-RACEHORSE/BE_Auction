@@ -82,7 +82,7 @@ public class RoundInfo {
                 .build();
     }
 
-    public static RoundInfo setIsActiveFalse(RoundInfo roundInfo) {
+    public static RoundInfo setIsActiveTrue(RoundInfo roundInfo) {
         return RoundInfo.builder()
                 .auctionUuid(roundInfo.getAuctionUuid())
                 .round(roundInfo.getRound())
@@ -90,7 +90,7 @@ public class RoundInfo {
                 .roundEndTime(roundInfo.getRoundEndTime())
                 .incrementUnit(roundInfo.getIncrementUnit())
                 .price(roundInfo.getPrice())
-                .isActive(false)
+                .isActive(true)
                 .numberOfParticipants(roundInfo.getNumberOfParticipants())
                 .leftNumberOfParticipants(roundInfo.getLeftNumberOfParticipants())
                 .createdAt(LocalDateTime.now())
