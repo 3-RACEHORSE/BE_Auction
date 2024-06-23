@@ -41,12 +41,13 @@ public class QuartzJobConfig {
                 .withDescription("경매 마감 Job")
                 .build();
 
-        // 경매 마감 시간을 경매 시작 시간으로부터 1분 뒤로 설정
-        Date auctionEndDate = Date.from(Instant.ofEpochMilli(initialAuctionDto.getAuctionStartTime()).plusSeconds(60));
 
         //todo
+        // 테스트를 위한경매 마감 시간을 경매 시작 시간으로부터 1분 뒤로 설정
+//        Date auctionEndDate = Date.from(Instant.ofEpochMilli(initialAuctionDto.getAuctionStartTime()).plusSeconds(60));
+
         // 배포에선 아래 코드 사용해야 함
-//        Date auctionEndDate = Date.from(Instant.ofEpochMilli(initialAuctionDto.getAuctionEndTime()));
+        Date auctionEndDate = Date.from(Instant.ofEpochMilli(initialAuctionDto.getAuctionEndTime()));
         log.info("Auction Close Job Will Start At >>> {}", auctionEndDate);
 
         // Trigger 생성
