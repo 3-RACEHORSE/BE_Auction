@@ -16,7 +16,6 @@ import com.skyhorsemanpower.auction.domain.AuctionHistory;
 import com.skyhorsemanpower.auction.status.AuctionStateEnum;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,9 +31,6 @@ import java.util.Set;
 public class AuctionServiceImpl implements AuctionService {
 
     private final AuctionHistoryRepository auctionHistoryRepository;
-    private final AuctionHistoryReactiveRepository auctionHistoryReactiveRepository;
-    private final MongoTemplate mongoTemplate;
-    private final RoundInfoReactiveRepository roundInfoReactiveRepository;
     private final RoundInfoRepository roundInfoRepository;
     private final AuctionCloseStateRepository auctionCloseStateRepository;
     private final KafkaProducerCluster producer;
@@ -83,7 +79,6 @@ public class AuctionServiceImpl implements AuctionService {
             producer.sendMessage(Topics.AUCTION_CLOSE.getTopic(), AuctionStateEnum.AUCTION_NO_PARTICIPANTS);
             return;
         }
-        ;
 
         log.info("auction_history is exist!");
 
@@ -123,7 +118,7 @@ public class AuctionServiceImpl implements AuctionService {
             if (memberUuids.size() == numberOfParticipants) break;
         }
 
-        log.info("memberUuids >>> {}", memberUuids.toString());
+        log.info("memberUuids >>> {}", memberUuids);
 
         // 낙찰가는 마지막 이전 라운드에서 biddingPrice로 결정
         BigDecimal price = lastMinusOneRoundAuctionHistory.get(0).getBiddingPrice();
@@ -157,10 +152,26 @@ public class AuctionServiceImpl implements AuctionService {
                 .build());
     }
 
+    @Override
+    public void auctionStateChangeTrue(String auctionUuid) {
+        RoundInfo roundInfo = roundInfoRepository.findFirstByAuctionUuidOrderByCreatedAtDesc(auctionUuid).orElseThrow(
+                () -> new CustomException(ResponseStatus.NO_DATA)
+        );
+
+        try {
+            RoundInfo standbyAuction = RoundInfo.setIsActiveTrue(roundInfo);
+            log.info("Auction Change isActive >>> {}", standbyAuction.toString());
+            roundInfoRepository.save(standbyAuction);
+        } catch (Exception e) {
+            throw new CustomException(ResponseStatus.MONGODB_ERROR);
+        }
+    }
+
     private void updateRoundInfo(RoundInfo roundInfo) {
         RoundInfo updatedRoundInfo;
 
         // 다음 라운드로 round_info 도큐먼트 갱신
+        // isActive 대기 상태로 변경
         if (roundInfo.getLeftNumberOfParticipants().equals(1L)) {
             updatedRoundInfo = RoundInfo.nextRoundUpdate(roundInfo);
         }
@@ -201,7 +212,6 @@ public class AuctionServiceImpl implements AuctionService {
         if (auctionHistoryRepository.findByBiddingUuidAndRound(biddingUuid, round).isPresent()) {
             throw new CustomException(ResponseStatus.ALREADY_BID_IN_ROUND);
         }
-        ;
     }
 
     private void checkLeftNumberOfParticipant(Long leftNumberOfParticipants) {

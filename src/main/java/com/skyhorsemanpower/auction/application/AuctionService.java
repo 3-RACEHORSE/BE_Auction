@@ -6,4 +6,6 @@ public interface AuctionService {
     void offerBiddingPrice(OfferBiddingPriceDto offerBiddingPriceDto);
 
     void auctionClose(String auctionUuid);
+
+    void auctionStateChangeTrue(String auctionUuid);
 }

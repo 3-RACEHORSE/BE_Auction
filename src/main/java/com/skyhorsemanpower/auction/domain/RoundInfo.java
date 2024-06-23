@@ -60,7 +60,7 @@ public class RoundInfo {
                 .roundEndTime(nextRoundEndTime)
                 .incrementUnit(roundInfo.getIncrementUnit())
                 .price(nextPrice)
-                .isActive(true)
+                .isActive(false)        // 대기 상태로 변경
                 .numberOfParticipants(roundInfo.getNumberOfParticipants())
                 .leftNumberOfParticipants(roundInfo.getNumberOfParticipants())
                 .build();
@@ -79,6 +79,21 @@ public class RoundInfo {
                 .isActive(true)
                 .numberOfParticipants(roundInfo.getNumberOfParticipants())
                 .leftNumberOfParticipants(nextNumberOfParticipants)
+                .build();
+    }
+
+    public static RoundInfo setIsActiveTrue(RoundInfo roundInfo) {
+        return RoundInfo.builder()
+                .auctionUuid(roundInfo.getAuctionUuid())
+                .round(roundInfo.getRound())
+                .roundStartTime(roundInfo.getRoundStartTime())
+                .roundEndTime(roundInfo.getRoundEndTime())
+                .incrementUnit(roundInfo.getIncrementUnit())
+                .price(roundInfo.getPrice())
+                .isActive(true)
+                .numberOfParticipants(roundInfo.getNumberOfParticipants())
+                .leftNumberOfParticipants(roundInfo.getLeftNumberOfParticipants())
+                .createdAt(LocalDateTime.now())
                 .build();
     }
 }
