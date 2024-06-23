@@ -81,4 +81,19 @@ public class RoundInfo {
                 .leftNumberOfParticipants(nextNumberOfParticipants)
                 .build();
     }
+
+    public static RoundInfo setIsActiveFalse(RoundInfo roundInfo) {
+        return RoundInfo.builder()
+                .auctionUuid(roundInfo.getAuctionUuid())
+                .round(roundInfo.getRound())
+                .roundStartTime(roundInfo.getRoundStartTime())
+                .roundEndTime(roundInfo.getRoundEndTime())
+                .incrementUnit(roundInfo.getIncrementUnit())
+                .price(roundInfo.getPrice())
+                .isActive(false)
+                .numberOfParticipants(roundInfo.getNumberOfParticipants())
+                .leftNumberOfParticipants(roundInfo.getLeftNumberOfParticipants())
+                .createdAt(LocalDateTime.now())
+                .build();
+    }
 }

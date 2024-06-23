@@ -157,6 +157,21 @@ public class AuctionServiceImpl implements AuctionService {
                 .build());
     }
 
+    @Override
+    public void auctionStateChangeToStandby(String auctionUuid) {
+        RoundInfo roundInfo = roundInfoRepository.findFirstByAuctionUuidOrderByCreatedAtDesc(auctionUuid).orElseThrow(
+                () -> new CustomException(ResponseStatus.NO_DATA)
+        );
+
+        try {
+            RoundInfo standbyAuction = RoundInfo.setIsActiveFalse(roundInfo);
+            log.info("Auction Change isActive >>> {}", standbyAuction.toString());
+            roundInfoRepository.save(standbyAuction);
+        } catch (Exception e) {
+            throw new CustomException(ResponseStatus.MONGODB_ERROR);
+        }
+    }
+
     private void updateRoundInfo(RoundInfo roundInfo) {
         RoundInfo updatedRoundInfo;
 

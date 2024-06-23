@@ -83,4 +83,14 @@ public class AuctionController {
         auctionService.auctionClose(auctionUuid);
         return new SuccessResponse<>(null);
     }
+
+    // 라운드 진행 중에서 대기 중으로 상태 변경
+    @PutMapping("/auction-standby/{auctionUuid}")
+    @Operation(summary = "경매 대기 API", description = "라운드 끝나서 대기 중으로 상태 변경")
+    public SuccessResponse<Object> auctionStateChangeToStandby(
+            @PathVariable("auctionUuid") String auctionUuid) {
+        // round_info의 isActive를 false로 변경
+        auctionService.auctionStateChangeToStandby(auctionUuid);
+        return new SuccessResponse<>(null);
+    }
 }
