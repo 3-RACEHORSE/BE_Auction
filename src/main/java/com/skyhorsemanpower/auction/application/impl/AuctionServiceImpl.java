@@ -6,7 +6,9 @@ import com.skyhorsemanpower.auction.domain.AuctionCloseState;
 import com.skyhorsemanpower.auction.domain.RoundInfo;
 import com.skyhorsemanpower.auction.kafka.KafkaProducerCluster;
 import com.skyhorsemanpower.auction.kafka.Topics;
-import com.skyhorsemanpower.auction.kafka.dto.AuctionCloseDto;
+import com.skyhorsemanpower.auction.kafka.data.MessageEnum;
+import com.skyhorsemanpower.auction.kafka.data.dto.AlarmDto;
+import com.skyhorsemanpower.auction.kafka.data.dto.AuctionCloseDto;
 import com.skyhorsemanpower.auction.repository.*;
 import com.skyhorsemanpower.auction.common.exception.ResponseStatus;
 import com.skyhorsemanpower.auction.data.dto.*;
@@ -20,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -139,6 +140,15 @@ public class AuctionServiceImpl implements AuctionService {
 
         // 경매글 마감 처리 메시지와 결제 서비스 메시지 동일 토픽으로 진행
         producer.sendMessage(Topics.Constant.AUCTION_CLOSE, auctionCloseDto);
+
+        // 알람 서비스로 메시지 전달
+        AlarmDto alarmDto = AlarmDto.builder().receiverUuids(memberUuids.stream().toList())
+                .message(MessageEnum.Constant.AUCTION_CLOSE_MESSAGE)
+                .eventType("경매")
+                .build();
+        log.info("Kafka Message To Alarm Service >>> {}", alarmDto.toString());
+
+        producer.sendMessage(Topics.Constant.ALARM, alarmDto);
 
         // 경매 마감 여부 저장
         auctionCloseStateRepository.save(AuctionCloseState.builder()

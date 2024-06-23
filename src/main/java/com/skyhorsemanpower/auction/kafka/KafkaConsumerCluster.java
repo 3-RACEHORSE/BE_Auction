@@ -1,9 +1,9 @@
 package com.skyhorsemanpower.auction.kafka;
 
 import com.skyhorsemanpower.auction.common.DateTimeConverter;
-import com.skyhorsemanpower.auction.config.QuartzConfig;
+import com.skyhorsemanpower.auction.config.QuartzJobConfig;
 import com.skyhorsemanpower.auction.domain.RoundInfo;
-import com.skyhorsemanpower.auction.kafka.dto.InitialAuctionDto;
+import com.skyhorsemanpower.auction.kafka.data.dto.InitialAuctionDto;
 import com.skyhorsemanpower.auction.repository.RoundInfoRepository;
 import com.skyhorsemanpower.auction.status.RoundTimeEnum;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +23,7 @@ import java.util.LinkedHashMap;
 @Component
 public class KafkaConsumerCluster {
     private final RoundInfoRepository roundInfoRepository;
-    private final QuartzConfig quartzConfig;
+    private final QuartzJobConfig quartzJobConfig;
 
     @KafkaListener(topics = Topics.Constant.INITIAL_AUCTION, groupId = "${spring.kafka.consumer.group-id}")
     public void initialAuction(@Payload LinkedHashMap<String, Object> message,
@@ -46,7 +46,7 @@ public class KafkaConsumerCluster {
 
         // 경매 마감 스케줄러 등록
         try {
-            quartzConfig.schedulerUpdateAuctionStateJob(initialAuctionDto);
+            quartzJobConfig.schedulerUpdateAuctionStateJob(initialAuctionDto);
         } catch (Exception e1) {
             log.warn(e1.getMessage());
         }
