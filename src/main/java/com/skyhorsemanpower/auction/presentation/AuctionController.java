@@ -12,14 +12,20 @@ import com.skyhorsemanpower.auction.data.vo.StandbyResponseVo;
 import com.skyhorsemanpower.auction.domain.RoundInfo;
 import com.skyhorsemanpower.auction.repository.RoundInfoReactiveRepository;
 import com.skyhorsemanpower.auction.repository.RoundInfoRepository;
+import com.skyhorsemanpower.auction.status.AuctionTimeEnum;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.jdt.internal.compiler.IErrorHandlingPolicy;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.SignalType;
 import reactor.core.scheduler.Schedulers;
+
+import java.time.Duration;
+import java.util.concurrent.TimeoutException;
 
 @Slf4j
 @RestController
@@ -48,13 +54,45 @@ public class AuctionController {
     @Operation(summary = "경매 페이지 API", description = "경매 페이지에 보여줄 데이터 실시간 조회")
     public Flux<RoundInfoResponseVo> auctionPage(
             @PathVariable("auctionUuid") String auctionUuid) {
-        return roundInfoReactiveRepository.searchRoundInfo(auctionUuid).subscribeOn(Schedulers.boundedElastic())
+        Flux<RoundInfoResponseVo> roundInfoResponseVoFlux = roundInfoReactiveRepository.searchRoundInfo(auctionUuid)
+                .timeout(Duration.ofMinutes(AuctionTimeEnum.MINUTES_120.getMinute()))
+                .subscribeOn(Schedulers.boundedElastic())
                 .doOnError(error -> {
-                    log.info("SSE error occured!! >>> {}", error.toString());
+                    if (error instanceof TimeoutException) {
+                        log.info("Timeout occurred about SSE!");
+                    } else {
+                        log.info("SSE error occured!! >>> {}", error.toString());
+                    }
                 })
                 .onErrorResume(error -> {
-                    // 에러 발생 시, 빈 Flux 객체를 반환
-                    return Flux.empty();
+                            if (error instanceof TimeoutException) {
+                                log.info("Connection closed due to timeout");
+                                // 에러 발생 시, 빈 Flux 객체를 반환
+                                return Flux.empty();
+                            }
+                            // 다른 에러 발생 시, 빈 Flux 객체를 반환해서 연결 종료
+                            return Flux.error(error);
+                        }
+                );
+
+        // heartbeat 스트림으로 1분 주기로 확인
+        Flux<RoundInfoResponseVo> heartbeat = Flux.interval(Duration.ofMinutes(1))
+                .map(tick -> new RoundInfoResponseVo());
+
+        // 메시지 및 heartbeat 반환
+        return roundInfoResponseVoFlux.mergeWith(heartbeat)
+                .doOnSubscribe(sub -> log.info("Subscribed to roundInfoResponseVo and heartbeat streams"))
+                .doFinally(signalType -> {
+                    // 디버그 용 로그
+                    if (signalType == SignalType.ON_COMPLETE) {
+                        log.info("Connection completed.");
+                    } else if (signalType == SignalType.ON_ERROR) {
+                        log.info("Connection terminated due to error.");
+                    } else {
+                        log.info("Connection terminated by signal type: {}", signalType);
+                    }
+                    //todo
+                    // 자원 해제 메서드 추가 필요
                 });
     }
 
