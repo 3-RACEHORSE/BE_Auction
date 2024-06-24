@@ -1,23 +1,19 @@
 package com.skyhorsemanpower.auction.presentation;
 
 import com.skyhorsemanpower.auction.application.AuctionService;
-import com.skyhorsemanpower.auction.application.RedisService;
 import com.skyhorsemanpower.auction.common.SuccessResponse;
 import com.skyhorsemanpower.auction.common.exception.CustomException;
 import com.skyhorsemanpower.auction.common.exception.ResponseStatus;
 import com.skyhorsemanpower.auction.data.dto.OfferBiddingPriceDto;
 import com.skyhorsemanpower.auction.data.vo.OfferBiddingPriceRequestVo;
 import com.skyhorsemanpower.auction.data.vo.RoundInfoResponseVo;
-import com.skyhorsemanpower.auction.data.vo.StandbyResponseVo;
 import com.skyhorsemanpower.auction.domain.RoundInfo;
 import com.skyhorsemanpower.auction.repository.RoundInfoReactiveRepository;
 import com.skyhorsemanpower.auction.repository.RoundInfoRepository;
-import com.skyhorsemanpower.auction.status.AuctionTimeEnum;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.jdt.internal.compiler.IErrorHandlingPolicy;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -35,7 +31,6 @@ import java.util.concurrent.TimeoutException;
 @CrossOrigin(value = "*")
 public class AuctionController {
     private final AuctionService auctionService;
-    private final RedisService redisService;
     private final RoundInfoReactiveRepository roundInfoReactiveRepository;
     private final RoundInfoRepository roundInfoRepository;
 
@@ -55,7 +50,6 @@ public class AuctionController {
     public Flux<RoundInfoResponseVo> auctionPage(
             @PathVariable("auctionUuid") String auctionUuid) {
         Flux<RoundInfoResponseVo> roundInfoResponseVoFlux = roundInfoReactiveRepository.searchRoundInfo(auctionUuid)
-                .timeout(Duration.ofMinutes(AuctionTimeEnum.MINUTES_120.getMinute()))
                 .subscribeOn(Schedulers.boundedElastic())
                 .doOnError(error -> {
                     if (error instanceof TimeoutException) {
@@ -103,14 +97,6 @@ public class AuctionController {
             @PathVariable("auctionUuid") String auctionUuid) {
         return new SuccessResponse<>(roundInfoRepository.findFirstByAuctionUuidOrderByCreatedAtDesc(auctionUuid).orElseThrow(
                 () -> new CustomException(ResponseStatus.NO_DATA)));
-    }
-
-    // 대기 페이지 API
-    @PutMapping("/standby-page/{auctionUuid}")
-    @Operation(summary = "대기 페이지 API", description = "대기 페이지에 보여줄 데이터 조회 및 갱신")
-    public SuccessResponse<StandbyResponseVo> standByPage(
-            @PathVariable("auctionUuid") String auctionUuid) {
-        return new SuccessResponse<>(redisService.getStandbyPage(auctionUuid));
     }
 
     // 경매 마감 API 구현
