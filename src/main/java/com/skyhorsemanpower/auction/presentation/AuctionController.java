@@ -12,6 +12,7 @@ import com.skyhorsemanpower.auction.data.vo.StandbyResponseVo;
 import com.skyhorsemanpower.auction.domain.RoundInfo;
 import com.skyhorsemanpower.auction.repository.RoundInfoReactiveRepository;
 import com.skyhorsemanpower.auction.repository.RoundInfoRepository;
+import com.skyhorsemanpower.auction.status.AuctionTimeEnum;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
+import java.util.concurrent.TimeoutException;
 
 @Slf4j
 @RestController
@@ -50,13 +52,22 @@ public class AuctionController {
     @Operation(summary = "경매 페이지 API", description = "경매 페이지에 보여줄 데이터 실시간 조회")
     public Flux<RoundInfoResponseVo> auctionPage(
             @PathVariable("auctionUuid") String auctionUuid) {
-        Flux<RoundInfoResponseVo> roundInfoResponseVoFlux = roundInfoReactiveRepository.searchRoundInfo(auctionUuid).subscribeOn(Schedulers.boundedElastic())
+        Flux<RoundInfoResponseVo> roundInfoResponseVoFlux = roundInfoReactiveRepository.searchRoundInfo(auctionUuid)
+                .timeout(Duration.ofMinutes(AuctionTimeEnum.MINUTES_120.getMinute()))
+                .subscribeOn(Schedulers.boundedElastic())
                 .doOnError(error -> {
-                    log.info("SSE error occured!! >>> {}", error.toString());
+                    if (error instanceof TimeoutException) {
+                        log.info("Timeout occurred about SSE!");
+                    } else {
+                        log.info("SSE error occured!! >>> {}", error.toString());
+                    }
                 })
                 .onErrorResume(error -> {
+                    if (error instanceof TimeoutException) {
+                        log.info("Connection closed due to timeout");
+                    }
                     // 에러 발생 시, 빈 Flux 객체를 반환
-                    return Flux.empty();
+                    return Flux.error(error);
                 });
 
         // heartbeat 스트림
