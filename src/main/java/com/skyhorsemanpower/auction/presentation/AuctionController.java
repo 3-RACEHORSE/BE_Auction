@@ -17,9 +17,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.jdt.internal.compiler.IErrorHandlingPolicy;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.SignalType;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
@@ -63,20 +65,35 @@ public class AuctionController {
                     }
                 })
                 .onErrorResume(error -> {
-                    if (error instanceof TimeoutException) {
-                        log.info("Connection closed due to timeout");
-                    }
-                    // 에러 발생 시, 빈 Flux 객체를 반환
-                    return Flux.error(error);
-                });
+                            if (error instanceof TimeoutException) {
+                                log.info("Connection closed due to timeout");
+                                // 에러 발생 시, 빈 Flux 객체를 반환
+                                return Flux.empty();
+                            }
+                            // 다른 에러 발생 시, 빈 Flux 객체를 반환해서 연결 종료
+                            return Flux.error(error);
+                        }
+                );
 
-        // heartbeat 스트림
-        Flux<RoundInfoResponseVo> heartbeat = Flux.interval(Duration.ofDays(1))
+        // heartbeat 스트림으로 1분 주기로 확인
+        Flux<RoundInfoResponseVo> heartbeat = Flux.interval(Duration.ofMinutes(1))
                 .map(tick -> new RoundInfoResponseVo());
 
         // 메시지 및 heartbeat 반환
         return roundInfoResponseVoFlux.mergeWith(heartbeat)
-                .doOnSubscribe(sub -> log.info("roundInfoResponseVo, heartbeat"));
+                .doOnSubscribe(sub -> log.info("Subscribed to roundInfoResponseVo and heartbeat streams"))
+                .doFinally(signalType -> {
+                    // 디버그 용 로그
+                    if (signalType == SignalType.ON_COMPLETE) {
+                        log.info("Connection completed.");
+                    } else if (signalType == SignalType.ON_ERROR) {
+                        log.info("Connection terminated due to error.");
+                    } else {
+                        log.info("Connection terminated by signal type: {}", signalType);
+                    }
+                    //todo
+                    // 자원 해제 메서드 추가 필요
+                });
     }
 
     // 경매 페이지 최초 진입 시 현재 데이터 조회 API
