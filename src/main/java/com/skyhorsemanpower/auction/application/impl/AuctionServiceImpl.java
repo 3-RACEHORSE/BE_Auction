@@ -2,7 +2,9 @@ package com.skyhorsemanpower.auction.application.impl;
 
 import com.skyhorsemanpower.auction.application.AuctionService;
 import com.skyhorsemanpower.auction.common.exception.CustomException;
+import com.skyhorsemanpower.auction.data.vo.AuctionResultResponseVo;
 import com.skyhorsemanpower.auction.domain.AuctionCloseState;
+import com.skyhorsemanpower.auction.domain.AuctionResult;
 import com.skyhorsemanpower.auction.domain.RoundInfo;
 import com.skyhorsemanpower.auction.kafka.KafkaProducerCluster;
 import com.skyhorsemanpower.auction.kafka.Topics;
@@ -24,6 +26,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -35,6 +38,7 @@ public class AuctionServiceImpl implements AuctionService {
     private final RoundInfoRepository roundInfoRepository;
     private final AuctionCloseStateRepository auctionCloseStateRepository;
     private final KafkaProducerCluster producer;
+    private final AuctionResultRepository auctionResultRepository;
 
     @Override
     @Transactional
@@ -138,6 +142,14 @@ public class AuctionServiceImpl implements AuctionService {
                 .auctionUuid(auctionUuid)
                 .auctionCloseState(true)
                 .build());
+
+        // 경매 결과 저장
+        auctionResultRepository.save(AuctionResult.builder()
+                .auctionUuid(auctionUuid)
+                .memberUuids(memberUuids.stream().toList())
+                .price(price)
+                .build());
+        log.info("Auction Result Save!");
     }
 
     private MemberUuidsAndPrice getMemberUuidsAndPrice(int round, String auctionUuid, long numberOfParticipants) {
@@ -210,6 +222,25 @@ public class AuctionServiceImpl implements AuctionService {
         } catch (Exception e) {
             throw new CustomException(ResponseStatus.MONGODB_ERROR);
         }
+    }
+
+    @Override
+    public AuctionResultResponseVo auctionResult(String uuid, String auctionUuid) {
+        Optional<AuctionResult> auctionResult = auctionResultRepository.
+                findByAuctionUuidAndMemberUuidsContains(auctionUuid, uuid);
+
+        // 낙찰자에 포함되지 않는 경우
+        if (auctionResult.isEmpty()) {
+            log.info("Auction Result is not exist. not bidder");
+            return AuctionResultResponseVo.notBidder();
+        }
+
+        // 낙찰자에 포함된 경우
+        log.info("Auction Result >>> {}", auctionResult.toString());
+        return AuctionResultResponseVo.builder()
+                .isBidder(true)
+                .price(auctionResult.get().getPrice())
+                .build();
     }
 
     private void updateRoundInfo(RoundInfo roundInfo) {
