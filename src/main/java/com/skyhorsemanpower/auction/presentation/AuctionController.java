@@ -5,6 +5,7 @@ import com.skyhorsemanpower.auction.common.SuccessResponse;
 import com.skyhorsemanpower.auction.common.exception.CustomException;
 import com.skyhorsemanpower.auction.common.exception.ResponseStatus;
 import com.skyhorsemanpower.auction.data.dto.OfferBiddingPriceDto;
+import com.skyhorsemanpower.auction.data.vo.AuctionResultResponseVo;
 import com.skyhorsemanpower.auction.data.vo.OfferBiddingPriceRequestVo;
 import com.skyhorsemanpower.auction.data.vo.RoundInfoResponseVo;
 import com.skyhorsemanpower.auction.domain.RoundInfo;
@@ -95,7 +96,8 @@ public class AuctionController {
     @Operation(summary = "경매 페이지 입장 시 사용되는 API", description = "경매 페이지 최초 진입 시 현재 데이터 조회")
     public SuccessResponse<RoundInfo> initialAuctionPage(
             @PathVariable("auctionUuid") String auctionUuid) {
-        return new SuccessResponse<>(roundInfoRepository.findFirstByAuctionUuidOrderByCreatedAtDesc(auctionUuid).orElseThrow(
+        return new SuccessResponse<>(roundInfoRepository.
+                findFirstByAuctionUuidOrderByCreatedAtDesc(auctionUuid).orElseThrow(
                 () -> new CustomException(ResponseStatus.NO_DATA)));
     }
 
@@ -116,5 +118,14 @@ public class AuctionController {
         // round_info의 isActive를 true(진행 중)로 변경
         auctionService.auctionStateChangeTrue(auctionUuid);
         return new SuccessResponse<>(null);
+    }
+
+    // 유저에 따른 경매 결과 조회
+    @GetMapping("/result/{auctionUuid}")
+    @Operation(summary = "경매 결과 조회 API", description = "유저가 경매에 낙찰됐는가를 조회")
+    public SuccessResponse<AuctionResultResponseVo> auctionResult(
+            @RequestHeader String uuid,
+            @PathVariable("auctionUuid") String auctionUuid) {
+        return new SuccessResponse<>(auctionService.auctionResult(uuid, auctionUuid));
     }
 }
