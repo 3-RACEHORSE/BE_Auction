@@ -1,6 +1,7 @@
 package com.skyhorsemanpower.auction.application;
 
 import com.skyhorsemanpower.auction.data.dto.*;
+import com.skyhorsemanpower.auction.data.vo.AuctionResultResponseVo;
 
 public interface AuctionService {
     void offerBiddingPrice(OfferBiddingPriceDto offerBiddingPriceDto);
@@ -8,4 +9,6 @@ public interface AuctionService {
     void auctionClose(String auctionUuid);
 
     void auctionStateChangeTrue(String auctionUuid);
+
+    AuctionResultResponseVo auctionResult(String uuid, String auctionUuid);
 }
