@@ -9,6 +9,7 @@ import com.skyhorsemanpower.auction.kafka.Topics;
 import com.skyhorsemanpower.auction.kafka.data.MessageEnum;
 import com.skyhorsemanpower.auction.kafka.data.dto.AlarmDto;
 import com.skyhorsemanpower.auction.kafka.data.dto.AuctionCloseDto;
+import com.skyhorsemanpower.auction.quartz.data.MemberUuidsAndPrice;
 import com.skyhorsemanpower.auction.repository.*;
 import com.skyhorsemanpower.auction.common.exception.ResponseStatus;
 import com.skyhorsemanpower.auction.data.dto.*;
@@ -71,12 +72,23 @@ public class AuctionServiceImpl implements AuctionService {
             return;
         }
 
-        log.info("Auction Close Start");
-
         // auction_history 도큐먼트를 조회하여 경매 상태를 변경
         if (auctionHistoryRepository.findFirstByAuctionUuidOrderByBiddingTimeDesc(auctionUuid).isEmpty()) {
-            log.info("auction_history is not exist! No one bid at auction!");
-            producer.sendMessage(Topics.AUCTION_CLOSE.getTopic(), AuctionStateEnum.AUCTION_NO_PARTICIPANTS);
+            log.info("auction_history is not exist! No one bid the auction!");
+
+            // 아무도 참여하지 않은 경우에는 auctionUuid와 auctionState(AUCTION_NO_PARTICIPANTS) 전송
+            AuctionCloseDto noParticipantsAuctionCloseDto = AuctionCloseDto.builder()
+                    .auctionUuid(auctionUuid)
+                    .auctionState(AuctionStateEnum.AUCTION_NO_PARTICIPANTS)
+                    .build();
+            log.info("No one bid the auction message >>> {}", noParticipantsAuctionCloseDto.toString());
+            producer.sendMessage(Topics.Constant.AUCTION_CLOSE, noParticipantsAuctionCloseDto);
+
+            // 경매 마감 여부 저장
+            auctionCloseStateRepository.save(AuctionCloseState.builder()
+                    .auctionUuid(auctionUuid)
+                    .auctionCloseState(true)
+                    .build());
             return;
         }
 
@@ -93,36 +105,12 @@ public class AuctionServiceImpl implements AuctionService {
         long numberOfParticipants = lastRoundInfo.getNumberOfParticipants();
 
         // 마감 로직
-        // 마지막 라운드 입찰 이력
-        List<AuctionHistory> lastRoundAuctionHistory = auctionHistoryRepository.
-                findByAuctionUuidAndRoundOrderByBiddingTime(auctionUuid, round);
-        log.info("Last Round Auction History >>> {}", lastRoundAuctionHistory.toString());
+        MemberUuidsAndPrice memberUuidsAndPrice = getMemberUuidsAndPrice(
+                round, auctionUuid, numberOfParticipants);
 
-        // 마지막 - 1 라운드 입찰 이력
-        List<AuctionHistory> lastMinusOneRoundAuctionHistory = auctionHistoryRepository.
-                findByAuctionUuidAndRoundOrderByBiddingTime(auctionUuid, round - 1);
-        log.info("Before Last Round Auction History >>> {}", lastMinusOneRoundAuctionHistory.toString());
-
-        // 마지막 라운드 입찰자를 낙찰자로 고정
-        Set<String> memberUuids = new HashSet<>();
-        for (AuctionHistory auctionHistory : lastRoundAuctionHistory) {
-            memberUuids.add(auctionHistory.getBiddingUuid());
-        }
-
-        // 마지막 직전 라운드 입찰자 중 낙찰자 추가
-        for (AuctionHistory auctionHistory : lastMinusOneRoundAuctionHistory) {
-            // 동일 입찰자 제외하고 추가
-            memberUuids.add(auctionHistory.getBiddingUuid());
-
-            // 낙찰 가능 인원 수 만큼 리스트 추가
-            if (memberUuids.size() == numberOfParticipants) break;
-        }
-
-        log.info("memberUuids >>> {}", memberUuids);
-
-        // 낙찰가는 마지막 이전 라운드에서 biddingPrice로 결정
-        BigDecimal price = lastMinusOneRoundAuctionHistory.get(0).getBiddingPrice();
-        log.info("price >>> {}", price);
+        // 낙찰가와 낙찰자 획득
+        Set<String> memberUuids = memberUuidsAndPrice.getMemberUuids();
+        BigDecimal price = memberUuidsAndPrice.getPrice();
 
         // 카프카로 경매 서비스 메시지 전달
         AuctionCloseDto auctionCloseDto = AuctionCloseDto.builder()
@@ -141,7 +129,7 @@ public class AuctionServiceImpl implements AuctionService {
                 .message(MessageEnum.Constant.AUCTION_CLOSE_MESSAGE)
                 .eventType("경매")
                 .build();
-        log.info("Kafka Message To Alarm Service >>> {}", alarmDto.toString());
+        log.info("Auction Close Message To Alarm Service >>> {}", alarmDto.toString());
 
         producer.sendMessage(Topics.Constant.ALARM, alarmDto);
 
@@ -150,6 +138,63 @@ public class AuctionServiceImpl implements AuctionService {
                 .auctionUuid(auctionUuid)
                 .auctionCloseState(true)
                 .build());
+    }
+
+    private MemberUuidsAndPrice getMemberUuidsAndPrice(int round, String auctionUuid, long numberOfParticipants) {
+        Set<String> memberUuids = new HashSet<>();
+        BigDecimal price;
+
+        // 마지막 라운드 입찰 이력
+        List<AuctionHistory> lastRoundAuctionHistory = auctionHistoryRepository.
+                findByAuctionUuidAndRoundOrderByBiddingTime(auctionUuid, round);
+        log.info("Last Round Auction History >>> {}", lastRoundAuctionHistory.toString());
+
+        // 1라운드에서 경매가 마감된 경우
+        if (round == 1) {
+            log.info("One Round Close");
+            // 마지막 라운드 입찰자를 낙찰자로 고정
+            for (AuctionHistory auctionHistory : lastRoundAuctionHistory) {
+                memberUuids.add(auctionHistory.getBiddingUuid());
+            }
+
+            log.info("memberUuids >>> {}", memberUuids.toString());
+
+            // 낙찰가는 마지막 라운드에서 biddingPrice로 결정
+            price = lastRoundAuctionHistory.get(0).getBiddingPrice();
+            log.info("price >>> {}", price);
+        }
+
+        // 1라운드 제외한 라운드에서 경매가 마감된 경우
+        else {
+            log.info("{} Round Close", round);
+
+            // 마지막 - 1 라운드 입찰 이력
+            List<AuctionHistory> lastMinusOneRoundAuctionHistory = auctionHistoryRepository.
+                    findByAuctionUuidAndRoundOrderByBiddingTime(auctionUuid, round - 1);
+            log.info("Before Last Round Auction History >>> {}", lastMinusOneRoundAuctionHistory.toString());
+
+            // 마지막 라운드 입찰자를 낙찰자로 고정
+            for (AuctionHistory auctionHistory : lastRoundAuctionHistory) {
+                memberUuids.add(auctionHistory.getBiddingUuid());
+            }
+
+            // 마지막 직전 라운드 입찰자 중 낙찰자 추가
+            for (AuctionHistory auctionHistory : lastMinusOneRoundAuctionHistory) {
+                // 동일 입찰자 제외하고 추가
+                memberUuids.add(auctionHistory.getBiddingUuid());
+
+                // 낙찰 가능 인원 수 만큼 리스트 추가
+                if (memberUuids.size() == numberOfParticipants) break;
+            }
+
+            log.info("memberUuids >>> {}", memberUuids.toString());
+
+            // 낙찰가는 마지막 이전 라운드에서 biddingPrice로 결정
+            price = lastMinusOneRoundAuctionHistory.get(0).getBiddingPrice();
+            log.info("price >>> {}", price);
+        }
+
+        return MemberUuidsAndPrice.builder().memberUuids(memberUuids).price(price).build();
     }
 
     @Override
