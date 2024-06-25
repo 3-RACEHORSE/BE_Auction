@@ -38,8 +38,8 @@ public class KafkaProducerConfig {
     @Bean
     public NewTopic auctionCloseTopic() {
         return TopicBuilder.name(Topics.Constant.AUCTION_CLOSE)
-                .partitions(1)
-                .replicas(1)
+                .partitions(2)
+                .replicas(2)
                 .config(TopicConfig.RETENTION_MS_CONFIG, String.valueOf(172800000))
                 .build();
     }
@@ -47,8 +47,8 @@ public class KafkaProducerConfig {
     @Bean
     public NewTopic alarmTopic() {
         return TopicBuilder.name(Topics.Constant.ALARM)
-                .partitions(1)
-                .replicas(1)
+                .partitions(2)
+                .replicas(2)
                 .config(TopicConfig.RETENTION_MS_CONFIG, String.valueOf(172800000))
                 .build();
     }
