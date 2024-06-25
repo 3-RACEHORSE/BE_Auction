@@ -76,7 +76,7 @@ public class AuctionServiceImpl implements AuctionService {
         // auction_history 도큐먼트를 조회하여 경매 상태를 변경
         if (auctionHistoryRepository.findFirstByAuctionUuidOrderByBiddingTimeDesc(auctionUuid).isEmpty()) {
             log.info("auction_history is not exist! No one bid at auction!");
-            producer.sendMessage(Topics.AUCTION_CLOSE.getTopic(), AuctionStateEnum.AUCTION_NO_PARTICIPANTS);
+            producer.sendMessage(Topics.Constant.AUCTION_CLOSE, AuctionStateEnum.AUCTION_NO_PARTICIPANTS);
             return;
         }
 

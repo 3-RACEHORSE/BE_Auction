@@ -60,7 +60,7 @@ public class AuctionClose implements Job {
                     .auctionState(AuctionStateEnum.AUCTION_NO_PARTICIPANTS)
                     .build();
             log.info("No one bid the auction message >>> {}", noParticipantsAuctionCloseDto.toString());
-            producer.sendMessage(Topics.AUCTION_CLOSE.getTopic(), noParticipantsAuctionCloseDto);
+            producer.sendMessage(Topics.Constant.AUCTION_CLOSE, noParticipantsAuctionCloseDto);
 
             // 경매 마감 여부 저장
             auctionCloseStateRepository.save(AuctionCloseState.builder()
