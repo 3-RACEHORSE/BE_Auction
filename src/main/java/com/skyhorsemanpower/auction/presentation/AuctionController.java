@@ -104,6 +104,7 @@ public class AuctionController {
     @Operation(summary = "경매 마감 API", description = "경매 마감 처리 후 결제 서비스에 메시지 전달")
     public SuccessResponse<Object> auctionClose(
             @PathVariable("auctionUuid") String auctionUuid) {
+        log.info("Start>>>>>>>>>..");
         auctionService.auctionClose(auctionUuid);
         return new SuccessResponse<>(null);
     }

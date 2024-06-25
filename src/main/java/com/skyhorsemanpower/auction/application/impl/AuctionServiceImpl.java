@@ -3,6 +3,7 @@ package com.skyhorsemanpower.auction.application.impl;
 import com.skyhorsemanpower.auction.application.AuctionService;
 import com.skyhorsemanpower.auction.common.exception.CustomException;
 import com.skyhorsemanpower.auction.domain.AuctionCloseState;
+import com.skyhorsemanpower.auction.domain.AuctionResult;
 import com.skyhorsemanpower.auction.domain.RoundInfo;
 import com.skyhorsemanpower.auction.kafka.KafkaProducerCluster;
 import com.skyhorsemanpower.auction.kafka.Topics;
@@ -35,6 +36,7 @@ public class AuctionServiceImpl implements AuctionService {
     private final RoundInfoRepository roundInfoRepository;
     private final AuctionCloseStateRepository auctionCloseStateRepository;
     private final KafkaProducerCluster producer;
+    private final AuctionResultRepository auctionResultRepository;
 
     @Override
     @Transactional
@@ -138,6 +140,14 @@ public class AuctionServiceImpl implements AuctionService {
                 .auctionUuid(auctionUuid)
                 .auctionCloseState(true)
                 .build());
+
+        // 경매 결과 저장
+        auctionResultRepository.save(AuctionResult.builder()
+                .auctionUuid(auctionUuid)
+                .memberUuids(memberUuids.stream().toList())
+                .price(price)
+                .build());
+        log.info("Auction Result Save!");
     }
 
     private MemberUuidsAndPrice getMemberUuidsAndPrice(int round, String auctionUuid, long numberOfParticipants) {

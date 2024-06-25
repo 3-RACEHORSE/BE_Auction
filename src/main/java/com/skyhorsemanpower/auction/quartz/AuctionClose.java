@@ -4,6 +4,7 @@ import com.skyhorsemanpower.auction.common.exception.CustomException;
 import com.skyhorsemanpower.auction.common.exception.ResponseStatus;
 import com.skyhorsemanpower.auction.domain.AuctionCloseState;
 import com.skyhorsemanpower.auction.domain.AuctionHistory;
+import com.skyhorsemanpower.auction.domain.AuctionResult;
 import com.skyhorsemanpower.auction.domain.RoundInfo;
 import com.skyhorsemanpower.auction.kafka.KafkaProducerCluster;
 import com.skyhorsemanpower.auction.kafka.Topics;
@@ -13,6 +14,7 @@ import com.skyhorsemanpower.auction.kafka.data.dto.AuctionCloseDto;
 import com.skyhorsemanpower.auction.quartz.data.MemberUuidsAndPrice;
 import com.skyhorsemanpower.auction.repository.AuctionCloseStateRepository;
 import com.skyhorsemanpower.auction.repository.AuctionHistoryRepository;
+import com.skyhorsemanpower.auction.repository.AuctionResultRepository;
 import com.skyhorsemanpower.auction.repository.RoundInfoRepository;
 import com.skyhorsemanpower.auction.status.AuctionStateEnum;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +37,7 @@ public class AuctionClose implements Job {
     private final AuctionHistoryRepository auctionHistoryRepository;
     private final RoundInfoRepository roundInfoRepository;
     private final AuctionCloseStateRepository auctionCloseStateRepository;
+    private final AuctionResultRepository auctionResultRepository;
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
@@ -116,6 +119,14 @@ public class AuctionClose implements Job {
                 .auctionUuid(auctionUuid)
                 .auctionCloseState(true)
                 .build());
+
+        // 경매 결과 저장
+        auctionResultRepository.save(AuctionResult.builder()
+                .auctionUuid(auctionUuid)
+                .memberUuids(memberUuids.stream().toList())
+                .price(price)
+                .build());
+        log.info("Auction Result Save!");
     }
 
     private MemberUuidsAndPrice getMemberUuidsAndPrice(int round, String auctionUuid, long numberOfParticipants) {
