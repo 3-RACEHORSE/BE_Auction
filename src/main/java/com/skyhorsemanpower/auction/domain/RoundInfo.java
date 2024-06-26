@@ -30,11 +30,14 @@ public class RoundInfo {
     private Long numberOfParticipants;
     private Long leftNumberOfParticipants;
     private LocalDateTime createdAt;
+    private LocalDateTime auctionEndTime;
+    private Boolean isLastRound;
 
     @Builder
     public RoundInfo(String auctionUuid, Integer round, LocalDateTime roundStartTime, LocalDateTime roundEndTime,
                      BigDecimal incrementUnit, BigDecimal price, Boolean isActive, Long numberOfParticipants,
-                     Long leftNumberOfParticipants, LocalDateTime createdAt) {
+                     Long leftNumberOfParticipants, LocalDateTime createdAt,
+                     LocalDateTime auctionEndTime, Boolean isLastRound) {
         this.auctionUuid = auctionUuid;
         this.round = round;
         this.roundStartTime = roundStartTime;
@@ -45,6 +48,8 @@ public class RoundInfo {
         this.numberOfParticipants = numberOfParticipants;
         this.leftNumberOfParticipants = leftNumberOfParticipants;
         this.createdAt = LocalDateTime.now();
+        this.auctionEndTime = auctionEndTime;
+        this.isLastRound = isLastRound;
     }
 
     public static RoundInfo nextRoundUpdate(RoundInfo roundInfo) {
@@ -52,6 +57,10 @@ public class RoundInfo {
         LocalDateTime nextRoundStartTime = LocalDateTime.now().plusSeconds(StandbyTimeEnum.SECONDS_15.getSecond());
         LocalDateTime nextRoundEndTime = nextRoundStartTime.plusSeconds(RoundTimeEnum.SECONDS_60.getSecond());
         BigDecimal nextPrice = roundInfo.getPrice().add(roundInfo.getIncrementUnit());
+        LocalDateTime auctionEndTime = roundInfo.getAuctionEndTime();
+
+        // nextRoundStartTime <= auctionEndTime <= nextRoundEndTime 인 경우 다음 라운드가 마지막 라운드
+        boolean isLastRound = nextRoundStartTime.isBefore(auctionEndTime) && auctionEndTime.isBefore(nextRoundEndTime);
 
         return RoundInfo.builder()
                 .auctionUuid(roundInfo.getAuctionUuid())
@@ -63,6 +72,8 @@ public class RoundInfo {
                 .isActive(false)        // 대기 상태로 변경
                 .numberOfParticipants(roundInfo.getNumberOfParticipants())
                 .leftNumberOfParticipants(roundInfo.getNumberOfParticipants())
+                .auctionEndTime(roundInfo.getAuctionEndTime())
+                .isLastRound(isLastRound)
                 .build();
     }
 
@@ -79,6 +90,8 @@ public class RoundInfo {
                 .isActive(true)
                 .numberOfParticipants(roundInfo.getNumberOfParticipants())
                 .leftNumberOfParticipants(nextNumberOfParticipants)
+                .auctionEndTime(roundInfo.getAuctionEndTime())
+                .isLastRound(roundInfo.getIsLastRound())
                 .build();
     }
 
@@ -93,6 +106,8 @@ public class RoundInfo {
                 .isActive(true)
                 .numberOfParticipants(roundInfo.getNumberOfParticipants())
                 .leftNumberOfParticipants(roundInfo.getLeftNumberOfParticipants())
+                .auctionEndTime(roundInfo.getAuctionEndTime())
+                .isLastRound(roundInfo.getIsLastRound())
                 .createdAt(LocalDateTime.now())
                 .build();
     }
