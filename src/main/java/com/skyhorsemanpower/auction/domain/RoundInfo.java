@@ -72,6 +72,7 @@ public class RoundInfo {
                 .isActive(false)        // 대기 상태로 변경
                 .numberOfParticipants(roundInfo.getNumberOfParticipants())
                 .leftNumberOfParticipants(roundInfo.getNumberOfParticipants())
+                .auctionEndTime(roundInfo.getAuctionEndTime())
                 .isLastRound(isLastRound)
                 .build();
     }
@@ -89,6 +90,8 @@ public class RoundInfo {
                 .isActive(true)
                 .numberOfParticipants(roundInfo.getNumberOfParticipants())
                 .leftNumberOfParticipants(nextNumberOfParticipants)
+                .auctionEndTime(roundInfo.getAuctionEndTime())
+                .isLastRound(roundInfo.getIsLastRound())
                 .build();
     }
 
@@ -103,6 +106,8 @@ public class RoundInfo {
                 .isActive(true)
                 .numberOfParticipants(roundInfo.getNumberOfParticipants())
                 .leftNumberOfParticipants(roundInfo.getLeftNumberOfParticipants())
+                .auctionEndTime(roundInfo.getAuctionEndTime())
+                .isLastRound(roundInfo.getIsLastRound())
                 .createdAt(LocalDateTime.now())
                 .build();
     }

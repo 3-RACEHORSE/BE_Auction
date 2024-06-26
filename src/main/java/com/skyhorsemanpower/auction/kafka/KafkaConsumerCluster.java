@@ -26,7 +26,7 @@ public class KafkaConsumerCluster {
     private final RoundInfoRepository roundInfoRepository;
     private final QuartzJobConfig quartzJobConfig;
 
-    @KafkaListener(topics = "1", groupId = "${spring.kafka.consumer.group-id}")
+    @KafkaListener(topics = Topics.Constant.INITIAL_AUCTION, groupId = "${spring.kafka.consumer.group-id}")
     public void initialAuction(@Payload LinkedHashMap<String, Object> message,
         @Headers MessageHeaders messageHeaders) {
         log.info("consumer: success >>> message: {}, headers: {}", message.toString(),
@@ -57,7 +57,7 @@ public class KafkaConsumerCluster {
         // Instant 타입을 LocalDateTime 변환
         LocalDateTime roundStartTime = DateTimeConverter.
                 instantToLocalDateTime(initialAuctionDto.getAuctionStartTime());
-        LocalDateTime auctionEndTime = roundStartTime.plusHours(AuctionTimeEnum.MINUTES_120.getMinute());
+        LocalDateTime auctionEndTime = roundStartTime.plusMinutes(AuctionTimeEnum.MINUTES_120.getMinute());
 
         RoundInfo roundinfo = RoundInfo.builder()
                 .auctionUuid(initialAuctionDto.getAuctionUuid())
