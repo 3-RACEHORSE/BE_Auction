@@ -5,6 +5,7 @@ import com.skyhorsemanpower.auction.config.QuartzJobConfig;
 import com.skyhorsemanpower.auction.domain.RoundInfo;
 import com.skyhorsemanpower.auction.kafka.data.dto.InitialAuctionDto;
 import com.skyhorsemanpower.auction.repository.RoundInfoRepository;
+import com.skyhorsemanpower.auction.status.AuctionTimeEnum;
 import com.skyhorsemanpower.auction.status.RoundTimeEnum;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +26,7 @@ public class KafkaConsumerCluster {
     private final RoundInfoRepository roundInfoRepository;
     private final QuartzJobConfig quartzJobConfig;
 
-    @KafkaListener(topics = Topics.Constant.INITIAL_AUCTION, groupId = "${spring.kafka.consumer.group-id}")
+    @KafkaListener(topics = "1", groupId = "${spring.kafka.consumer.group-id}")
     public void initialAuction(@Payload LinkedHashMap<String, Object> message,
         @Headers MessageHeaders messageHeaders) {
         log.info("consumer: success >>> message: {}, headers: {}", message.toString(),
@@ -56,6 +57,7 @@ public class KafkaConsumerCluster {
         // Instant 타입을 LocalDateTime 변환
         LocalDateTime roundStartTime = DateTimeConverter.
                 instantToLocalDateTime(initialAuctionDto.getAuctionStartTime());
+        LocalDateTime auctionEndTime = roundStartTime.plusHours(AuctionTimeEnum.MINUTES_120.getMinute());
 
         RoundInfo roundinfo = RoundInfo.builder()
                 .auctionUuid(initialAuctionDto.getAuctionUuid())
@@ -68,6 +70,8 @@ public class KafkaConsumerCluster {
                 .numberOfParticipants((long) initialAuctionDto.getNumberOfEventParticipants())
                 .leftNumberOfParticipants((long) initialAuctionDto.getNumberOfEventParticipants())
                 .createdAt(LocalDateTime.now())
+                .auctionEndTime(auctionEndTime)
+                .isLastRound(false)
                 .build();
 
         log.info("Initial round_info >>> {}", roundinfo);
