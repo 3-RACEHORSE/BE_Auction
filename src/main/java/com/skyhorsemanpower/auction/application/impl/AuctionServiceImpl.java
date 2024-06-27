@@ -132,6 +132,7 @@ public class AuctionServiceImpl implements AuctionService {
         AlarmDto alarmDto = AlarmDto.builder().receiverUuids(memberUuids.stream().toList())
                 .message(MessageEnum.Constant.AUCTION_CLOSE_MESSAGE)
                 .eventType("경매")
+                .uuid(auctionUuid)
                 .build();
         log.info("Auction Close Message To Alarm Service >>> {}", alarmDto.toString());
 
