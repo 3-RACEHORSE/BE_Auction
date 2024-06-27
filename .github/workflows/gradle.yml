@@ -90,7 +90,7 @@ jobs:
           sudo docker rm auction-service
 
       - name: Run new docker container
-        run: sudo docker run -d --restart unless-stopped --name auction-service -p 9001:9001 --net cheonma-network ${{secrets.DOCKERHUB_USERNAME}}/auction-service:latest
+        run: sudo docker run -d --name auction-service -p 9001:9001 --net cheonma-network ${{secrets.DOCKERHUB_USERNAME}}/auction-service:latest
 
       - name: Delete old docker image
         run: sudo docker system prune -f
