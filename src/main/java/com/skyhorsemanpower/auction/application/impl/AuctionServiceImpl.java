@@ -70,8 +70,8 @@ public class AuctionServiceImpl implements AuctionService {
 
     @Override
     public void auctionClose(String auctionUuid) {
-        // auction_close_state 도큐먼트에 acutionUuid 데이터가 있으면(마감됐으면) 바로 return
-        if (auctionCloseStateRepository.findByAuctionUuid(auctionUuid).isPresent()) {
+        // 동시성을 고려한 auction_close_state 도큐먼트에 acutionUuid 데이터가 있으면(마감됐으면) 바로 return
+        if (auctionCloseStateRepository.setAuctionClosedInNotExists(auctionUuid)) {
             log.info("Auction already close");
             return;
         }
