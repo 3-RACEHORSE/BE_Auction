@@ -2,7 +2,6 @@ package com.skyhorsemanpower.auction.quartz;
 
 import com.skyhorsemanpower.auction.common.exception.CustomException;
 import com.skyhorsemanpower.auction.common.exception.ResponseStatus;
-import com.skyhorsemanpower.auction.domain.AuctionCloseState;
 import com.skyhorsemanpower.auction.domain.AuctionHistory;
 import com.skyhorsemanpower.auction.domain.AuctionResult;
 import com.skyhorsemanpower.auction.domain.RoundInfo;
@@ -12,7 +11,6 @@ import com.skyhorsemanpower.auction.kafka.data.MessageEnum;
 import com.skyhorsemanpower.auction.kafka.data.dto.AlarmDto;
 import com.skyhorsemanpower.auction.kafka.data.dto.AuctionCloseDto;
 import com.skyhorsemanpower.auction.quartz.data.MemberUuidsAndPrice;
-import com.skyhorsemanpower.auction.repository.AuctionCloseStateRepository;
 import com.skyhorsemanpower.auction.repository.AuctionHistoryRepository;
 import com.skyhorsemanpower.auction.repository.AuctionResultRepository;
 import com.skyhorsemanpower.auction.repository.RoundInfoRepository;
@@ -36,7 +34,6 @@ public class AuctionClose implements Job {
     private final KafkaProducerCluster producer;
     private final AuctionHistoryRepository auctionHistoryRepository;
     private final RoundInfoRepository roundInfoRepository;
-    private final AuctionCloseStateRepository auctionCloseStateRepository;
     private final AuctionResultRepository auctionResultRepository;
 
     @Override
@@ -46,12 +43,6 @@ public class AuctionClose implements Job {
         // JobDataMap에서 auctionUuid 추출
         JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
         String auctionUuid = jobDataMap.getString("auctionUuid");
-
-        // auction_close_state 도큐먼트에 acutionUuid 데이터가 있으면(마감됐으면) 바로 return
-        if (auctionCloseStateRepository.findByAuctionUuid(auctionUuid).isPresent()) {
-            log.info("Auction already close");
-            return;
-        }
 
         // auction_history 도큐먼트를 조회하여 경매 상태를 변경
         if (auctionHistoryRepository.findFirstByAuctionUuidOrderByBiddingTimeDesc(auctionUuid).isEmpty()) {
@@ -65,11 +56,6 @@ public class AuctionClose implements Job {
             log.info("No one bid the auction message >>> {}", noParticipantsAuctionCloseDto.toString());
             producer.sendMessage(Topics.Constant.AUCTION_CLOSE, noParticipantsAuctionCloseDto);
 
-            // 경매 마감 여부 저장
-            auctionCloseStateRepository.save(AuctionCloseState.builder()
-                    .auctionUuid(auctionUuid)
-                    .auctionCloseState(true)
-                    .build());
             return;
         }
 
@@ -114,12 +100,6 @@ public class AuctionClose implements Job {
         log.info("Auction Close Message To Alarm Service >>> {}", alarmDto.toString());
 
         producer.sendMessage(Topics.Constant.ALARM, alarmDto);
-
-        // 경매 마감 여부 저장
-        auctionCloseStateRepository.save(AuctionCloseState.builder()
-                .auctionUuid(auctionUuid)
-                .auctionCloseState(true)
-                .build());
 
         // 경매 결과 저장
         auctionResultRepository.save(AuctionResult.builder()
