@@ -2,10 +2,8 @@ package com.skyhorsemanpower.auction.kafka;
 
 import com.skyhorsemanpower.auction.common.DateTimeConverter;
 import com.skyhorsemanpower.auction.config.QuartzJobConfig;
-import com.skyhorsemanpower.auction.domain.AuctionCloseState;
 import com.skyhorsemanpower.auction.domain.RoundInfo;
 import com.skyhorsemanpower.auction.kafka.data.dto.InitialAuctionDto;
-import com.skyhorsemanpower.auction.repository.AuctionCloseStateRepository;
 import com.skyhorsemanpower.auction.repository.RoundInfoRepository;
 import com.skyhorsemanpower.auction.status.AuctionTimeEnum;
 import com.skyhorsemanpower.auction.status.RoundTimeEnum;
@@ -27,7 +25,7 @@ import java.util.LinkedHashMap;
 public class KafkaConsumerCluster {
     private final RoundInfoRepository roundInfoRepository;
     private final QuartzJobConfig quartzJobConfig;
-    private final AuctionCloseStateRepository auctionCloseStateRepository;
+//    private final AuctionCloseStateRepository auctionCloseStateRepository;
 
     @KafkaListener(topics = Topics.Constant.INITIAL_AUCTION, groupId = "${spring.kafka.consumer.group-id}")
     public void initialAuction(@Payload LinkedHashMap<String, Object> message,
@@ -47,15 +45,6 @@ public class KafkaConsumerCluster {
         log.info("InitialAuctionDto >>> {}", initialAuctionDto.toString());
 
         initialRoundInfo(initialAuctionDto);
-
-        // auction_close_state 초기 정보 등록
-        AuctionCloseState auctionCloseState = AuctionCloseState.builder()
-                .auctionUuid(message.get("auctionUuid").toString())
-                .auctionCloseState(false)
-                .build();
-        log.info("auction_close_state Initial Document >>> {}", auctionCloseState.toString());
-
-        auctionCloseStateRepository.save(auctionCloseState);
 
         // 경매 마감 스케줄러 등록
         try {

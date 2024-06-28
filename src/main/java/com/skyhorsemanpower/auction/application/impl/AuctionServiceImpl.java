@@ -33,7 +33,6 @@ public class AuctionServiceImpl implements AuctionService {
 
     private final AuctionHistoryRepository auctionHistoryRepository;
     private final RoundInfoRepository roundInfoRepository;
-    private final AuctionCloseStateRepository auctionCloseStateRepository;
     private final KafkaProducerCluster producer;
     private final AuctionResultRepository auctionResultRepository;
     private final AuctionUniqueRepository auctionUniqueRepository;
@@ -68,19 +67,10 @@ public class AuctionServiceImpl implements AuctionService {
 
     @Override
     public void auctionClose(String auctionUuid) {
-        // 동시성을 고려한 auction_close_state 도큐먼트에 acutionUuid 데이터가 있으면(마감됐으면) 바로 return
-//        if (auctionCloseStateRepository.setAuctionClosedInNotExists(auctionUuid)) {
-//            log.info("Auction already close");
-//            return;
-//        }
-
-        // RDB에 저장(auctionUuid 저장)
-        // 저장한 성공한 경우에는 DB
         try{
-            // 저장
+            // 저장에 성공하면 마감이 진행되지 않았다는 의미, 바로 마감 진행
              AuctionUnique auctionUnique = auctionUniqueRepository.save(AuctionUnique.builder().auctionUuid(auctionUuid).build());
             log.info("Auction Close Start!");
-
         } catch (Exception e) {
             log.info("Auction Already Close!");
             return;
@@ -98,11 +88,6 @@ public class AuctionServiceImpl implements AuctionService {
             log.info("No one bid the auction message >>> {}", noParticipantsAuctionCloseDto.toString());
             producer.sendMessage(Topics.Constant.AUCTION_CLOSE, noParticipantsAuctionCloseDto);
 
-            // 경매 마감 여부 저장
-            auctionCloseStateRepository.save(AuctionCloseState.builder()
-                    .auctionUuid(auctionUuid)
-                    .auctionCloseState(true)
-                    .build());
             return;
         }
 
@@ -147,12 +132,6 @@ public class AuctionServiceImpl implements AuctionService {
         log.info("Auction Close Message To Alarm Service >>> {}", alarmDto.toString());
 
         producer.sendMessage(Topics.Constant.ALARM, alarmDto);
-
-        // 경매 마감 여부 저장
-        auctionCloseStateRepository.save(AuctionCloseState.builder()
-                .auctionUuid(auctionUuid)
-                .auctionCloseState(true)
-                .build());
 
         // 경매 결과 저장
         auctionResultRepository.save(AuctionResult.builder()
