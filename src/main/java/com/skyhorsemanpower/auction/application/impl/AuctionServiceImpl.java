@@ -3,9 +3,7 @@ package com.skyhorsemanpower.auction.application.impl;
 import com.skyhorsemanpower.auction.application.AuctionService;
 import com.skyhorsemanpower.auction.common.exception.CustomException;
 import com.skyhorsemanpower.auction.data.vo.AuctionResultResponseVo;
-import com.skyhorsemanpower.auction.domain.AuctionCloseState;
-import com.skyhorsemanpower.auction.domain.AuctionResult;
-import com.skyhorsemanpower.auction.domain.RoundInfo;
+import com.skyhorsemanpower.auction.domain.*;
 import com.skyhorsemanpower.auction.kafka.KafkaProducerCluster;
 import com.skyhorsemanpower.auction.kafka.Topics;
 import com.skyhorsemanpower.auction.kafka.data.MessageEnum;
@@ -15,7 +13,6 @@ import com.skyhorsemanpower.auction.quartz.data.MemberUuidsAndPrice;
 import com.skyhorsemanpower.auction.repository.*;
 import com.skyhorsemanpower.auction.common.exception.ResponseStatus;
 import com.skyhorsemanpower.auction.data.dto.*;
-import com.skyhorsemanpower.auction.domain.AuctionHistory;
 import com.skyhorsemanpower.auction.status.AuctionStateEnum;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +36,7 @@ public class AuctionServiceImpl implements AuctionService {
     private final AuctionCloseStateRepository auctionCloseStateRepository;
     private final KafkaProducerCluster producer;
     private final AuctionResultRepository auctionResultRepository;
+    private final AuctionUniqueRepository auctionUniqueRepository;
 
     @Override
     @Transactional
@@ -71,8 +69,20 @@ public class AuctionServiceImpl implements AuctionService {
     @Override
     public void auctionClose(String auctionUuid) {
         // 동시성을 고려한 auction_close_state 도큐먼트에 acutionUuid 데이터가 있으면(마감됐으면) 바로 return
-        if (auctionCloseStateRepository.setAuctionClosedInNotExists(auctionUuid)) {
-            log.info("Auction already close");
+//        if (auctionCloseStateRepository.setAuctionClosedInNotExists(auctionUuid)) {
+//            log.info("Auction already close");
+//            return;
+//        }
+
+        // RDB에 저장(auctionUuid 저장)
+        // 저장한 성공한 경우에는 DB
+        try{
+            // 저장
+            auctionUniqueRepository.save(new AuctionUnique(auctionUuid));
+            log.info("Auction Close Start!");
+
+        } catch (Exception e) {
+            log.info("Auction Already Close!");
             return;
         }
 
