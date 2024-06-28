@@ -78,7 +78,7 @@ public class AuctionServiceImpl implements AuctionService {
         // 저장한 성공한 경우에는 DB
         try{
             // 저장
-            auctionUniqueRepository.save(new AuctionUnique(auctionUuid));
+             AuctionUnique auctionUnique = auctionUniqueRepository.save(AuctionUnique.builder().auctionUuid(auctionUuid).build());
             log.info("Auction Close Start!");
 
         } catch (Exception e) {
