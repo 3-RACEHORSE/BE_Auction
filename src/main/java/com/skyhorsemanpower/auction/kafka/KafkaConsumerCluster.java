@@ -25,7 +25,6 @@ import java.util.LinkedHashMap;
 public class KafkaConsumerCluster {
     private final RoundInfoRepository roundInfoRepository;
     private final QuartzJobConfig quartzJobConfig;
-//    private final AuctionCloseStateRepository auctionCloseStateRepository;
 
     @KafkaListener(topics = Topics.Constant.INITIAL_AUCTION, groupId = "${spring.kafka.consumer.group-id}")
     public void initialAuction(@Payload LinkedHashMap<String, Object> message,
