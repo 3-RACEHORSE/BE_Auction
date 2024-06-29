@@ -4,6 +4,7 @@ import com.skyhorsemanpower.auction.common.exception.CustomException;
 import com.skyhorsemanpower.auction.common.exception.ResponseStatus;
 import com.skyhorsemanpower.auction.domain.AuctionHistory;
 import com.skyhorsemanpower.auction.domain.AuctionResult;
+import com.skyhorsemanpower.auction.domain.AuctionUnique;
 import com.skyhorsemanpower.auction.domain.RoundInfo;
 import com.skyhorsemanpower.auction.kafka.KafkaProducerCluster;
 import com.skyhorsemanpower.auction.kafka.Topics;
@@ -13,6 +14,7 @@ import com.skyhorsemanpower.auction.kafka.data.dto.AuctionCloseDto;
 import com.skyhorsemanpower.auction.quartz.data.MemberUuidsAndPrice;
 import com.skyhorsemanpower.auction.repository.AuctionHistoryRepository;
 import com.skyhorsemanpower.auction.repository.AuctionResultRepository;
+import com.skyhorsemanpower.auction.repository.AuctionUniqueRepository;
 import com.skyhorsemanpower.auction.repository.RoundInfoRepository;
 import com.skyhorsemanpower.auction.status.AuctionStateEnum;
 import lombok.RequiredArgsConstructor;
@@ -35,14 +37,23 @@ public class AuctionClose implements Job {
     private final AuctionHistoryRepository auctionHistoryRepository;
     private final RoundInfoRepository roundInfoRepository;
     private final AuctionResultRepository auctionResultRepository;
+    private final AuctionUniqueRepository auctionUniqueRepository;
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        log.info("Auction Close Job Start!");
-
         // JobDataMap에서 auctionUuid 추출
         JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
         String auctionUuid = jobDataMap.getString("auctionUuid");
+
+        // 이미 마감된 경매는 진행하지 않습니다.
+        try{
+            // 저장에 성공하면 마감이 진행되지 않았다는 의미, 바로 마감 진행
+            auctionUniqueRepository.save(AuctionUnique.builder().auctionUuid(auctionUuid).build());
+            log.info("Scheduled Auction Close Job Start!");
+        } catch (Exception e) {
+            log.info("Auction Already Close!");
+            return;
+        }
 
         // auction_history 도큐먼트를 조회하여 경매 상태를 변경
         if (auctionHistoryRepository.findFirstByAuctionUuidOrderByBiddingTimeDesc(auctionUuid).isEmpty()) {
