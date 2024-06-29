@@ -14,6 +14,7 @@ import com.skyhorsemanpower.auction.repository.*;
 import com.skyhorsemanpower.auction.common.exception.ResponseStatus;
 import com.skyhorsemanpower.auction.data.dto.*;
 import com.skyhorsemanpower.auction.status.AuctionStateEnum;
+import com.skyhorsemanpower.auction.status.NextRoundStateEnum;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -238,7 +239,7 @@ public class AuctionServiceImpl implements AuctionService {
 
         // 다음 라운드로 round_info 도큐먼트 갱신
         // isActive 대기 상태로 변경
-        if (roundInfo.getLeftNumberOfParticipants().equals(1L)) {
+        if (roundInfo.getLeftNumberOfParticipants() == NextRoundStateEnum.NUMBER_1.getNumber()) {
             updatedRoundInfo = RoundInfo.nextRoundUpdate(roundInfo);
         }
 
@@ -282,7 +283,7 @@ public class AuctionServiceImpl implements AuctionService {
         }
     }
 
-    private void checkLeftNumberOfParticipant(Long leftNumberOfParticipants) {
+    private void checkLeftNumberOfParticipant(int leftNumberOfParticipants) {
         log.info("leftNumberOfParticipants >>> {}", leftNumberOfParticipants);
         if (leftNumberOfParticipants < 1L) throw new CustomException(ResponseStatus.FULL_PARTICIPANTS);
     }
