@@ -122,7 +122,7 @@ public class AuctionController {
 
     // 유저에 따른 경매 결과 조회
     @GetMapping("/result/{auctionUuid}")
-    @Operation(summary = "경매 결과 조회 API", description = "유저가 경매에 낙찰됐는가를 조회")
+    @Operation(summary = "경매 결과 조회 API", description = "유저가 경매에 낙찰됐는가 여부 조회")
     public SuccessResponse<AuctionResultResponseVo> auctionResult(
             @RequestHeader String uuid,
             @PathVariable("auctionUuid") String auctionUuid) {
