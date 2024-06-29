@@ -37,13 +37,14 @@ public class KafkaConsumerCluster {
                 .auctionUuid(message.get("auctionUuid").toString())
                 .startPrice(new BigDecimal(message.get("startPrice").toString()))
                 .numberOfEventParticipants((Integer) message.get("numberOfEventParticipants"))
-                .auctionStartTime(((Long) message.get("auctionStartTime")))
-                .auctionEndTime(((Long) message.get("auctionEndTime")))
+                .auctionStartTime((Long) message.get("auctionStartTime"))
+                .auctionEndTime((Long) message.get("auctionEndTime"))
                 .incrementUnit(new BigDecimal(message.get("incrementUnit").toString()))
                 .build();
         log.info("InitialAuctionDto >>> {}", initialAuctionDto.toString());
 
-        initialRoundInfo(initialAuctionDto);
+        // 초기 round_info 도큐먼트 저장
+        roundInfoRepository.save(RoundInfo.initialRoundInfo(initialAuctionDto));
 
         // 경매 마감 스케줄러 등록
         try {
@@ -51,30 +52,5 @@ public class KafkaConsumerCluster {
         } catch (Exception e1) {
             log.warn(e1.getMessage());
         }
-    }
-
-    private void initialRoundInfo(InitialAuctionDto initialAuctionDto) {
-        // Instant 타입을 LocalDateTime 변환
-        LocalDateTime roundStartTime = DateTimeConverter.
-                instantToLocalDateTime(initialAuctionDto.getAuctionStartTime());
-        LocalDateTime auctionEndTime = roundStartTime.plusMinutes(AuctionTimeEnum.MINUTES_120.getMinute());
-
-        RoundInfo roundinfo = RoundInfo.builder()
-                .auctionUuid(initialAuctionDto.getAuctionUuid())
-                .round(1)
-                .roundStartTime(roundStartTime)
-                .roundEndTime(roundStartTime.plusSeconds(RoundTimeEnum.SECONDS_60.getSecond()))
-                .incrementUnit(initialAuctionDto.getIncrementUnit())
-                .price(initialAuctionDto.getStartPrice())
-                .isActive(true)
-                .numberOfParticipants((long) initialAuctionDto.getNumberOfEventParticipants())
-                .leftNumberOfParticipants((long) initialAuctionDto.getNumberOfEventParticipants())
-                .createdAt(LocalDateTime.now())
-                .auctionEndTime(auctionEndTime)
-                .isLastRound(false)
-                .build();
-
-        log.info("Initial round_info >>> {}", roundinfo);
-        roundInfoRepository.save(roundinfo);
     }
 }

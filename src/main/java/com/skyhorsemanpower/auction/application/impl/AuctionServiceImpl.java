@@ -238,7 +238,7 @@ public class AuctionServiceImpl implements AuctionService {
 
         // 다음 라운드로 round_info 도큐먼트 갱신
         // isActive 대기 상태로 변경
-        if (roundInfo.getLeftNumberOfParticipants().equals(1L)) {
+        if (roundInfo.getLeftNumberOfParticipants() == 1) {
             updatedRoundInfo = RoundInfo.nextRoundUpdate(roundInfo);
         }
 
@@ -282,7 +282,7 @@ public class AuctionServiceImpl implements AuctionService {
         }
     }
 
-    private void checkLeftNumberOfParticipant(Long leftNumberOfParticipants) {
+    private void checkLeftNumberOfParticipant(int leftNumberOfParticipants) {
         log.info("leftNumberOfParticipants >>> {}", leftNumberOfParticipants);
         if (leftNumberOfParticipants < 1L) throw new CustomException(ResponseStatus.FULL_PARTICIPANTS);
     }
