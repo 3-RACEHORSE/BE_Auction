@@ -156,6 +156,17 @@ public class AuctionServiceImpl implements AuctionService {
 
         roundInfoRepository.save(RoundInfo.builder()
                         .auctionUuid(auctionUuid)
+                        .round(currenctRoundInfo.getRound())
+                        .roundStartTime(currenctRoundInfo.getRoundStartTime())
+                        .roundEndTime(currenctRoundInfo.getRoundEndTime())
+                        .incrementUnit(currenctRoundInfo.getIncrementUnit())
+                        .price(currenctRoundInfo.getPrice())
+                        .isActive(true)
+                        .numberOfParticipants(currenctRoundInfo.getNumberOfParticipants())
+                        .leftNumberOfParticipants(currenctRoundInfo.getLeftNumberOfParticipants())
+                        .createdAt(LocalDateTime.now())
+                        .auctionEndTime(currenctRoundInfo.getAuctionEndTime())
+                        .isLastRound(currenctRoundInfo.getIsLastRound())
                         .endStatus(true)
                 .build());
     }

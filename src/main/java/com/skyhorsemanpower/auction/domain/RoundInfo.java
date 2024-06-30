@@ -56,6 +56,7 @@ public class RoundInfo {
         this.createdAt = LocalDateTime.now();
         this.auctionEndTime = auctionEndTime;
         this.isLastRound = isLastRound;
+        this.endStatus = endStatus;
     }
 
     public static RoundInfo nextRoundUpdate(RoundInfo roundInfo) {
