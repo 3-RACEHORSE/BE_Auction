@@ -147,6 +147,17 @@ public class AuctionServiceImpl implements AuctionService {
                 .price(price)
                 .build());
         log.info("Auction Result Save!");
+
+        // round_info 마감됐음을 endStatus에 저장
+        RoundInfo currenctRoundInfo = roundInfoRepository.
+                findFirstByAuctionUuidOrderByCreatedAtDesc(auctionUuid).orElseThrow(
+                        () -> new CustomException(ResponseStatus.NO_DATA)
+                );
+
+        roundInfoRepository.save(RoundInfo.builder()
+                        .auctionUuid(auctionUuid)
+                        .endStatus(true)
+                .build());
     }
 
     private MemberUuidsAndPrice getMemberUuidsAndPrice(int round, String auctionUuid, long numberOfParticipants) {

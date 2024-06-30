@@ -37,12 +37,13 @@ public class RoundInfo {
     private LocalDateTime createdAt;
     private LocalDateTime auctionEndTime;
     private Boolean isLastRound;
+    private Boolean endStatus;
 
     @Builder
     public RoundInfo(String auctionUuid, Integer round, LocalDateTime roundStartTime, LocalDateTime roundEndTime,
                      BigDecimal incrementUnit, BigDecimal price, Boolean isActive, int numberOfParticipants,
                      int leftNumberOfParticipants, LocalDateTime createdAt,
-                     LocalDateTime auctionEndTime, Boolean isLastRound) {
+                     LocalDateTime auctionEndTime, Boolean isLastRound, Boolean endStatus) {
         this.auctionUuid = auctionUuid;
         this.round = round;
         this.roundStartTime = roundStartTime;
