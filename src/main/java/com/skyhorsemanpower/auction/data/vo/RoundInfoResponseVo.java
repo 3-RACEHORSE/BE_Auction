@@ -20,12 +20,13 @@ public class RoundInfoResponseVo {
     private Boolean isActive;
     private Long numberOfParticipants;
     private Long leftNumberOfParticipants;
+    private Boolean endStatus;
 
     @Builder
 
     public RoundInfoResponseVo(Integer round, LocalDateTime roundStartTime, LocalDateTime roundEndTime,
                                BigDecimal incrementUnit, BigDecimal price, Boolean isActive,
-                               Long numberOfParticipants, Long leftNumberOfParticipants) {
+                               Long numberOfParticipants, Long leftNumberOfParticipants, Boolean endStatus) {
         this.round = round;
         this.roundStartTime = roundStartTime;
         this.roundEndTime = roundEndTime;
@@ -34,5 +35,6 @@ public class RoundInfoResponseVo {
         this.isActive = isActive;
         this.numberOfParticipants = numberOfParticipants;
         this.leftNumberOfParticipants = leftNumberOfParticipants;
+        this.endStatus = endStatus;
     }
 }
