@@ -40,7 +40,7 @@ public class AuctionServiceImpl implements AuctionService {
 
     @Override
     @Transactional
-    public void offerBiddingPrice(OfferBiddingPriceDto offerBiddingPriceDto) {
+    public Boolean offerBiddingPrice(OfferBiddingPriceDto offerBiddingPriceDto) {
 
         // 현재 경매의 라운드 정보 추출
         RoundInfo roundInfo = roundInfoRepository.
@@ -50,7 +50,7 @@ public class AuctionServiceImpl implements AuctionService {
         // 입찰 가능 확인
         // 입찰이 안되면 아래 메서드 내에서 예외를 던진다.
         // isUpdateRoundInfo boolean 데이터는 round_info 도큐먼트를 갱신 트리거
-        isBiddingPossible(offerBiddingPriceDto, roundInfo);
+        Boolean isBiddingPossible = isBiddingPossible(offerBiddingPriceDto, roundInfo);
 
         // 입찰 정보 저장
         AuctionHistory auctionHistory = AuctionHistory.converter(offerBiddingPriceDto);
@@ -64,6 +64,9 @@ public class AuctionServiceImpl implements AuctionService {
 
         // 입찰 후, round_info 도큐먼트 갱신
         updateRoundInfo(roundInfo);
+
+        log.info("isBidding >>> {}", isBiddingPossible);
+        return isBiddingPossible;
     }
 
     @Override
@@ -257,38 +260,33 @@ public class AuctionServiceImpl implements AuctionService {
         }
     }
 
-    private void isBiddingPossible(OfferBiddingPriceDto offerBiddingPriceDto, RoundInfo roundInfo) {
+    private Boolean isBiddingPossible(OfferBiddingPriceDto offerBiddingPriceDto, RoundInfo roundInfo) {
         // 조건1. 입찰 시간 확인
-        checkBiddingTime(roundInfo.getRoundStartTime(), roundInfo.getRoundEndTime());
-        log.info("입찰 시간 통과");
-
         // 조건2. 해당 라운드에 참여 여부
-        checkBiddingRound(offerBiddingPriceDto.getAuctionUuid(), offerBiddingPriceDto.getBiddingUuid(),
-                offerBiddingPriceDto.getRound());
-        log.info("현재 라운드에 참여한 적 없음");
-
         // 조건3. 남은 인원이 1 이상
-        checkLeftNumberOfParticipant(roundInfo.getLeftNumberOfParticipants());
-        log.info("남은 인원 통과");
-
         // 조건4. round 입찰가와 입력한 입찰가 확인
-        checkRoundAndBiddingPrice(offerBiddingPriceDto, roundInfo);
-        log.info("라운드 및 입찰가 통과");
+
+        return checkBiddingTime(roundInfo.getRoundStartTime(), roundInfo.getRoundEndTime()) &&
+                checkBiddingRound(offerBiddingPriceDto.getAuctionUuid(), offerBiddingPriceDto.getBiddingUuid(),
+                        offerBiddingPriceDto.getRound()) &&
+                checkLeftNumberOfParticipant(roundInfo.getLeftNumberOfParticipants()) &&
+                checkRoundAndBiddingPrice(offerBiddingPriceDto, roundInfo)
+                ;
     }
 
-    private void checkBiddingRound(String auctionUuid, String biddingUuid, int round) {
-        if (auctionHistoryRepository.findByAuctionUuidAndBiddingUuidAndRound(
-                auctionUuid, biddingUuid, round).isPresent()) {
-            throw new CustomException(ResponseStatus.ALREADY_BID_IN_ROUND);
-        }
+    private Boolean checkBiddingRound(String auctionUuid, String biddingUuid, int round) {
+        return !(auctionHistoryRepository.findByAuctionUuidAndBiddingUuidAndRound(
+                auctionUuid, biddingUuid, round).isPresent());
     }
 
-    private void checkLeftNumberOfParticipant(int leftNumberOfParticipants) {
+    private Boolean checkLeftNumberOfParticipant(int leftNumberOfParticipants) {
         log.info("leftNumberOfParticipants >>> {}", leftNumberOfParticipants);
-        if (leftNumberOfParticipants < 1L) throw new CustomException(ResponseStatus.FULL_PARTICIPANTS);
+//        if (leftNumberOfParticipants < 1L) throw new CustomException(ResponseStatus.FULL_PARTICIPANTS);
+        log.info("!(leftNumberOfParticipants < 1L) >>> {}", !(leftNumberOfParticipants < 1L));
+        return !(leftNumberOfParticipants < 1L);
     }
 
-    private void checkRoundAndBiddingPrice(OfferBiddingPriceDto offerBiddingPriceDto, RoundInfo roundInfo) {
+    private Boolean checkRoundAndBiddingPrice(OfferBiddingPriceDto offerBiddingPriceDto, RoundInfo roundInfo) {
         log.info("input round >>> {}, document round >>> {}, input price >>> {}, document price >>> {}",
                 offerBiddingPriceDto.getRound(), roundInfo.getRound(),
                 offerBiddingPriceDto.getBiddingPrice(), roundInfo.getPrice());
@@ -297,21 +295,17 @@ public class AuctionServiceImpl implements AuctionService {
         log.info("inputPrice.compareTo(documentPrice) == 0 >>> {}",
                 offerBiddingPriceDto.getBiddingPrice().compareTo(roundInfo.getPrice()) == 0);
 
-        if (!(offerBiddingPriceDto.getBiddingPrice().compareTo(roundInfo.getPrice()) == 0) ||
-                !(offerBiddingPriceDto.getRound() == roundInfo.getRound())) {
-            throw new CustomException(ResponseStatus.NOT_EQUAL_ROUND_INFORMATION);
-        }
+        return !((!(offerBiddingPriceDto.getBiddingPrice().compareTo(roundInfo.getPrice()) == 0) ||
+                !(offerBiddingPriceDto.getRound() == roundInfo.getRound())));
     }
 
-    private void checkBiddingTime(LocalDateTime roundStartTime, LocalDateTime roundEndTime) {
+    private Boolean checkBiddingTime(LocalDateTime roundStartTime, LocalDateTime roundEndTime) {
         log.info("roundStartTime >>> {}, now >>> {}, roundEndTime >>> {}",
                 roundStartTime, LocalDateTime.now(), roundEndTime);
         log.info("roundStartTime.isBefore(LocalDateTime.now()) >>> {}, roundEndTime.isAfter(LocalDateTime.now()) >>> {}"
                 , roundStartTime.isBefore(LocalDateTime.now()), roundEndTime.isAfter(LocalDateTime.now()));
         // roundStartTime <= 입찰 시간 <= roundEndTime
-        if (!(roundStartTime.isBefore(LocalDateTime.now()) && roundEndTime.isAfter(LocalDateTime.now()))) {
-            throw new CustomException(ResponseStatus.NOT_BIDDING_TIME);
-        }
+        return (roundStartTime.isBefore(LocalDateTime.now()) && roundEndTime.isAfter(LocalDateTime.now()));
     }
 
 }

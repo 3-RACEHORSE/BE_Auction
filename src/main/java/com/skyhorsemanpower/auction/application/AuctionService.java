@@ -4,7 +4,7 @@ import com.skyhorsemanpower.auction.data.dto.*;
 import com.skyhorsemanpower.auction.data.vo.AuctionResultResponseVo;
 
 public interface AuctionService {
-    void offerBiddingPrice(OfferBiddingPriceDto offerBiddingPriceDto);
+    Boolean offerBiddingPrice(OfferBiddingPriceDto offerBiddingPriceDto);
 
     void auctionClose(String auctionUuid);
 
