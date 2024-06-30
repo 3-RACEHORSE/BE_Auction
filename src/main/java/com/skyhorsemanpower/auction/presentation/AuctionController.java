@@ -38,11 +38,10 @@ public class AuctionController {
     // 경매 입찰가 제시
     @PostMapping("/bidding")
     @Operation(summary = "경매 입찰가 제시", description = "경매 입찰가 제시")
-    public SuccessResponse<Object> offerBiddingPrice(
+    public Boolean offerBiddingPrice(
             @RequestHeader String uuid,
             @RequestBody OfferBiddingPriceRequestVo offerBiddingPriceRequestVo) {
-        auctionService.offerBiddingPrice(OfferBiddingPriceDto.voToDto(offerBiddingPriceRequestVo, uuid));
-        return new SuccessResponse<>(null);
+        return auctionService.offerBiddingPrice(OfferBiddingPriceDto.voToDto(offerBiddingPriceRequestVo, uuid));
     }
 
     // 경매 페이지 API
