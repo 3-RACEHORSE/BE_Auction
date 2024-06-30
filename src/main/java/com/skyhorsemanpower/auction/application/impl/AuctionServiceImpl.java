@@ -52,18 +52,21 @@ public class AuctionServiceImpl implements AuctionService {
         // isUpdateRoundInfo boolean 데이터는 round_info 도큐먼트를 갱신 트리거
         Boolean isBiddingPossible = isBiddingPossible(offerBiddingPriceDto, roundInfo);
 
-        // 입찰 정보 저장
-        AuctionHistory auctionHistory = AuctionHistory.converter(offerBiddingPriceDto);
-        log.info("Saved Auction History Information >>> {}", auctionHistory.toString());
+        // 입찰 가능할 때만 아래 로직 진행
+        if (isBiddingPossible) {
+            // 입찰 정보 저장
+            AuctionHistory auctionHistory = AuctionHistory.converter(offerBiddingPriceDto);
+            log.info("Saved Auction History Information >>> {}", auctionHistory.toString());
 
-        try {
-            auctionHistoryRepository.save(auctionHistory);
-        } catch (Exception e) {
-            throw new CustomException(ResponseStatus.MONGODB_ERROR);
+            try {
+                auctionHistoryRepository.save(auctionHistory);
+            } catch (Exception e) {
+                throw new CustomException(ResponseStatus.MONGODB_ERROR);
+            }
+
+            // 입찰 후, round_info 도큐먼트 갱신
+            updateRoundInfo(roundInfo);
         }
-
-        // 입찰 후, round_info 도큐먼트 갱신
-        updateRoundInfo(roundInfo);
 
         log.info("isBidding >>> {}", isBiddingPossible);
         return isBiddingPossible;
