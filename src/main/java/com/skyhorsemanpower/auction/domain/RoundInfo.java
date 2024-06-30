@@ -81,6 +81,7 @@ public class RoundInfo {
                 .leftNumberOfParticipants(roundInfo.getNumberOfParticipants())
                 .auctionEndTime(roundInfo.getAuctionEndTime())
                 .isLastRound(isLastRound)
+                .endStatus(false)
                 .build();
     }
 
@@ -99,6 +100,7 @@ public class RoundInfo {
                 .leftNumberOfParticipants(nextNumberOfParticipants)
                 .auctionEndTime(roundInfo.getAuctionEndTime())
                 .isLastRound(roundInfo.getIsLastRound())
+                .endStatus(false)
                 .build();
     }
 
@@ -116,6 +118,7 @@ public class RoundInfo {
                 .auctionEndTime(roundInfo.getAuctionEndTime())
                 .isLastRound(roundInfo.getIsLastRound())
                 .createdAt(LocalDateTime.now())
+                .endStatus(false)
                 .build();
     }
 
@@ -139,6 +142,7 @@ public class RoundInfo {
                 .createdAt(LocalDateTime.now())
                 .auctionEndTime(auctionEndTime)
                 .isLastRound(false)
+                .endStatus(false)
                 .build();
 
         log.info("Initial round_info >>> {}", roundinfo);
